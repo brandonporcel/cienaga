@@ -75,3 +75,44 @@ RESEND_API_KEY=...
 - [ ] Notificaciones por mail
 - [ ] Dashboard con coincidencias
 - [ ] Recomendaciones basadas en ratings
+
+### Paginas/cines:
+
+- malba(quizas no hace falta porque tiene un newsletter que avisa mensualmente programacion): https://www.malba.org.ar/eventos/de/actividades-cine/
+- check cartelera sigilio website every day
+- Sala Lugones: https://complejoteatral.gob.ar/cine
+- Cine york: https://www.vicentelopez.gov.ar/agenda/agenda-lumiton
+- CCK: https://palaciolibertad.gob.ar/cine/
+- gaumont: https://www.cinegaumont.ar/ / https://letterboxd.com/franco2601/list/cine-gaumont-cartelera/
+- cine lorca: https://cinelorca.wixsite.com/cine-lorca/current-production - https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110
+- cine cosmos: https://www.cinecosmos.uba.ar/
+- Teatro Municipal Gregorio de Laferrere: https://ellaferrere.com.ar/programacion/
+
+---
+
+- agregar debajo de todo https://thegithubshop.com/ algo relacionado al cine
+  usar supabase
+- me gusta landing de https://www.canva.com/es_es/ como idea de landing
+
+📱 ¿Tiene sentido integrar QR codes en tu app de cine?
+
+Depende del caso de uso. Algunas ideas:
+
+Compartir tu perfil
+Cada usuario podría tener un QR que linkee a su perfil público de Ciénaga (sus directores favoritos + próximas pelis). Ej: “escaneá y seguí mis directores”.
+
+Compartir películas/eventos
+QR en cada función: “Escaneá y agregala a tu calendario” o “Abrir en la web del cine”.
+
+En newsletters o afiches físicos
+Podrías generar un QR que apunte a “Cartelera personalizada” para un user. Ej: en un mail → QR que abre la agenda de esa semana.
+
+👉 Conclusión: no es esencial para el MVP, pero es un nice-to-have para compartir. Podés dejarlo como feature futura con una lib como qrcode.react
+.
+
+login con google para obtener email
+
+https://www.miscuentas.com.ar/dashboard
+https://gasti.pro/en/
+
+compartir noticia peli via qr con whastapp? 
