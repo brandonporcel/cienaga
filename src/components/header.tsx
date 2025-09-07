@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+
+const navItems = [
+  { name: "Producto", href: "#features-section" },
+  { name: "Precios", href: "#pricing-section" },
+  { name: "Cartelera", href: "#testimonials-section" },
+];
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -14,6 +21,18 @@ function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleScroll = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    e.preventDefault();
+    const targetId = href.substring(1);
+    const targetElement = document.getElementById(targetId);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <header
       className={`fixed top-2 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
@@ -25,21 +44,16 @@ function Header() {
           <h1 className="text-xl font-bold text-lime-400">CIENAGA</h1>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className=" hover:text-white transition-colors">
-              Inicio
-            </a>
-            <a href="#" className=" hover:text-white transition-colors">
-              Producto
-            </a>
-            <a href="#" className=" hover:text-white transition-colors">
-              Planes
-            </a>
-            <a href="#" className=" hover:text-white transition-colors">
-              FAQs
-            </a>
-            <a href="#" className=" hover:text-white transition-colors">
-              Contacto
-            </a>
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={(e) => handleScroll(e, item.href)} // Add onClick handler
+                className="text-[#888888] hover:text-foreground px-4  transition-colors"
+              >
+                {item.name}
+              </Link>
+            ))}
           </nav>
 
           <button className="border-slate-600  hover:bg-slate-700 bg-transparent">
