@@ -57,16 +57,16 @@ export function BentoSection() {
       title: "Notificaciones por mail",
       description:
         "Enterate enseguida cuándo un director de tu lista tiene una película en cartel.",
-      Component: MCPConnectivityIllustration, // Updated component
+      Component: MCPConnectivityIllustration,
     },
     {
-      title: "Cine que te encuentra", // Swapped position
+      title: "Cine que te encuentra",
       description:
         "Uní tus gustos con la magia del cine porteño. Diseño simple, centrado en vos.",
-      Component: ParallelCodingAgents, // Updated component
+      Component: ParallelCodingAgents,
     },
     {
-      title: "Descubrí tus próximos estrenos favoritos", // Swapped position
+      title: "Descubrí tus próximos estrenos favoritos",
       description: "Subí tu CSV y empezá a recibir alertas hoy mismo.",
       Component: EasyDeployment,
     },

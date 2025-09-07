@@ -6,34 +6,44 @@ import { ChevronDown } from "lucide-react";
 
 const faqData = [
   {
-    question: "What is Pointer and who is it for?",
+    question: "¿Qué es Ciénaga y para quién está pensado?",
     answer:
-      "Pointer is an AI-powered development platform designed for developers, teams, and organizations who want toaccelerate their coding workflow. It's perfect for both individual developers looking to enhance their productivity and teams seeking seamless collaboration tools.",
+      "Ciénaga es una aplicación que conecta tus películas favoritas de Letterboxd con la cartelera de cines en Buenos Aires. Está pensada para cinéfilos que quieren enterarse cuándo se proyectan en pantalla grande sus films preferidos.",
   },
   {
-    question: "How does Pointer's AI code review work?",
+    question: "¿Cómo funciona la integración con Letterboxd?",
     answer:
-      "Our AI analyzes your code in real-time, providing intelligent suggestions for improvements, catching potential bugs, and ensuring best practices. It learns from your coding patterns and adapts to your team's standards, making code reviews faster and more consistent.",
+      "Podés importar fácilmente tu cuenta de Letterboxd y sincronizar tu lista de películas favoritas. De esa forma, Ciénaga detecta coincidencias con la programación de cines en BA y te avisa cuando estén en cartelera.",
   },
   {
-    question: "Can I integrate Pointer with my existing tools?",
+    question: "¿Necesito una cuenta para usar la app?",
     answer:
-      "Yes! Pointer offers one-click integrations with popular development tools including GitHub, GitLab, VS Code, Slack, and many more. Our MCP connectivity allows you to easily manage and configure server access across your entire development stack.",
+      "Sí, es necesario registrarse para que podamos guardar tus películas favoritas y enviarte notificaciones personalizadas. El registro es gratuito y toma menos de un minuto.",
   },
   {
-    question: "What's included in the free plan?",
+    question: "¿La app es gratis?",
     answer:
-      "The free plan includes real-time code suggestions, basic integrations, single MCP server connection, up to 2 AI coding agents, and Vercel deployments with Pointer branding. It's perfect for individual developers getting started.",
+      "Sí, podés registrarte y usar Ciénaga de manera gratuita. Estamos trabajando en planes premium con beneficios adicionales, como alertas prioritarias y recomendaciones exclusivas.",
   },
   {
-    question: "How do parallel coding agents work?",
+    question: "¿Puedo usar Ciénaga sin tener Letterboxd?",
     answer:
-      "Our parallel coding agents can work on different parts of your codebase simultaneously, solving complex problems faster than traditional single-threaded approaches. You can launch multiple agents to handle different tasks like bug fixes, feature development, and code optimization concurrently.",
+      "¡Claro! Si no tenés cuenta en Letterboxd, podés seleccionar manualmente tus películas favoritas dentro de la app y recibir notificaciones de la misma manera.",
   },
   {
-    question: "Is my code secure with Pointer?",
+    question: "¿Qué tan actualizada está la información de la cartelera?",
     answer:
-      "Absolutely. We use enterprise-grade security measures including end-to-end encryption, secure data transmission, and compliance with industry standards. Your code never leaves your secure environment without your explicit permission, and we offer on-premises deployment options for enterprise customers.",
+      "La cartelera se actualiza constantemente a partir de la información oficial de los cines de Buenos Aires, para que siempre tengas datos precisos sobre funciones, estrenos y reestrenos.",
+  },
+  {
+    question: "¿Van a expandirse a otras ciudades además de BA?",
+    answer:
+      "Por el momento estamos enfocados en la Ciudad de Buenos Aires, pero planeamos ampliar Ciénaga a otras ciudades de Argentina y la región en próximas versiones.",
+  },
+  {
+    question: "¿Van a enviarme spam o correos no deseados?",
+    answer:
+      "No. Solo recibirás notificaciones y correos relacionados con las películas que marcaste como favoritas o con avisos importantes sobre la app.",
   },
 ];
 
@@ -51,7 +61,7 @@ const FAQItem = ({ question, answer, isOpen, onToggle }: FAQItemProps) => {
   };
   return (
     <div
-      className={`w-full bg-[rgba(231,236,235,0.08)] shadow-[0px_2px_4px_rgba(0,0,0,0.16)] overflow-hidden rounded-[10px] outline outline-1 outline-border outline-offset-[-1px] transition-all duration-500 ease-out cursor-pointer`}
+      className={`w-full bg-[rgba(231,236,235,0.08)] shadow-[0px_2px_4px_rgba(0,0,0,0.16)] overflow-hidden rounded-[10px] outline-1 outline-border outline-offset-[-1px] transition-all duration-500 ease-out cursor-pointer`}
       onClick={handleClick}
     >
       <div className="w-full px-5 py-[18px] pr-4 flex justify-between items-center gap-5 text-left transition-all duration-300 ease-out">
@@ -97,14 +107,26 @@ export function FAQSection() {
   return (
     <section className="w-full pt-[66px] pb-20 md:pb-40 px-5 relative flex flex-col justify-center items-center">
       <div className="w-[300px] h-[500px] absolute top-[150px] left-1/2 -translate-x-1/2 origin-top-left rotate-[-33.39deg] bg-primary/10 blur-[100px] z-0" />
+      <div
+        className="
+          absolute
+          overflow-visible
+          -inset-full
+          select-none
+          -z-10
+          opacity-80
+          translate-y-1/5
+          bg-[radial-gradient(at_71%_57%,rgba(51,255,0,0.3)_0px,transparent_50%),radial-gradient(at_53%_43%,rgba(255,255,0,0.3)_0px,transparent_50%),radial-gradient(at_31%_51%,rgba(255,128,0,0.17)_0px,transparent_50%)]
+        "
+      ></div>
       <div className="self-stretch pt-8 pb-8 md:pt-14 md:pb-14 flex flex-col justify-center items-center gap-2 relative z-10">
         <div className="flex flex-col justify-start items-center gap-4">
           <h2 className="w-full max-w-[435px] text-center text-foreground text-4xl font-semibold leading-10 break-words">
-            Frequently Asked Questions
+            Preguntas frecuentes
           </h2>
           <p className="self-stretch text-center text-muted-foreground text-sm font-medium leading-[18.20px] break-words">
-            Everything you need to know about Pointer and how it can transform
-            your development workflow
+            Todo lo que necesitas saber sobre Ciénaga y cómo puede transformar
+            toda tu vida
           </p>
         </div>
       </div>

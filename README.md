@@ -78,15 +78,19 @@ RESEND_API_KEY=...
 
 ### Paginas/cines:
 
-- malba(quizas no hace falta porque tiene un newsletter que avisa mensualmente programacion): https://www.malba.org.ar/eventos/de/actividades-cine/
-- check cartelera sigilio website every day
-- Sala Lugones: https://complejoteatral.gob.ar/cine
-- Cine york: https://www.vicentelopez.gov.ar/agenda/agenda-lumiton
-- CCK: https://palaciolibertad.gob.ar/cine/
-- gaumont: https://www.cinegaumont.ar/ / https://letterboxd.com/franco2601/list/cine-gaumont-cartelera/
-- cine lorca: https://cinelorca.wixsite.com/cine-lorca/current-production - https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110
-- cine cosmos: https://www.cinecosmos.uba.ar/
-- Teatro Municipal Gregorio de Laferrere: https://ellaferrere.com.ar/programacion/
+<!-- 2. check cartelera sigilio website every day -->
+
+1. malba (quizas no hace falta porque tiene un newsletter que avisa mensualmente programacion): https://www.malba.org.ar/eventos/de/actividades-cine/
+2. Sala Lugones: https://complejoteatral.gob.ar/cine
+3. Cine york: https://www.vicentelopez.gov.ar/agenda/agenda-lumiton
+4. CCK: https://palaciolibertad.gob.ar/cine/
+5. gaumont: https://www.cinegaumont.ar/ / https://letterboxd.com/franco2601/list/cine-gaumont-cartelera/
+6. cine lorca: https://cinelorca.wixsite.com/cine-lorca/current-production - https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110
+7. cine cosmos: https://www.cinecosmos.uba.ar/
+8. Teatro Municipal Gregorio de Laferrere: https://ellaferrere.com.ar/programacion/
+9. CC San Martín
+10. Bafici
+11. Hoyts
 
 ---
 
@@ -118,5 +122,4 @@ https://gasti.pro/en/
 
 compartir noticia peli via qr con whastapp?
 
-agregar cines de la plata
 usar lambda

@@ -3,23 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { Button } from "./ui/button";
+
 const navItems = [
-  { name: "Producto", href: "#features-section" },
-  { name: "Precios", href: "#pricing-section" },
-  { name: "Cartelera", href: "#testimonials-section" },
+  { name: "Acerca", href: "#about-section" },
+  { name: "Cartelera", href: "#cinema-listings-section" },
 ];
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const handleScroll = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -33,6 +25,15 @@ function Header() {
     }
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <header
       className={`fixed top-2 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${
@@ -41,14 +42,16 @@ function Header() {
     >
       <div className="backdrop-blur-md rounded-2xl border px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-lime-400">CIENAGA</h1>
+          <h1 className="text-xl font-bold text-[#003720]">
+            CIENAGA<span className="text-[#94f27f]">I</span>
+          </h1>
 
           <nav className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={(e) => handleScroll(e, item.href)} // Add onClick handler
+                onClick={(e) => handleScroll(e, item.href)}
                 className="text-[#888888] hover:text-foreground px-4  transition-colors"
               >
                 {item.name}
@@ -56,9 +59,11 @@ function Header() {
             ))}
           </nav>
 
-          <button className="border-slate-600  hover:bg-slate-700 bg-transparent">
+          <Button
+            className={`cursor-pointer text-black shadow-none ${isScrolled ? "bg-[#94f27f]" : "bg-transparent"}`}
+          >
             Iniciar sesión
-          </button>
+          </Button>
         </div>
       </div>
     </header>

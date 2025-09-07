@@ -1,6 +1,4 @@
-"use client";
-
-import { Github, Linkedin, Twitter } from "lucide-react";
+import { Github, Linkedin } from "lucide-react";
 
 export function FooterSection() {
   return (
@@ -9,31 +7,26 @@ export function FooterSection() {
       <div className="flex flex-col justify-start items-start gap-8 p-4 md:p-8">
         <div className="flex gap-3 items-stretch justify-center">
           <div className="text-center text-foreground text-xl font-semibold leading-4">
-            Pointer
+            Ciénaga
           </div>
         </div>
         <p className="text-foreground/90 text-sm font-medium leading-[18px] text-left">
-          Coding made effortless
+          Peliculas y Cines
         </p>
         <div className="flex justify-start items-start gap-3">
           <a
-            href="#"
-            aria-label="Twitter"
-            className="w-4 h-4 flex items-center justify-center"
-          >
-            <Twitter className="w-full h-full text-muted-foreground" />
-          </a>
-          <a
-            href="#"
+            href="https://github.com/brandonporcel/"
             aria-label="GitHub"
             className="w-4 h-4 flex items-center justify-center"
+            target="_blank"
           >
             <Github className="w-full h-full text-muted-foreground" />
           </a>
           <a
-            href="#"
+            href="https://www.linkedin.com/in/brandonporcel/"
             aria-label="LinkedIn"
             className="w-4 h-4 flex items-center justify-center"
+            target="_blank"
           >
             <Linkedin className="w-full h-full text-muted-foreground" />
           </a>

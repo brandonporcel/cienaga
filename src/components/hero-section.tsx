@@ -1,30 +1,46 @@
 import React from "react";
+import Link from "next/link";
 
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
-function HeroSection() {
+export function HeroSection() {
   return (
-    <section className="min-h-screen flex items-center justify-center px-4 pt-24">
-      <div className="text-center max-w-4xl">
-        <Badge variant="default">Potenciado por IA</Badge>
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 text-balance">
-          Tus pelis favoritas en{" "}
-          <span className="italic text-lime-400">cines</span> de Bs. As.
+    <section
+      className="flex flex-col items-center text-center relative mx-auto rounded-2xl overflow-hidden my-6 py-0 px-4
+         w-full h-[400px] md:w-[1220px] md:h-[600px] lg:h-[810px] md:px-0"
+    >
+      {/* SVG Background */}
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          background: `
+        radial-gradient(at 53% 78%, rgba(255, 255, 0, 0.3) 0px, transparent 50%),
+        radial-gradient(at 71% 91%, rgba(51, 255, 0, 0.3) 0px, transparent 50%),
+        radial-gradient(at 31% 91%, rgba(255, 128, 0, 0.17) 0px, transparent 50%)
+      `,
+        }}
+      />
+
+      <div className="relative z-10 space-y-4 md:space-y-5 lg:space-y-6 mb-6 md:mb-7 lg:mb-9 max-w-md md:max-w-[500px] lg:max-w-[660px] mt-16 md:mt-[120px] lg:mt-[160px] px-4">
+        <h1 className="text-foreground text-3xl md:text-4xl lg:text-6xl font-bold leading-tight">
+          Tus <span className="text-[#003720]">Pelis Favoritas</span> en Cines
+          De Buenos Aires
         </h1>
-
-        <p className="text-lg md:text-xl text-slate-300 mb-4 max-w-3xl mx-auto text-pretty">
-          Importa tu historial de Letterboxd, sigue a tus directores favoritos y
-          recibe notificaciones cuando sus películas se proyecten en los cines
-          de Buenos Aires.
+        <p className="text-muted-foreground text-base md:text-base lg:text-lg font-medium leading-relaxed max-w-lg mx-auto">
+          Importa tus datos de Letterboxd y recibe notificaciones cuando se
+          proyecten en los cines de BA.
         </p>
-
-        <Button className="bg-lime-400 hover:bg-lime-500 text-slate-900 font-semibold px-8 py-6 text-lg rounded-xl">
-          Chatear con Gasti en WhatsApp
-        </Button>
       </div>
+
+      <Link
+        href="https://vercel.com/home"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <Button className="relative z-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10 cursor-pointer">
+          Registrarme gratis
+        </Button>
+      </Link>
     </section>
   );
 }
-
-export default HeroSection;
