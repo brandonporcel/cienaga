@@ -1,4 +1,5 @@
 import Header from "@/components/header";
+import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   return (
@@ -21,9 +22,9 @@ export default function HomePage() {
             cines de Buenos Aires.
           </p>
 
-          <button className="bg-lime-400 hover:bg-lime-500 text-slate-900 font-semibold px-8 py-6 text-lg rounded-xl">
+          <Button className="bg-lime-400 hover:bg-lime-500 text-slate-900 font-semibold px-8 py-6 text-lg rounded-xl">
             Chatear con Gasti en WhatsApp
-          </button>
+          </Button>
         </div>
       </section>
 
