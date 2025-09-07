@@ -113,6 +113,11 @@ Podrías generar un QR que apunte a “Cartelera personalizada” para un user. 
 login con google para obtener email
 
 https://www.miscuentas.com.ar/dashboard
+
 https://gasti.pro/en/
 
-compartir noticia peli via qr con whastapp? 
+compartir noticia peli via qr con whastapp?
+
+https://www.tiktok.com/@ed.mfr/video/7143396365802966277
+agregar cines de la plata
+usar lambda
