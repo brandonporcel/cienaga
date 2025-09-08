@@ -1,10 +1,10 @@
 import { AnimatedSection } from "@/components/animated-section";
-import { BentoSection } from "@/components/bento-section";
 import { DashboardPreview } from "@/components/dashboard-preview";
 import { FAQSection } from "@/components/faq-section";
 import { FooterSection } from "@/components/footer-section";
 import Header from "@/components/header";
 import { HeroSection } from "@/components/hero-section";
+import InstructionsSection from "@/components/instructions-section";
 import { LargeTestimonial } from "@/components/large-testimonial";
 import { SocialProof } from "@/components/social-proof";
 
@@ -36,7 +36,7 @@ export default function HomePage() {
         className="relative z-10 max-w-[1320px] mx-auto mt-16"
         delay={0.2}
       >
-        <BentoSection />
+        <InstructionsSection />
       </AnimatedSection>
 
       <AnimatedSection

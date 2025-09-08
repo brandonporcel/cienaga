@@ -123,3 +123,53 @@ https://gasti.pro/en/
 compartir noticia peli via qr con whastapp?
 
 usar lambda
+
+📦 Cards (6 ítems)
+
+1. Importar tu historial
+
+Título: Importá tu historial de Letterboxd
+
+Descripción: Subí tu archivo CSV y detectamos automáticamente los directores que más te gustan.
+
+Imagen/ícono: 📂 CSV / logo Letterboxd.
+
+2. Guardar tus directores
+
+Título: Tus directores favoritos
+
+Descripción: Ciénaga los guarda en tu perfil y los sigue de manera automática.
+
+Imagen/ícono: 🎬 claqueta o siluetas de directores.
+
+3. Cruce con la cartelera
+
+Título: Cartelera porteña al día
+
+Descripción: Scrapeamos Gaumont, Cosmos, Malba, Sala Lugones y más para actualizar las funciones.
+
+Imagen/ícono: 🏛️ ícono de cine/proyector.
+
+4. Recibí alertas al instante
+
+Título: Notificaciones por mail
+
+Descripción: Enterate enseguida cuándo un director de tu lista tiene una película en cartel.
+
+Imagen/ícono: 📩 sobrecito con campanita.
+
+5. Inspiración visual (branding/diseño)
+
+Título: Cine que te encuentra
+
+Descripción: Uní tus gustos con la magia del cine porteño. Diseño simple, centrado en vos.
+
+Imagen/ícono: 🎥 un rollo de película estilizado, un glow degradado o una ilustración abstracta (sirve para “pausa estética”).
+
+6. CTA final
+
+Título: Descubrí tus próximos estrenos favoritos
+
+Descripción: Subí tu CSV y empezá a recibir alertas hoy mismo.
+
+Imagen/ícono: 🚀 (o botón destacado con glow tipo “Empezar ahora”).

@@ -7,49 +7,49 @@ const phrases = [
     title: "Director de cine",
     description:
       "El cine no es un trozo de vida, sino un pedazo de pastel con el que jugamos a imaginar mundos distintos.",
-    image: "/images/hitchcock.png",
+    image: "/images/directors/hitchcock.png",
   },
   {
     name: "Federico Fellini",
     title: "Director italiano",
     description:
       "El cine es un sueño que jamás olvido; cada película es una vida que nunca dejará de existir en la pantalla.",
-    image: "/images/fellini.png",
+    image: "/images/directors/fellini.png",
   },
   {
     name: "Jean-Luc Godard",
     title: "Director francés",
     description:
       "El cine es verdad veinticuatro veces por segundo, y en esa repetición nace su propia poesía.",
-    image: "/images/godard.png",
+    image: "/images/directors/godard.png",
   },
   {
     name: "Martin Scorsese",
     title: "Director estadounidense",
     description:
       "Cada película que hacemos es un intento de atrapar un momento en el tiempo y hacerlo eterno para todos.",
-    image: "/images/scorsese.png",
+    image: "/images/directors/scorsese.png",
   },
   {
     name: "Ingmar Bergman",
     title: "Director sueco",
     description:
       "El cine es como un espejo que nunca termina: refleja lo que somos y lo que tememos ser.",
-    image: "/images/bergman.png",
+    image: "/images/directors/bergman.png",
   },
   {
     name: "Francis Ford Coppola",
     title: "Director estadounidense",
     description:
       "El cine, como la vida, está hecho de momentos imperfectos que se transforman en recuerdos inolvidables.",
-    image: "/images/coppola.png",
+    image: "/images/directors/coppola.png",
   },
   {
     name: "Agnès Varda",
     title: "Directora francesa",
     description:
       "Filmar es una manera de ver, y al ver de otra forma, el cine nos enseña a vivir con nuevos ojos.",
-    image: "/images/varda.png",
+    image: "/images/directors/varda.png",
   },
 ];
 
@@ -61,6 +61,19 @@ export function LargeTestimonial() {
 
   return (
     <section className="w-full px-5 overflow-hidden flex justify-center items-center">
+      <div
+        className="
+                absolute
+                overflow-visible
+                -inset-0
+                select-none
+                -z-10
+                opacity-80
+                translate-y-[1%]
+                bg-[radial-gradient(at_71%_57%,rgba(51,255,0,0.15)_0px,transparent_40%),radial-gradient(at_53%_43%,rgba(255,255,0,0.15)_0px,transparent_40%),radial-gradient(at_31%_51%,rgba(255,128,0,0.1)_0px,transparent_40%)]
+              "
+      ></div>
+
       <div className="flex-1 flex flex-col justify-start items-start overflow-hidden">
         <div className="self-stretch px-4 py-12 md:px-6 md:py-16 lg:py-28 flex flex-col justify-start items-start gap-2">
           <div className="self-stretch flex justify-between items-center">
@@ -70,8 +83,8 @@ export function LargeTestimonial() {
               </div>
               <div className="flex justify-start items-center gap-5">
                 <Image
-                  src="/images/guillermo-rauch.png"
-                  alt="Guillermo Rauch avatar"
+                  src={randomPhrase.image}
+                  alt={`${randomPhrase.name} avatar`}
                   width={48}
                   height={48}
                   className="w-12 h-12 relative rounded-full"

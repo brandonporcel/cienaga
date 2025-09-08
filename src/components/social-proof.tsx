@@ -27,7 +27,7 @@ const venues = [
   },
   {
     name: "Sala Lugones",
-    logo: "/logos/sala-lugones.gif",
+    logo: "/logos/lugones.png",
   },
   {
     name: "Malba",

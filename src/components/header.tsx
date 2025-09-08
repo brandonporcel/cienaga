@@ -60,7 +60,7 @@ function Header() {
           </nav>
 
           <Button
-            className={`cursor-pointer text-black shadow-none ${isScrolled ? "bg-[#94f27f]" : "bg-transparent"}`}
+            className={`cursor-pointer text-black shadow-none ${isScrolled ? "bg-[#94f27f]" : "bg-transparent"} hover:bg-[#94f27f95]`}
           >
             Iniciar sesión
           </Button>
