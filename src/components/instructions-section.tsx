@@ -90,7 +90,7 @@ const InstructionCard = ({
 
 export default function InstructionsSection() {
   return (
-    <section className="w-full px-5 flex flex-col justify-center items-center  bg-transparent">
+    <section className="w-full px-5 flex flex-col justify-center items-center bg-transparent overflow-hidden">
       <div className="w-full py-8 md:py-16 relative flex flex-col justify-start items-start gap-6">
         <div className="w-[547px] h-[938px] absolute top-[614px] left-[80px] origin-top-left rotate-[-33.39deg] bg-primary/10 blur-[130px] z-0" />
         <div className="self-stretch py-8 md:py-14 flex flex-col justify-center items-center gap-2 z-10">

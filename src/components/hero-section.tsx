@@ -14,10 +14,10 @@ export function HeroSection() {
         className="absolute inset-0 -z-10"
         style={{
           background: `
-        radial-gradient(at 53% 78%, rgba(255, 255, 0, 0.3) 0px, transparent 50%),
-        radial-gradient(at 71% 91%, rgba(51, 255, 0, 0.3) 0px, transparent 50%),
-        radial-gradient(at 31% 91%, rgba(255, 128, 0, 0.17) 0px, transparent 50%)
-      `,
+            radial-gradient(at 53% 78%, rgba(255, 255, 0, 0.3) 0px, transparent 50%),
+            radial-gradient(at 71% 91%, rgba(51, 255, 0, 0.3) 0px, transparent 50%),
+            radial-gradient(at 31% 91%, rgba(255, 128, 0, 0.17) 0px, transparent 50%)
+          `,
         }}
       />
 
