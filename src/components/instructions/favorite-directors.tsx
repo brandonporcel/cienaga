@@ -34,9 +34,9 @@ const FavoriteDirectors = () => {
         </div>
 
         <div className="space-y-3">
-          {directors.map((director, index) => (
+          {directors.map((director, i) => (
             <div
-              key={director.name}
+              key={director.name + i}
               className="flex items-center justify-between bg-gray-50/60 backdrop-blur-sm rounded-xl p-3 border border-gray-200/30"
             >
               <div className="flex items-center gap-3">

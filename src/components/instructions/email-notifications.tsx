@@ -49,7 +49,8 @@ const EmailNotifications = () => {
                 ¡Nueva película de Nolan!
               </p>
               <p className="text-gray-600 text-xs leading-relaxed">
-                "Oppenheimer" se estrena en Gaumont Recoleta este viernes.
+                &quot;Oppenheimer&quot; se estrena en Gaumont Recoleta este
+                viernes.
               </p>
             </div>
           </div>
