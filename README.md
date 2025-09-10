@@ -1,6 +1,6 @@
 # 🌊 Ciénaga
 
-**Ciénaga** es una aplicación web que te avisa cuando en los cines de Buenos Aires se proyectan películas de directores que te gustan.
+Aplicación web que te avisa cuando en los cines de Buenos Aires se proyectan películas de directores que te gustan.
 
 ---
 
@@ -76,6 +76,32 @@ RESEND_API_KEY=...
 - [ ] Dashboard con coincidencias
 - [ ] Recomendaciones basadas en ratings
 
+## ✅ To-Do
+
+1. Autenticación y rutas
+
+- [ ] Implementar login con Clerk (Google como proveedor principal).
+- [ ] Configurar rutas privadas → si no está logueado, redirect a /login.
+- [ ] Crear middleware en Next.js para proteger páginas privadas.
+- [ ] Guardar en Supabase el email del user (o su clerk_user_id) al momento de login.
+
+2. Dashboard + Historial
+
+- [ ] Subida de watched.csv / ratings.csv.
+- [ ] Parseo del CSV en frontend o backend.
+- [ ] Guardar en Supabase:
+  - [ ] Películas (movies).
+  - [ ] Directores (directors).
+  - [ ] Relación user ↔ director (user_directors).
+- [ ] Mostrar historial de uploads en el dashboard.
+
+3. Cartelera / Scraping
+
+- [ ] Setear GitHub Actions con un script Node + Cheerio.
+- [ ] Scrapear cines básicos (Gaumont, Cosmos, Lugones).
+- [ ] Guardar screenings en screenings.
+- [ ] Endpoint/API en Supabase (o Edge Function) para exponer la cartelera.
+
 ### Paginas/cines:
 
 <!-- 2. check cartelera sigilio website every day -->
@@ -116,60 +142,13 @@ Podrías generar un QR que apunte a “Cartelera personalizada” para un user. 
 
 login con google para obtener email
 
-https://www.miscuentas.com.ar/dashboard
-
-https://gasti.pro/en/
+<!--
+diseño en base a
+- https://gasti.pro/en/
+- https://v0.app/chat/pointer-ai-landing-page-b3xq2HC1JCs
+- https://www.miscuentas.com.ar/dashboard
+ -->
 
 compartir noticia peli via qr con whastapp?
 
 usar lambda
-
-📦 Cards (6 ítems)
-
-1. Importar tu historial
-
-Título: Importá tu historial de Letterboxd
-
-Descripción: Subí tu archivo CSV y detectamos automáticamente los directores que más te gustan.
-
-Imagen/ícono: 📂 CSV / logo Letterboxd.
-
-2. Guardar tus directores
-
-Título: Tus directores favoritos
-
-Descripción: Ciénaga los guarda en tu perfil y los sigue de manera automática.
-
-Imagen/ícono: 🎬 claqueta o siluetas de directores.
-
-3. Cruce con la cartelera
-
-Título: Cartelera porteña al día
-
-Descripción: Scrapeamos Gaumont, Cosmos, Malba, Sala Lugones y más para actualizar las funciones.
-
-Imagen/ícono: 🏛️ ícono de cine/proyector.
-
-4. Recibí alertas al instante
-
-Título: Notificaciones por mail
-
-Descripción: Enterate enseguida cuándo un director de tu lista tiene una película en cartel.
-
-Imagen/ícono: 📩 sobrecito con campanita.
-
-5. Inspiración visual (branding/diseño)
-
-Título: Cine que te encuentra
-
-Descripción: Uní tus gustos con la magia del cine porteño. Diseño simple, centrado en vos.
-
-Imagen/ícono: 🎥 un rollo de película estilizado, un glow degradado o una ilustración abstracta (sirve para “pausa estética”).
-
-6. CTA final
-
-Título: Descubrí tus próximos estrenos favoritos
-
-Descripción: Subí tu CSV y empezá a recibir alertas hoy mismo.
-
-Imagen/ícono: 🚀 (o botón destacado con glow tipo “Empezar ahora”).
