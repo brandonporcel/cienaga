@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -23,6 +24,7 @@ export function SiteHeader() {
               GitHub
             </a>
           </Button>
+          <ThemeToggle className="hidden sm:flex" />
         </div>
       </div>
     </header>
