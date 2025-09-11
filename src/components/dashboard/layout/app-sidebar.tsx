@@ -2,21 +2,20 @@
 
 import * as React from "react";
 import {
+  IconBell,
+  IconBrandGithub,
+  IconBrandLinkedin,
+  IconBrandWhatsapp,
   IconCamera,
-  IconChartBar,
   IconDashboard,
-  IconDatabase,
   IconFileAi,
   IconFileDescription,
-  IconFileWord,
-  IconFolder,
   IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
+  IconMail,
+  IconSeedling,
   IconSettings,
-  IconUsers,
+  IconSparkles,
+  type Icon,
 } from "@tabler/icons-react";
 
 import { NavDocuments } from "@/components/dashboard/layout/nav-documents";
@@ -33,119 +32,70 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+export interface NavItem {
+  title: string;
+  href: string; // mejor que "url" → es lo que espera <a> y <Link>
+  icon: Icon;
+  items?: NavItem[];
+  isExternal?: boolean; // si true → target="_blank" rel="noopener noreferrer"
+  isLocal?: boolean; // si true → usar <Link> de Next.js
+}
+
+const navUser = {
+  name: "shadcn",
+  email: "m@example.com",
+  avatar: "/avatars/shadcn.jpg",
+};
+
+const data: Record<string, NavItem[]> = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      href: "#",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+      title: "Asistente",
+      href: "#",
+      icon: IconSparkles,
     },
   ],
   navSecondary: [
     {
       title: "Settings",
-      url: "#",
+      href: "/settings", // interno → usar Next Link
       icon: IconSettings,
     },
     {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
+      title: "Novedades",
+      href: "#",
+      icon: IconBell,
+      items: [
+        {
+          icon: IconBrandLinkedin,
+          title: "Seguinos en LinkedIn",
+          href: "https://www.linkedin.com/in/brandonporcel",
+          isExternal: true, // se abre en nueva pestaña
+        },
+        {
+          icon: IconBrandGithub,
+          title: "Seguinos en GitHub",
+          href: "https://github.com/brandonporcel",
+          isExternal: true,
+        },
+      ],
     },
   ],
   tools: [
     {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
+      title: "WhatsApp",
+      href: "#",
+      icon: IconBrandWhatsapp,
     },
     {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
+      title: "Emails",
+      href: "#",
+      icon: IconMail,
     },
   ],
 };
@@ -161,8 +111,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <IconSeedling className="!size-5" />
+                <span className="text-base font-semibold">Cienaga</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -174,7 +124,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={navUser} />
       </SidebarFooter>
     </Sidebar>
   );
