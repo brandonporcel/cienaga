@@ -1,19 +1,7 @@
-export default function Dashboard() {
+export default function Page() {
   return (
-    <div>
-      <div className="text-white text-2xl">hola</div>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-      <p>hola!</p>
-    </div>
+    <>
+      <p>hola</p>
+    </>
   );
 }
