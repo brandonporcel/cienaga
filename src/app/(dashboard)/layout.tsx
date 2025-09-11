@@ -1,38 +1,32 @@
-"use client";
+import { ThemeProvider } from "next-themes";
 
-import { useState } from "react";
-
-import DashboardHeader from "@/components/layout/dashboard-header";
-import Sidebar from "@/components/layout/sidebar";
+import { AppSidebar } from "@/components/dashboard/layout/app-sidebar";
+import { SiteHeader } from "@/components/dashboard/layout/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
   return (
-    <div className="flex h-screen">
-      <Sidebar sidebarOpen={sidebarOpen} />
-
-      {/* Main Content */}
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ease-in-out`}
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange={false}
+    >
+      <SidebarProvider
+        style={
+          {
+            "--header-height": "calc(var(--spacing) * 12)",
+          } as React.CSSProperties
+        }
       >
-        <DashboardHeader
-          setSidebarOpen={setSidebarOpen}
-          sidebarOpen={sidebarOpen}
-        />
-
-        {/* Main Content Area */}
-        <main className="flex-1 bg-red-500 p-8">{children}</main>
-      </div>
-
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-    </div>
+        <AppSidebar variant="inset" />
+        <SidebarInset>
+          <SiteHeader />
+          <div className="flex flex-col p-4 md:py-6 lg:px-6">{children}</div>
+        </SidebarInset>
+      </SidebarProvider>
+    </ThemeProvider>
   );
 }
