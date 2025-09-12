@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-import { Button } from "./ui/button";
+import ProfileUser from "./profile-user";
 
 const navItems = [
   { name: "Acerca", href: "#about-section" },
@@ -45,13 +45,9 @@ function Header() {
             ))}
           </nav>
 
-          <Button
-            className={`cursor-pointer text-sm md:text-base text-black shadow-none 
-              ${isScrolled ? "bg-[#94f27f]" : "bg-transparent"} 
-              hover:bg-[#94f27f95]`}
-          >
-            Iniciar sesión
-          </Button>
+          <ProfileUser
+            buttonClassName={`${isScrolled ? "bg-[#94f27f]" : "bg-transparent"} hover:bg-[#94f27f95]`}
+          />
         </div>
       </div>
     </header>

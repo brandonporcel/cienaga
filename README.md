@@ -147,6 +147,8 @@ diseño en base a
 - https://gasti.pro/en/
 - https://v0.app/chat/pointer-ai-landing-page-b3xq2HC1JCs
 - https://www.miscuentas.com.ar/dashboard
+- https://ui.shadcn.com/blocks: A dashboard with sidebar, charts and data table
+- https://youtu.be/XgqCh2FwNVY: 2. How to add Google OAuth in Nextjs with Supabase | Server Component | Server Action | Google Login
  -->
 
 compartir noticia peli via qr con whastapp?
