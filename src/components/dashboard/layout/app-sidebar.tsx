@@ -14,6 +14,7 @@ import {
   type Icon,
 } from "@tabler/icons-react";
 
+import { ROUTES } from "@/config/routes";
 import { NavDocuments } from "@/components/dashboard/layout/nav-documents";
 import { NavMain } from "@/components/dashboard/layout/nav-main";
 import { NavSecondary } from "@/components/dashboard/layout/nav-secondary";
@@ -30,24 +31,17 @@ import {
 
 export interface NavItem {
   title: string;
-  href: string; // mejor que "url" → es lo que espera <a> y <Link>
+  href: string;
   icon: Icon;
   items?: NavItem[];
-  isExternal?: boolean; // si true → target="_blank" rel="noopener noreferrer"
-  isLocal?: boolean; // si true → usar <Link> de Next.js
+  isExternal?: boolean;
 }
-
-const navUser = {
-  name: "shadcn",
-  email: "m@example.com",
-  avatar: "/avatars/shadcn.jpg",
-};
 
 const data: Record<string, NavItem[]> = {
   navMain: [
     {
       title: "Dashboard",
-      href: "#",
+      href: ROUTES.dashboard,
       icon: IconDashboard,
     },
     {
@@ -59,7 +53,7 @@ const data: Record<string, NavItem[]> = {
   navSecondary: [
     {
       title: "Settings",
-      href: "/settings", // interno → usar Next Link
+      href: ROUTES.settings,
       icon: IconSettings,
     },
     {
@@ -120,7 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={navUser} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );

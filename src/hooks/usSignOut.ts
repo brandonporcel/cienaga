@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { ROUTES } from "@/config/routes";
 import createClientForBrowser from "@/lib/supabase/client";
 import { signOut } from "@/app/actions/auth";
 
@@ -10,7 +11,7 @@ export function useSignOut() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const logout = async (redirectTo: string = "/") => {
+  const logout = async (redirectTo: string = ROUTES.home) => {
     startTransition(async () => {
       try {
         // 1. Sign out en cliente (actualización inmediata del estado)
@@ -21,7 +22,7 @@ export function useSignOut() {
         await signOut();
 
         if (redirectTo) {
-          router.push(redirectTo);
+          router.replace(redirectTo);
         }
       } catch (error) {
         console.error("Error signing out:", error);
