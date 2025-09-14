@@ -6,10 +6,23 @@ import { createClientForServer } from "@/lib/supabase/server";
 
 type AuthProvider = "google";
 
+const getURL = () => {
+  let url =
+    process?.env?.NEXT_PUBLIC_SITE_URL ?? // Set this to your site URL in production env.
+    process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel.
+    "http://localhost:3000";
+
+  return url;
+};
+
 const signInWith = (provider: AuthProvider) => async () => {
   const supabase = await createClientForServer();
 
-  const auth_callback_url = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+  const auth_callback_url = `${getURL()}/auth/callback`;
+  console.log("getURL()", getURL());
+  console.log("NEXT_PUBLIC_SITE_URL", process.env.NEXT_PUBLIC_SITE_URL);
+  console.log("NEXT_PUBLIC_VERCEL_URL", process.env.NEXT_PUBLIC_VERCEL_URL);
+  console.log("auth_callback_url", auth_callback_url);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
