@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   IconCreditCard,
   IconDotsVertical,
@@ -7,6 +8,8 @@ import {
 } from "@tabler/icons-react";
 import { LogOut } from "lucide-react";
 
+import NavItem from "@/types/nav";
+import { ROUTES } from "@/config/routes";
 import { useClientUser } from "@/hooks/useClientUser";
 import { useSignOut } from "@/hooks/usSignOut";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,12 +29,30 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+import NavUserSkeleton from "./skeleton";
+
+const items: NavItem[] = [
+  {
+    href: ROUTES.settings.path,
+    title: "Perfil",
+    icon: IconUserCircle,
+  },
+  {
+    href: ROUTES.billing.path,
+    title: "Facturación",
+    icon: IconCreditCard,
+  },
+];
+
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { isPending, logout } = useSignOut();
 
   const { user, loading } = useClientUser();
-  if (loading || !user) return null;
+
+  if (loading || !user) {
+    return <NavUserSkeleton />;
+  }
 
   return (
     <SidebarMenu>
@@ -42,7 +63,7 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
+              <Avatar className="h-8 w-8 rounded-full">
                 <AvatarImage
                   src={user.user_metadata.avatar_url}
                   alt={user.user_metadata.name}
@@ -68,7 +89,7 @@ export function NavUser() {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
+                <Avatar className="h-8 w-8 rounded-full">
                   <AvatarImage src={user.user_metadata.avatar_url} />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
@@ -84,14 +105,14 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Facturación
-              </DropdownMenuItem>
+              {items.map((item) => (
+                <DropdownMenuItem key={item.title} asChild>
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

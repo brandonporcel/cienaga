@@ -11,14 +11,14 @@ import {
   IconSeedling,
   IconSettings,
   IconSparkles,
-  type Icon,
 } from "@tabler/icons-react";
+import { HelpCircle } from "lucide-react";
 
+import NavItem from "@/types/nav";
 import { ROUTES } from "@/config/routes";
 import { NavDocuments } from "@/components/dashboard/layout/nav-documents";
 import { NavMain } from "@/components/dashboard/layout/nav-main";
 import { NavSecondary } from "@/components/dashboard/layout/nav-secondary";
-import { NavUser } from "@/components/dashboard/layout/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -29,19 +29,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export interface NavItem {
-  title: string;
-  href: string;
-  icon: Icon;
-  items?: NavItem[];
-  isExternal?: boolean;
-}
+import { NavUser } from "./navbar-user";
 
 const data: Record<string, NavItem[]> = {
   navMain: [
     {
       title: "Dashboard",
-      href: ROUTES.dashboard,
+      href: ROUTES.dashboard.path,
       icon: IconDashboard,
     },
     {
@@ -52,9 +46,9 @@ const data: Record<string, NavItem[]> = {
   ],
   navSecondary: [
     {
-      title: "Settings",
-      href: ROUTES.settings,
-      icon: IconSettings,
+      title: "Ayuda",
+      href: ROUTES.help.path,
+      icon: HelpCircle,
     },
     {
       title: "Novedades",
@@ -65,7 +59,7 @@ const data: Record<string, NavItem[]> = {
           icon: IconBrandLinkedin,
           title: "Seguinos en LinkedIn",
           href: "https://www.linkedin.com/in/brandonporcel",
-          isExternal: true, // se abre en nueva pestaña
+          isExternal: true,
         },
         {
           icon: IconBrandGithub,

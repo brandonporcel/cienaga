@@ -1,6 +1,10 @@
-# 🌊 Ciénaga
+<p align="center">
+<img src="public/og.png">
+</p>
 
-Aplicación web que te avisa cuando en los cines de Buenos Aires se proyectan películas de directores que te gustan.
+<h1 align="center">🌊 Ciénaga</h1>
+
+<p align="center">Aplicación web que te avisa cuando en los cines de Buenos Aires se proyectan películas de directores que te gustan.</p>
 
 ---
 
@@ -18,10 +22,7 @@ Aplicación web que te avisa cuando en los cines de Buenos Aires se proyectan pe
 
 ## 🏗️ Tecnologías
 
-- **Frontend**: Next.js, Tailwind, shadcn/ui
-- **Backend/DB**: Supabase (Postgres + Auth + Storage)
-- **Scraping**: GitHub Actions + Cheerio
-- **Mailing**: Resend / SendGrid / Postmark
+- Next.js, shadcn - Supabase (Postgres + Auth + Storage) - GitHub Actions + Cheerio + Resend
 
 ---
 
@@ -39,22 +40,24 @@ Aplicación web que te avisa cuando en los cines de Buenos Aires se proyectan pe
 
 ## 📂 Estructura de datos (Supabase)
 
-- **users** → info de usuario + login con Google
-- **directors** → nombre único de cada director
-- **user_directors** → relación entre user y director
-- **movies** → título, año, url, director_id
-- **screenings** → fecha, hora, cine, movie_id
-- **cinemas** → nombre + url de scraper
+| Tabla              | Contenido                          |
+| ------------------ | ---------------------------------- |
+| **users**          | info de usuario + login con Google |
+| **directors**      | nombre único de cada director      |
+| **user_directors** | relación entre usuario y director  |
+| **movies**         | título, año, URL, `director_id`    |
+| **screenings**     | fecha, hora, cine, `movie_id`      |
+| **cinemas**        | nombre + URL de scraper            |
 
 ---
 
-## ⚙️ Instalación
+## ⚙️ Instalación y setup
 
 ```bash
-git clone https://github.com/tuusuario/cienaga.git
+git clone https://github.com/brandonporcel/cienaga.git
 cd cienaga
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ### Configurar variables de entorno en .env.local:
@@ -62,38 +65,27 @@ npm run dev
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-
-RESEND_API_KEY=...
 ```
 
-## 📅 Roadmap
-
-- [x] Importar CSV de Letterboxd
-- [x] Guardar directores en Supabase
-- [ ] Scraping automático con GitHub Actions
-- [ ] Notificaciones por mail
-- [ ] Dashboard con coincidencias
-- [ ] Recomendaciones basadas en ratings
+> 💡 Nota: Quien clone el proyecto debe crear un proyecto en Supabase y crear las tablas manualmente.
 
 ## ✅ To-Do
 
-1. Autenticación y rutas
+1. Autenticación
 
-- [ ] Implementar login con Clerk (Google como proveedor principal).
-- [ ] Configurar rutas privadas → si no está logueado, redirect a /login.
-- [ ] Crear middleware en Next.js para proteger páginas privadas.
-- [ ] Guardar en Supabase el email del user (o su clerk_user_id) al momento de login.
+- [ ] Implementar login/signup con mail. [guia next](https://nextjs.org/docs/app/guides/authentication)
 
-2. Dashboard + Historial
+2. Dashboard + CSV
 
-- [ ] Subida de watched.csv / ratings.csv.
+- [ ] Subida/Imporatación de watched.csv / ratings.csv.
 - [ ] Parseo del CSV en frontend o backend.
 - [ ] Guardar en Supabase:
   - [ ] Películas (movies).
   - [ ] Directores (directors).
   - [ ] Relación user ↔ director (user_directors).
 - [ ] Mostrar historial de uploads en el dashboard.
+- [ ] Dashboard con coincidencias
+- [ ] Recomendaciones basadas en ratings
 
 3. Cartelera / Scraping
 
@@ -102,9 +94,19 @@ RESEND_API_KEY=...
 - [ ] Guardar screenings en screenings.
 - [ ] Endpoint/API en Supabase (o Edge Function) para exponer la cartelera.
 
-### Paginas/cines:
+4. Recordatorio
 
-<!-- 2. check cartelera sigilio website every day -->
+- [ ] Notificaciones por mail
+
+5. Más
+
+- [ ] Integracion con QRs
+  - [ ] QR en cada función: “Escaneá y agregala a tu calendario” o “Abrir en la web del cine”.
+- [ ] Integración con lambda
+- [ ] Integración con Google Calendar
+  - [ ] En mail agrecar widget para agregar a calendario
+
+## 🎬 Páginas/cines:
 
 1. malba (quizas no hace falta porque tiene un newsletter que avisa mensualmente programacion): https://www.malba.org.ar/eventos/de/actividades-cine/
 2. Sala Lugones: https://complejoteatral.gob.ar/cine
@@ -117,40 +119,23 @@ RESEND_API_KEY=...
 9. CC San Martín
 10. Bafici
 11. Hoyts
+12. Cartelera sigilio
 
 ---
 
-- agregar debajo de todo https://thegithubshop.com/ algo relacionado al cine
-  usar supabase
-- me gusta landing de https://www.canva.com/es_es/ como idea de landing
+## Contribuciones
 
-📱 ¿Tiene sentido integrar QR codes en tu app de cine?
+Las contribuciones son siempre bienvenidas. No dudes en abrir un pr/issue.
 
-Depende del caso de uso. Algunas ideas:
+## Feedback
 
-Compartir tu perfil
-Cada usuario podría tener un QR que linkee a su perfil público de Ciénaga (sus directores favoritos + próximas pelis). Ej: “escaneá y seguí mis directores”.
-
-Compartir películas/eventos
-QR en cada función: “Escaneá y agregala a tu calendario” o “Abrir en la web del cine”.
-
-En newsletters o afiches físicos
-Podrías generar un QR que apunte a “Cartelera personalizada” para un user. Ej: en un mail → QR que abre la agenda de esa semana.
-
-👉 Conclusión: no es esencial para el MVP, pero es un nice-to-have para compartir. Podés dejarlo como feature futura con una lib como qrcode.react
-.
-
-login con google para obtener email
+Me encantaría conocer tu opinión. Contactame por [mail](brandon7.7porcel@gmail.com) o [linkedin](https://www.linkedin.com/in/brandonporcel/)
 
 <!--
-diseño en base a
+utils
 - https://gasti.pro/en/
 - https://v0.app/chat/pointer-ai-landing-page-b3xq2HC1JCs
 - https://www.miscuentas.com.ar/dashboard
 - https://ui.shadcn.com/blocks: A dashboard with sidebar, charts and data table
 - https://youtu.be/XgqCh2FwNVY: 2. How to add Google OAuth in Nextjs with Supabase | Server Component | Server Action | Google Login
  -->
-
-compartir noticia peli via qr con whastapp?
-
-usar lambda

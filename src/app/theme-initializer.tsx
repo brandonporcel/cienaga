@@ -11,7 +11,7 @@ export default function ThemeInitializer() {
   const { setTheme } = useTheme();
 
   useEffect(() => {
-    if (pathname === ROUTES.home || pathname === ROUTES.login) {
+    if (pathname === ROUTES.home.path || pathname === ROUTES.login.path) {
       setTheme("light");
     }
   }, [pathname, setTheme]);

@@ -11,7 +11,7 @@ export function useSignOut() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const logout = async (redirectTo: string = ROUTES.home) => {
+  const logout = async (redirectTo: string = ROUTES.home.path) => {
     startTransition(async () => {
       try {
         // 1. Sign out en cliente (actualización inmediata del estado)
