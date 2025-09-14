@@ -9,7 +9,7 @@ type AuthProvider = "google";
 const signInWith = (provider: AuthProvider) => async () => {
   const supabase = await createClientForServer();
 
-  const auth_callback_url = `${process.env.SITE_URL}/auth/callback`;
+  const auth_callback_url = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
