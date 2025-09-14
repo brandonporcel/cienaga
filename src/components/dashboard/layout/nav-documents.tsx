@@ -5,6 +5,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
+import NavItem from "@/types/nav";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +22,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-import { NavItem } from "./app-sidebar";
 
 export function NavDocuments({ items }: { items: NavItem[] }) {
   const { isMobile } = useSidebar();
@@ -46,7 +45,7 @@ export function NavDocuments({ items }: { items: NavItem[] }) {
                   className="data-[state=open]:bg-accent rounded-sm"
                 >
                   <IconDots />
-                  <span className="sr-only">More</span>
+                  <span className="sr-only">más</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
               <DropdownMenuContent

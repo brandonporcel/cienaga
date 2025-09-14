@@ -7,12 +7,11 @@ import {
   IconBrandLinkedin,
   IconBrandWhatsapp,
   IconDashboard,
+  IconHelpCircle,
   IconMail,
   IconSeedling,
-  IconSettings,
   IconSparkles,
 } from "@tabler/icons-react";
-import { HelpCircle } from "lucide-react";
 
 import NavItem from "@/types/nav";
 import { ROUTES } from "@/config/routes";
@@ -48,7 +47,7 @@ const data: Record<string, NavItem[]> = {
     {
       title: "Ayuda",
       href: ROUTES.help.path,
-      icon: HelpCircle,
+      icon: IconHelpCircle,
     },
     {
       title: "Novedades",

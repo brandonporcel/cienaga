@@ -1,5 +1,5 @@
 <p align="center">
-<img src="public/og.png">
+<img src="public/og.png" alt="Cienaga Screenshot" />
 </p>
 
 <h1 align="center">🌊 Ciénaga</h1>
@@ -8,7 +8,7 @@
 
 ---
 
-## 🚀 Funcionalidad
+## 🚀 Características principales
 
 - **Importar tu historial de Letterboxd** (`watched.csv` y `ratings.csv`).
 - A partir de las URLs de las películas, el sistema obtiene automáticamente los directores.
@@ -26,7 +26,7 @@
 
 ---
 
-## 🔄 Flujo
+## 🔄 Cómo funciona
 
 1. El usuario sube su CSV exportado desde Letterboxd.
 2. Se guardan las URLs de películas en Supabase.
@@ -77,7 +77,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 2. Dashboard + CSV
 
-- [ ] Subida/Imporatación de watched.csv / ratings.csv.
+- [ ] Subida/Importación de watched.csv / ratings.csv.
 - [ ] Parseo del CSV en frontend o backend.
 - [ ] Guardar en Supabase:
   - [ ] Películas (movies).
@@ -104,7 +104,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
   - [ ] QR en cada función: “Escaneá y agregala a tu calendario” o “Abrir en la web del cine”.
 - [ ] Integración con lambda
 - [ ] Integración con Google Calendar
-  - [ ] En mail agrecar widget para agregar a calendario
+  - [ ] En mail agregar widget para agregar a calendario
 
 ## 🎬 Páginas/cines:
 
@@ -119,7 +119,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 9. CC San Martín
 10. Bafici
 11. Hoyts
-12. Cartelera sigilio
+12. Web cartelera Sigilio
 
 ---
 
