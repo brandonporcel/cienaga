@@ -20,12 +20,6 @@
 
 ---
 
-## 🏗️ Tecnologías
-
-- Next.js, shadcn - Supabase (Postgres + Auth + Storage) - GitHub Actions + Cheerio + Resend
-
----
-
 ## 🔄 Cómo funciona
 
 1. El usuario sube su CSV exportado desde Letterboxd.
@@ -48,6 +42,23 @@
 | **movies**         | título, año, URL, `director_id`    |
 | **screenings**     | fecha, hora, cine, `movie_id`      |
 | **cinemas**        | nombre + URL de scraper            |
+
+---
+
+## 🎬 Páginas/cines:
+
+1. malba (quizas no hace falta porque tiene un newsletter que avisa mensualmente programacion): https://www.malba.org.ar/eventos/de/actividades-cine/
+2. Sala Lugones: https://complejoteatral.gob.ar/cine
+3. Cine york: https://www.vicentelopez.gov.ar/agenda/agenda-lumiton
+4. CCK: https://palaciolibertad.gob.ar/cine/
+5. gaumont: https://www.cinegaumont.ar/ / https://letterboxd.com/franco2601/list/cine-gaumont-cartelera/
+6. cine lorca: https://cinelorca.wixsite.com/cine-lorca/current-production - https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110
+7. cine cosmos: https://www.cinecosmos.uba.ar/
+8. Teatro Municipal Gregorio de Laferrere: https://ellaferrere.com.ar/programacion/
+9. CC San Martín
+10. Bafici
+11. Hoyts
+12. Web cartelera Sigilio
 
 ---
 
@@ -106,20 +117,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 - [ ] Integración con Google Calendar
   - [ ] En mail agregar widget para agregar a calendario
 
-## 🎬 Páginas/cines:
+---
 
-1. malba (quizas no hace falta porque tiene un newsletter que avisa mensualmente programacion): https://www.malba.org.ar/eventos/de/actividades-cine/
-2. Sala Lugones: https://complejoteatral.gob.ar/cine
-3. Cine york: https://www.vicentelopez.gov.ar/agenda/agenda-lumiton
-4. CCK: https://palaciolibertad.gob.ar/cine/
-5. gaumont: https://www.cinegaumont.ar/ / https://letterboxd.com/franco2601/list/cine-gaumont-cartelera/
-6. cine lorca: https://cinelorca.wixsite.com/cine-lorca/current-production - https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110
-7. cine cosmos: https://www.cinecosmos.uba.ar/
-8. Teatro Municipal Gregorio de Laferrere: https://ellaferrere.com.ar/programacion/
-9. CC San Martín
-10. Bafici
-11. Hoyts
-12. Web cartelera Sigilio
+## 🏗️ Tecnologías
+
+- Next.js, shadcn - Supabase (Postgres + Auth + Storage) - GitHub Actions + Cheerio + Resend
 
 ---
 

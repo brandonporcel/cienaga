@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 
+import NavItem from "@/types/nav";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +17,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-import { NavItem } from "./app-sidebar";
 
 export function NavSecondary({
   items,
