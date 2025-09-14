@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { IconBrandGoogleFilled } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
@@ -83,10 +84,11 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
-        <img
+        <Image
+          fill
           src="/images/login-banner.jpg"
           alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          className="object-cover"
         />
       </div>
     </div>

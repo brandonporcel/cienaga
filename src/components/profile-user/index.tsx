@@ -1,12 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { LogOut, Settings, User } from "lucide-react";
 
-import createClientForBrowser from "@/lib/supabase/client";
 import { useClientUser } from "@/hooks/useClientUser";
 import { useSignOut } from "@/hooks/usSignOut";
 import { Button } from "@/components/ui/button";
@@ -19,7 +16,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "@/app/actions/auth";
 
 interface ProfileUserProps {
   buttonClassName?: string;

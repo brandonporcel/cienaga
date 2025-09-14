@@ -1,6 +1,12 @@
 import { Calendar, KeyRound, Mail, Pencil, User } from "lucide-react";
 
-export default function Page() {
+import { createClientForServer } from "@/lib/supabase/server";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+export default async function Page() {
+  const supabase = await createClientForServer();
+  const { data } = await supabase.auth.getUser();
+
   return (
     <>
       <h2 className="text-lg font-semibold text-neutral-500 mb-6">
@@ -24,12 +30,17 @@ export default function Page() {
             </div>
           </div>
           <div className="flex items-center gap-3 p-6 pt-0">
-            <img
-              src="https://i.pravatar.cc/60"
-              alt="avatar"
-              className="w-12 h-12 rounded-full border-2 border-green-500"
-            />
-            <span className="text-white">brandon7.7porcel@gmail.com</span>
+            <Avatar className="w-12 h-12 rounded-full border-2 border-green-500">
+              <AvatarImage
+                src={
+                  data.user?.user_metadata.avatar_url ||
+                  "https://i.pravatar.cc/60"
+                }
+                alt={"Avatar"}
+              />
+              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+            </Avatar>
+            <span className="text-white">{data.user?.email}</span>
           </div>
         </div>
 
@@ -46,7 +57,9 @@ export default function Page() {
           </div>
           <div className="p-6 pt-0">
             <div className="flex items-center justify-between">
-              <p className="text-lg font-medium">Brandon Porcel</p>
+              <p className="text-lg font-medium">
+                {data.user?.user_metadata.name}
+              </p>
               <button className="justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs flex items-center gap-1">
                 <Pencil size={16} />
                 Editar
@@ -67,7 +80,7 @@ export default function Page() {
             </div>
           </div>
           <div className="p-6 pt-0">
-            <p className="text-lg font-medium">3 de septiembre de 2025</p>
+            <p className="text-lg font-medium">{data.user?.created_at}</p>
           </div>
         </div>
 
