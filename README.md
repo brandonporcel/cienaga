@@ -34,14 +34,14 @@
 
 ## 📂 Estructura de datos (Supabase)
 
-| Tabla              | Contenido                          |
-| ------------------ | ---------------------------------- |
-| **users**          | info de usuario + login con Google |
-| **directors**      | nombre único de cada director      |
-| **user_directors** | relación entre usuario y director  |
-| **movies**         | título, año, URL, `director_id`    |
-| **screenings**     | fecha, hora, cine, `movie_id`      |
-| **cinemas**        | nombre + URL de scraper            |
+| Tabla              | Contenido                         |
+| ------------------ | --------------------------------- |
+| **users**          | info de usuario                   |
+| **directors**      | nombre único de cada director     |
+| **user_directors** | relación entre usuario y director |
+| **movies**         | título, año?, URL?, `director_id` |
+| **screenings**     | fecha, hora, cine, `movie_id`     |
+| **cinemas**        | nombre + URL de scraper           |
 
 ---
 
@@ -55,10 +55,9 @@
 6. cine lorca: https://cinelorca.wixsite.com/cine-lorca/current-production - https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110
 7. cine cosmos: https://www.cinecosmos.uba.ar/
 8. Teatro Municipal Gregorio de Laferrere: https://ellaferrere.com.ar/programacion/
-9. CC San Martín
-10. Bafici
-11. Hoyts
-12. Web cartelera Sigilio
+9. Bafici
+10. Hoyts
+11. Web cartelera Sigilio
 
 ---
 
@@ -78,7 +77,7 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-> 💡 Nota: Quien clone el proyecto debe crear un proyecto en Supabase y crear las tablas manualmente.
+> 💡 Importar db desde `db/schema.sql` y `db/seed.sql`.
 
 ## ✅ To-Do
 
