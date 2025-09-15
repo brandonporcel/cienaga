@@ -22,7 +22,6 @@ export function useClientUser() {
     // para mantener el estado del usuario sincronizado en el cliente
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        console.log("data.user update", session?.user);
         setUser(session?.user || null);
       },
     );

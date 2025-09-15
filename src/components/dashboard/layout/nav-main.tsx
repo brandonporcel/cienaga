@@ -23,8 +23,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive = "/" + item.title.toLocaleLowerCase() === pathname;
-
+            const isActive = item.href === pathname;
             return (
               <SidebarMenuItem key={item.title} className="mb-0.5">
                 <SidebarMenuButton

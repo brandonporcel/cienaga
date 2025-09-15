@@ -6,6 +6,7 @@ import {
   IconBrandGithub,
   IconBrandLinkedin,
   IconBrandWhatsapp,
+  IconChairDirector,
   IconDashboard,
   IconHelpCircle,
   IconMail,
@@ -33,9 +34,14 @@ import { NavUser } from "./navbar-user";
 const data: Record<string, NavItem[]> = {
   navMain: [
     {
-      title: "Dashboard",
+      title: "Cartelera",
       href: ROUTES.dashboard.path,
       icon: IconDashboard,
+    },
+    {
+      title: "Directores",
+      href: ROUTES.directors.path,
+      icon: IconChairDirector,
     },
     {
       title: "Asistente",
