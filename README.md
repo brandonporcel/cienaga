@@ -87,15 +87,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
 2. Dashboard + CSV
 
-- [ ] Subida/Importación de watched.csv / ratings.csv.
-- [ ] Parseo del CSV en frontend o backend.
 - [ ] Guardar en Supabase:
   - [ ] Películas (movies).
-  - [ ] Directores (directors).
-  - [ ] Relación user ↔ director (user_directors).
-- [ ] Mostrar historial de uploads en el dashboard.
 - [ ] Dashboard con coincidencias
-- [ ] Recomendaciones basadas en ratings
 
 3. Cartelera / Scraping
 

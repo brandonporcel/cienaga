@@ -4,6 +4,7 @@ create table public.users (
   full_name text,
   email text,
   avatar_url text,
+  has_upload_csv boolean default false,
   created_at timestamptz default now(),
   primary key (id)
 );
@@ -41,7 +42,8 @@ create trigger on_auth_user_created
 create table public.cinemas (
   id          serial primary key,
   name        text not null unique,
-  url         text not null unique,
+  year        int not null,
+  url         text not null unique
 );
 
 -- Directores
@@ -62,19 +64,19 @@ create table public.user_directors (
 
 -- Películas
 create table public.movies (
-  id          serial primary key,
-  title       text not null,
-  release_year int,
-  url         text,
-  director_id int not null references public.directors(id) on delete set null,
-  created_at  timestamptz default now()
+  id           uuid primary key default uuid_generate_v4(),
+  title        text not null,
+  url          text,
+  year         int,
+  director_id  int references public.directors(id) on delete set null,
+  created_at   timestamptz default now()
 );
 
 -- Proyecciones
 create table public.screenings (
-  id          serial primary key,
+  id             serial primary key,
   screening_time timestamptz not null,
-  cinema_id   int not null references public.cinemas(id) on delete cascade,
-  movie_id    int not null references public.movies(id) on delete cascade,
-  created_at  timestamptz default now()
+  cinema_id      int not null references public.cinemas(id) on delete cascade,
+  movie_id       int not null references public.movies(id) on delete cascade,
+  created_at     timestamptz default now()
 );

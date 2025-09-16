@@ -2,30 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
+import { Director } from "@/types/director";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-interface Card08Props {
-  title?: string;
-  subtitle?: string;
-  image?: string;
-  badge?: {
-    text: string;
-    variant: "pink" | "indigo" | "orange";
-  };
-  href?: string;
-}
-
-export default function Card08({
-  title = "Quentin Tarantino",
-  subtitle = "US · 1963",
-  image = "https://image.tmdb.org/t/p/w500/1gjcpAa99FAOWGnrUvHEXXsRs7o.jpg",
-  badge = { text: "Recent", variant: "orange" },
-  href = "https://kokonutui.com/",
-}: Card08Props) {
+export default function Card08({ director }: { director: Director }) {
+  const { id, name } = director;
   return (
     <Link
-      href={href}
+      href={"https://kokonutui.com/"}
       className="block w-full max-w-[280px] group cursor-default"
     >
       <div
@@ -49,8 +34,8 @@ export default function Card08({
 
         <div className="relative h-[320px] overflow-hidden">
           <Image
-            src={image}
-            alt={title}
+            src="https://image.tmdb.org/t/p/w500/1gjcpAa99FAOWGnrUvHEXXsRs7o.jpg"
+            alt={name}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -75,7 +60,7 @@ export default function Card08({
               "border border-white/20 dark:border-zinc-800/50",
             )}
           >
-            {badge.text}
+            Reciente
           </span>
         </div>
 
@@ -83,10 +68,10 @@ export default function Card08({
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1.5">
               <h3 className="text-lg font-semibold text-white dark:text-zinc-100 leading-snug">
-                {title}
+                {name}
               </h3>
               <p className="text-sm text-zinc-200 dark:text-zinc-300 line-clamp-2">
-                {subtitle}
+                US · 1963
               </p>
             </div>
             <div
