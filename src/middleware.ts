@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const protectedRoutes = ["/dashboard"];
+import { ROUTES } from "./config/routes";
+
+const protectedRoutes: string[] = [
+  ROUTES.dashboard.path,
+  ROUTES.directors.path,
+];
 
 /**
  * Middleware de autenticación con Supabase
