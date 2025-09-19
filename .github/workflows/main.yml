@@ -1,0 +1,79 @@
+name: Scrape Movie Directors
+
+on:
+  schedule:
+    # Solo una vez por día para optimizar minutos
+    - cron: "0 6 * * *"
+  workflow_dispatch: # Permite ejecución manual
+
+env:
+  NODE_VERSION: "18"
+
+jobs:
+  scrape-directors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12 # Límite de seguridad
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if there's work to do
+        id: check_work
+        run: |
+          echo "🔍 Checking for pending movies..."
+          response=$(curl -s -H "Authorization: Bearer ${{ secrets.CRON_SECRET_KEY }}" \
+            "${{ secrets.APP_URL }}/api/movies/count-pending")
+          echo "API Response: $response"
+
+          has_work=$(echo "$response" | jq -r '.hasWork // true')
+          pending_count=$(echo "$response" | jq -r '.pendingMovies // -1')
+
+          echo "has_work=$has_work" >> $GITHUB_OUTPUT
+          echo "pending_count=$pending_count" >> $GITHUB_OUTPUT
+
+          if [ "$has_work" = "false" ]; then
+            echo "🎉 No pending movies to process!"
+          else
+            echo "📋 Found $pending_count movies to process"
+          fi
+
+      - name: Setup Node.js
+        if: steps.check_work.outputs.has_work == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        if: steps.check_work.outputs.has_work == 'true'
+        run: |
+          echo "📦 Installing scraping dependencies..."
+          npm install axios cheerio tsx @types/node
+          echo "✅ Dependencies installed"
+
+      - name: Run TypeScript scraping script
+        if: steps.check_work.outputs.has_work == 'true'
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
+        run: |
+          echo "🚀 Starting director scraping process..."
+          npx tsx scripts/scrape-directors.ts
+          echo "✅ Scraping process completed"
+
+      - name: Upload execution logs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraping-logs-${{ github.run_number }}
+          path: |
+            /tmp/*.log
+            ${{ runner.temp }}/*.log
+          retention-days: 7
+
+      - name: Report success
+        if: success() && steps.check_work.outputs.has_work == 'true'
+        run: |
+          echo "🎉 Director scraping completed successfully!"
+          echo "📊 Check the logs above for detailed results"

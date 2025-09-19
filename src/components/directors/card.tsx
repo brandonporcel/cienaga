@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export default function Card08({ director }: { director: Director }) {
-  const { id, name } = director;
+  const { name } = director;
   return (
     <Link
       href={"https://kokonutui.com/"}
