@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const { data: movies, error } = await supabase
       .from("movies")
       .select("id, title, url, year")
+      .is("poster_url", null)
       .is("director_id", null)
       .not("url", "is", null)
       .limit(limit)

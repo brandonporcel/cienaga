@@ -1,4 +1,3 @@
-// scripts/scrape-directors.ts
 import { ApiService } from "./services/api.service";
 import { BatchProcessorService } from "./services/batch-processor.service";
 import { ExecutionTimer } from "./utils/delay.util";

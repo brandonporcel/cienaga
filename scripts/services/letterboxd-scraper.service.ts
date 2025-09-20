@@ -36,6 +36,7 @@ export class LetterboxdScraperService {
         director: this.extractDirector($),
         directorUrl: this.extractDirectorUrl($),
         posterUrl: this.extractPosterUrl($),
+        backgroundMovieImg: this.extractBackgroundMovieImg($),
         year: this.extractYear($),
       };
 
@@ -101,6 +102,28 @@ export class LetterboxdScraperService {
   }
 
   private static extractPosterUrl($: cheerio.CheerioAPI): string | null {
+    // Método 1: JSON-LD (mejor calidad, poster oficial)
+    const jsonLdScript = $('script[type="application/ld+json"]').first().text();
+    // elimina cualquier bloque /* ... */
+    const cleanJson = jsonLdScript.replace(/\/\*.*?\*\//gs, "").trim();
+
+    if (cleanJson) {
+      try {
+        const data = JSON.parse(cleanJson);
+        if (data.image) {
+          return data.image;
+        }
+      } catch (e) {
+        // Continuar con método 2
+      }
+    }
+
+    return null;
+  }
+
+  private static extractBackgroundMovieImg(
+    $: cheerio.CheerioAPI,
+  ): string | null {
     return $('meta[property="og:image"]').attr("content") || null;
   }
 

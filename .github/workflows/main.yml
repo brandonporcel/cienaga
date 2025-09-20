@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Permite ejecución manual
 
 env:
-  NODE_VERSION: "18"
+  NODE_VERSION: "20"
 
 jobs:
   scrape-directors:
@@ -38,18 +38,24 @@ jobs:
             echo "📋 Found $pending_count movies to process"
           fi
 
+      - name: Setup pnpm
+        if: steps.check_work.outputs.has_work == 'true'
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: Setup Node.js
         if: steps.check_work.outputs.has_work == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Install dependencies
         if: steps.check_work.outputs.has_work == 'true'
         run: |
-          echo "📦 Installing scraping dependencies..."
-          npm install axios cheerio tsx @types/node
+          echo "📦 Installing dependencies with pnpm..."
+          pnpm install --no-frozen-lockfile
           echo "✅ Dependencies installed"
 
       - name: Run TypeScript scraping script
@@ -59,7 +65,7 @@ jobs:
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
         run: |
           echo "🚀 Starting director scraping process..."
-          npx tsx scripts/scrape-directors.ts
+          pnpm exec tsx scripts/scrape-directors.ts
           echo "✅ Scraping process completed"
 
       - name: Upload execution logs (on failure)
@@ -76,4 +82,3 @@ jobs:
         if: success() && steps.check_work.outputs.has_work == 'true'
         run: |
           echo "🎉 Director scraping completed successfully!"
-          echo "📊 Check the logs above for detailed results"
