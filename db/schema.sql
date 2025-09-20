@@ -48,15 +48,16 @@ create table public.cinemas (
 
 -- Directores
 create table public.directors (
-  id          serial primary key,
+  id          uuid primary key default uuid_generate_v4(),
   name        text not null unique,
+  image_url   text,
   created_at  timestamptz default now()
 );
 
 -- Relación muchos-a-muchos entre usuario y director favorito
 create table public.user_directors (
   user_id     uuid not null references public.users(id) on delete cascade,
-  director_id int  not null references public.directors(id) on delete cascade,
+  director_id uuid not null references public.directors(id) on delete cascade,
   created_at  timestamptz default now(),
 
   primary key (user_id, director_id)
@@ -66,17 +67,18 @@ create table public.user_directors (
 create table public.movies (
   id           uuid primary key default uuid_generate_v4(),
   title        text not null,
+  poster_url   text,
   url          text,
   year         int,
-  director_id  int references public.directors(id) on delete set null,
+  director_id  uuid references public.directors(id) on delete set null,
   created_at   timestamptz default now()
 );
 
 -- Proyecciones
 create table public.screenings (
-  id             serial primary key,
+  id             uuid primary key default uuid_generate_v4(),
   screening_time timestamptz not null,
-  cinema_id      int not null references public.cinemas(id) on delete cascade,
-  movie_id       int not null references public.movies(id) on delete cascade,
+  cinema_id      int  not null references public.cinemas(id) on delete cascade,
+  movie_id       uuid not null references public.movies(id) on delete cascade,
   created_at     timestamptz default now()
 );
