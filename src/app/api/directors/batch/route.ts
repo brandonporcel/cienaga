@@ -5,6 +5,10 @@ import { createClientForServer } from "@/lib/supabase/server";
 interface MovieDirectorData {
   movieId: string;
   director: string;
+  directorUrl?: string;
+  posterUrl?: string;
+  year?: number;
+  backgroundMovieImg?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -31,8 +35,25 @@ export async function POST(request: NextRequest) {
 
     const results = [];
 
-    for (const { movieId, director } of movieDirectors) {
+    for (const movieData of movieDirectors) {
+      const { movieId, director, posterUrl, backgroundMovieImg } = movieData;
+
       try {
+        // Actualizar poster de película
+        if (posterUrl) {
+          await supabase
+            .from("movies")
+            .update({ poster_url: posterUrl })
+            .eq("id", movieId);
+        }
+        // Actualizar imagen de fondo de película
+        if (backgroundMovieImg) {
+          await supabase
+            .from("movies")
+            .update({ background_img: backgroundMovieImg })
+            .eq("id", movieId);
+        }
+
         // Buscar si el director ya existe
         const { data: existingDirector, error: directorError } = await supabase
           .from("directors")
