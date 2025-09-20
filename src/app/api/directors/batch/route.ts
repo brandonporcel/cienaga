@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
     const results = [];
 
     for (const movieData of movieDirectors) {
-      const { movieId, director, posterUrl, backgroundMovieImg } = movieData;
+      const { movieId, director, posterUrl, backgroundMovieImg, directorUrl } =
+        movieData;
 
       try {
         // Actualizar poster de película
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
           // Director no existe, crearlo
           const { data: newDirector, error: insertError } = await supabase
             .from("directors")
-            .insert({ name: director })
+            .insert({ name: director, url: directorUrl })
             .select("id")
             .single();
 
@@ -108,6 +109,64 @@ export async function POST(request: NextRequest) {
             error: "Failed to update movie",
           });
           continue;
+        }
+
+        // Sincronizar user_directors
+        // Encontrar usuarios que tienen películas de este director
+        const { data: usersWithMovies, error: queryError } = await supabase
+          .from("user_movies")
+          .select(
+            `
+            user_id,
+            movies!inner (
+              director_id
+            )
+          `,
+          )
+          .eq("movies.director_id", directorId);
+
+        if (!queryError && usersWithMovies && usersWithMovies.length > 0) {
+          // Extraer user_ids únicos
+          const uniqueUserIds = [
+            ...new Set(usersWithMovies.map((item) => item.user_id)),
+          ];
+
+          // Para cada usuario, verificar si ya tiene la relación user_directors
+          const userDirectorInserts = [];
+
+          for (const userId of uniqueUserIds) {
+            const { data: existingRelation } = await supabase
+              .from("user_directors")
+              .select("user_id")
+              .eq("user_id", userId)
+              .eq("director_id", directorId)
+              .single();
+
+            if (!existingRelation) {
+              userDirectorInserts.push({
+                user_id: userId,
+                director_id: directorId,
+              });
+            }
+          }
+
+          // Insertar nuevas relaciones user_directors
+          if (userDirectorInserts.length > 0) {
+            const { error: insertUserDirectorsError } = await supabase
+              .from("user_directors")
+              .insert(userDirectorInserts);
+
+            if (!insertUserDirectorsError) {
+              console.log(
+                `✅ Created ${userDirectorInserts.length} user_director relationships for director ${director}`,
+              );
+            } else {
+              console.error(
+                "Error inserting user_directors:",
+                insertUserDirectorsError,
+              );
+            }
+          }
         }
 
         results.push({
