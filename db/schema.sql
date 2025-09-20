@@ -64,6 +64,15 @@ create table public.user_directors (
   primary key (user_id, director_id)
 );
 
+-- Relación muchos-a-muchos entre usuario y peliculas
+create table public.user_movies (
+  user_id     uuid not null references public.users(id) on delete cascade,
+  movie_id uuid not null references public.movies(id) on delete cascade,
+  created_at  timestamptz default now(),
+
+  primary key (user_id, movie_id)
+);
+
 -- Películas
 create table public.movies (
   id                 uuid primary key default uuid_generate_v4(),

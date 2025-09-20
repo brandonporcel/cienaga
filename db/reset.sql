@@ -6,6 +6,7 @@ drop function if exists public.handle_new_user();
 
 -- Borrar las tablas que dependen de otras
 drop table if exists public.user_directors; 
+drop table if exists public.user_movies; 
 drop table if exists public.screenings; 
 drop table if exists public.cinemas cascade;
 drop table if exists public.users cascade; 
