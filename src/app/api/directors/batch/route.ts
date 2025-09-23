@@ -9,6 +9,7 @@ interface MovieDirectorData {
   posterUrl?: string;
   year?: number;
   backgroundMovieImg?: string;
+  movieRating?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -36,8 +37,14 @@ export async function POST(request: NextRequest) {
     const results = [];
 
     for (const movieData of movieDirectors) {
-      const { movieId, director, posterUrl, backgroundMovieImg, directorUrl } =
-        movieData;
+      const {
+        movieId,
+        director,
+        posterUrl,
+        backgroundMovieImg,
+        directorUrl,
+        movieRating,
+      } = movieData;
 
       try {
         // Actualizar poster de película
@@ -52,6 +59,13 @@ export async function POST(request: NextRequest) {
           await supabase
             .from("movies")
             .update({ background_img: backgroundMovieImg })
+            .eq("id", movieId);
+        }
+
+        if (movieRating) {
+          await supabase
+            .from("movies")
+            .update({ rating: movieRating })
             .eq("id", movieId);
         }
 

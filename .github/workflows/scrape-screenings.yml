@@ -1,0 +1,38 @@
+# malba
+# no es necesario entrar el link
+# const items = document.querySelectorAll('.elementor.event.type-event.status-publish.has-post-thumbnail.hentry.event-category-cine');
+
+# lumiton
+# es necesario mapear buscar <a> entrar para obtener mas datos
+# const items =document.querySelectorAll('.evento.type-evento.status-publish.has-post-thumbnail.hentry.tipo-proyecciones.tipo-vecine-vecine')
+
+name: Scrape Cinema Screenings
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape-screenings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: npm install axios cheerio tsx @types/node
+
+      - name: Scrape all cinemas
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
+        run: npx tsx scripts/scrape-screenings.ts

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "scrape:directors": "pnpm exec tsx scripts/scrape-directors.ts",
+    "scrape:screenings": "pnpm exec tsx scripts/scrape-screenings.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "dependencies": {

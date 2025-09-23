@@ -42,8 +42,9 @@ create trigger on_auth_user_created
 create table public.cinemas (
   id          serial primary key,
   name        text not null unique,
-  year        int not null,
   url         text not null unique
+  image_url   text unique
+  enabled     boolean default true
 );
 
 -- Directores
@@ -72,6 +73,7 @@ create table public.movies (
   background_img_url text,
   url                text,
   year               int,
+  rating             numeric(3, 1),
   director_id        uuid references public.directors(id) on delete set null,
   created_at         timestamptz default now()
 );
@@ -80,6 +82,7 @@ create table public.movies (
 create table public.user_movies (
   user_id     uuid not null references public.users(id) on delete cascade,
   movie_id    uuid not null references public.movies(id) on delete cascade,
+  rating      numeric(3, 1),
   created_at  timestamptz default now(),
 
   primary key (user_id, movie_id)
@@ -89,6 +92,11 @@ create table public.user_movies (
 -- Proyecciones
 create table public.screenings (
   id             uuid primary key default uuid_generate_v4(),
+  event_type     text, -- 'malba: ciclo', 'estreno', 'continúa', 're-estreno', 'proyecciones', '37º Festival'
+  description    text,
+  room           text,
+  original_url   text,
+  thumbnail_url  text,
   screening_time timestamptz not null,
   cinema_id      int  not null references public.cinemas(id) on delete cascade,
   movie_id       uuid not null references public.movies(id) on delete cascade,

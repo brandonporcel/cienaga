@@ -1,8 +1,8 @@
 import axios, { AxiosResponse } from "axios";
 import * as cheerio from "cheerio";
 
-import { ScrapedMovieData } from "../types/movie.types";
-import { cleanDirectorName, parseYear } from "../utils/validation.util";
+import { ScrapedMovieData } from "../../types/movie.types";
+import { cleanDirectorName, parseYear } from "../../utils/validation.util";
 
 export class LetterboxdScraperService {
   private static readonly USER_AGENT =
@@ -37,6 +37,7 @@ export class LetterboxdScraperService {
         directorUrl: this.extractDirectorUrl($),
         posterUrl: this.extractPosterUrl($),
         backgroundMovieImg: this.extractBackgroundMovieImg($),
+        movieRating: this.extractMovieRating($),
         year: this.extractYear($),
       };
 
@@ -112,6 +113,26 @@ export class LetterboxdScraperService {
         const data = JSON.parse(cleanJson);
         if (data.image) {
           return data.image;
+        }
+      } catch (e) {
+        // Continuar con método 2
+      }
+    }
+
+    return null;
+  }
+
+  private static extractMovieRating($: cheerio.CheerioAPI): string | null {
+    // Método 1: JSON-LD (mejor calidad, poster oficial)
+    const jsonLdScript = $('script[type="application/ld+json"]').first().text();
+    // elimina cualquier bloque /* ... */
+    const cleanJson = jsonLdScript.replace(/\/\*.*?\*\//gs, "").trim();
+
+    if (cleanJson) {
+      try {
+        const data = JSON.parse(cleanJson);
+        if (data.aggregateRating) {
+          return data.aggregateRating.ratingValue;
         }
       } catch (e) {
         // Continuar con método 2
