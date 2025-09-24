@@ -1,5 +1,7 @@
-import { Movie, MovieDirector } from "../types/movie.types";
-import { delay, ExecutionTimer } from "../utils/delay.util";
+import Movie from "@/types/movie";
+
+import { MovieDirector } from "../../types/movie.types";
+import { delay, ExecutionTimer } from "../../utils/delay.util";
 import { LetterboxdScraperService } from "./letterboxd-scraper.service";
 
 export interface BatchConfig {

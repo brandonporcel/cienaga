@@ -1,4 +1,6 @@
-import { Movie, MovieDirector, ProcessingResult } from "./movie.types";
+import Movie from "@/types/movie";
+
+import { ProcessingResult } from "./movie.types";
 
 export interface ApiResponse {
   movies: Movie[];

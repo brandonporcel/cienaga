@@ -1,10 +1,3 @@
-export interface Movie {
-  id: string;
-  title: string;
-  url: string;
-  year?: number;
-}
-
 export interface ScrapedMovieData {
   director: string | null;
   directorUrl: string | null;
@@ -18,6 +11,7 @@ export interface MovieDirector {
   directorUrl?: string;
   posterUrl?: string;
   backgroundMovieImg?: string;
+  movieRating?: number;
   year?: number;
 }
 

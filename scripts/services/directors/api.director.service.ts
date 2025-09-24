@@ -1,7 +1,9 @@
 import axios from "axios";
 
-import { ApiConfig, ApiResponse, SaveResponse } from "../types/api.types";
-import { Movie, MovieDirector } from "../types/movie.types";
+import Movie from "@/types/movie";
+
+import { ApiConfig, ApiResponse, SaveResponse } from "../../types/api.types";
+import { MovieDirector } from "../../types/movie.types";
 
 export class ApiService {
   private config: ApiConfig;
