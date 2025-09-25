@@ -1,33 +1,33 @@
+import CinemaClass from "@/types/class/cinema.class";
+
 import { BaseCinemaScraper, ScrapedScreening } from "./base-scraper.service";
 
 interface MalbaEventData extends ScrapedScreening {
   eventType?: string;
-  description?: string;
-  room?: string;
-  thumbnailUrl?: string;
 }
 
 export class MalbaScraper extends BaseCinemaScraper {
-  constructor() {
-    super("Malba", "https://malba.org.ar", 1);
+  constructor(cinema: CinemaClass) {
+    super(cinema);
   }
 
   async scrapeScreenings(): Promise<ScrapedScreening[]> {
-    const screenings: MalbaEventData[] = [];
+    const screenings: ScrapedScreening[] = [];
 
     try {
-      const $ = await this.fetchPage(`${this.baseUrl}/cine/`);
-      const entriesClass =
-        ".elementor.event.type-event.status-publish.has-post-thumbnail.hentry.event-category-cine";
-
       // Obtener URLs y datos básicos del listado
       const eventUrls: Array<{
         url: string;
         thumbnailUrl?: string;
         eventType?: string;
       }> = [];
+      const $ = await this.fetchPage(`${this.baseUrl}/cine/`);
 
-      $(entriesClass).each((_, element) => {
+      const entriesClass =
+        ".elementor.event.type-event.status-publish.has-post-thumbnail.hentry.event-category-cine";
+      const events$ = $(entriesClass);
+
+      events$.each((_, element) => {
         const $event = $(element);
 
         // URL del evento
@@ -193,9 +193,5 @@ export class MalbaScraper extends BaseCinemaScraper {
       console.error("Error parsing Malba datetime:", error);
       return null;
     }
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

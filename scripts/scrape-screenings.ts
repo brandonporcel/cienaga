@@ -1,21 +1,26 @@
-// import { MalbaScraper } from './services/screenings/malba.scraper';
-// import { GaumontScraper } from './services/screenings/gaumont.scraper';
-// import { CosmosScraper } from './services/screenings/cosmos.scraper';
-// import { SalaLugonesScraper } from './services/screenings/sala-lugones.scraper';
+import axios from "axios";
 
-import { MalbaScraper } from "./services/screenings/malba.scraper";
+import Cinema from "@/types/cinema";
+import CinemaClass from "@/types/class/cinema.class";
+import { CinemaSlug } from "@/lib/enums/cinema.enum";
+
+import { ScraperFactory } from "./services/screenings/scraper.factory";
 
 class ScreeningScrapingOrchestrator {
-  private scrapers = [
-    new MalbaScraper(),
-    // new GaumontScraper(),
-    // new CosmosScraper(),
-    // new SalaLugonesScraper(),
-    // Agregar más scrapers aquí
-  ];
+  async getEnabledCinemas(): Promise<Cinema[]> {
+    const url = `${process.env.APP_URL || "http://localhost:3000"}/api/cinemas?enabled=true`;
+    const { data: cinemas } = await axios.get(url);
+    return cinemas;
+  }
 
   async execute(): Promise<void> {
     console.log("🎬 Starting cinema screenings scraping...");
+    const enabledCinemas = await this.getEnabledCinemas();
+
+    if (enabledCinemas.length === 0) {
+      console.log("No enabled cinemas found");
+      return;
+    }
 
     const results = {
       total: 0,
@@ -25,8 +30,19 @@ class ScreeningScrapingOrchestrator {
     };
 
     // Procesar cada cine secuencialmente (para no sobrecargar)
-    for (const scraper of this.scrapers) {
+    for (const cinema of enabledCinemas) {
       try {
+        const scraper = ScraperFactory.createScraper(
+          cinema.slug as CinemaSlug,
+          cinema as CinemaClass,
+        );
+
+        if (!scraper) {
+          results.failed += 1;
+          results.errors.push(`No scraper available for ${cinema.name}`);
+          continue;
+        }
+
         const result = await scraper.execute();
 
         results.total += 1;
@@ -39,14 +55,9 @@ class ScreeningScrapingOrchestrator {
           results.failed += 1;
           results.errors.push(...result.errors);
         }
-
-        // Delay entre scrapers para ser respetuosos
-        await this.delay(2000);
       } catch (error) {
         results.failed += 1;
-        const errorMsg = `Fatal error in ${scraper.constructor.name}: ${error}`;
-        console.error(errorMsg);
-        results.errors.push(errorMsg);
+        results.errors.push(`Fatal error in ${cinema.name}: ${error}`);
       }
     }
 
@@ -65,10 +76,6 @@ class ScreeningScrapingOrchestrator {
       console.error("💥 More failures than successes, check your scrapers!");
       process.exit(1);
     }
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

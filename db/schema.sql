@@ -42,10 +42,14 @@ create trigger on_auth_user_created
 create table public.cinemas (
   id          serial primary key,
   name        text not null unique,
-  url         text not null unique
-  image_url   text unique
-  enabled     boolean default true
+  url         text not null unique,
+  image_url   text unique,
+  enabled     boolean not null default true,
+  slug        text not null unique,
+  last_scraped timestamptz
+  scraping_frequency interval DEFAULT '12 hours'
 );
+
 
 -- Directores
 create table public.directors (

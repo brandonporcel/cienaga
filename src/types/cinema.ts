@@ -3,4 +3,5 @@ export default interface Cinema {
   name: string;
   url: string;
   image_url: string;
+  slug: string;
 }

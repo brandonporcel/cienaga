@@ -1,27 +1,38 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 
+import CinemaClass from "@/types/class/cinema.class";
+
 export interface ScrapedScreening {
   title: string;
   director?: string;
   datetime: Date;
   cinemaName: string;
   originalUrl: string;
-  typeEvent?: string;
+  eventType?: string;
   description?: string;
   room?: string;
   thumbnailUrl?: string;
 }
 
 export abstract class BaseCinemaScraper {
-  protected cinemaName: string;
-  protected baseUrl: string;
-  protected cinemaId: number;
+  protected cinema = new CinemaClass();
 
-  constructor(cinemaName: string, baseUrl: string, cinemaId: number) {
-    this.cinemaName = cinemaName;
-    this.baseUrl = baseUrl;
-    this.cinemaId = cinemaId;
+  constructor(cinema: CinemaClass) {
+    this.cinema = cinema;
+  }
+
+  get cinemaId(): number {
+    return this.cinema.id;
+  }
+  get cinemaName(): string {
+    return this.cinema.name;
+  }
+  get baseUrl(): string {
+    return this.cinema.url;
+  }
+  get appUrl(): string {
+    return process.env.APP_URL || "http://localhost:3000";
   }
 
   // Cada cine implementa su lógica específica
@@ -42,6 +53,10 @@ export abstract class BaseCinemaScraper {
     } catch (error) {
       throw new Error(`Failed to fetch ${url}: ${error}`);
     }
+  }
+
+  protected delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   // Método común para limpiar títulos
@@ -107,13 +122,15 @@ export abstract class BaseCinemaScraper {
 
       // Enviar a tu API para guardar
       const response = await axios.post(
-        `${process.env.APP_URL}/api/screenings/batch`,
+        `${this.appUrl}/api/screenings/batch`,
         {
           screenings,
           cinemaId: this.cinemaId,
         },
         {
-          headers: { Authorization: `Bearer ${process.env.CRON_SECRET_KEY}` },
+          headers: {
+            Authorization: `Bearer ${process.env.CRON_SECRET_KEY}`,
+          },
         },
       );
 

@@ -21,12 +21,12 @@ import { getPersonalizedScreenings } from "@/app/actions/screenings";
 
 const cinemas = [
   { name: "Todos los cines", logo: null },
-  { name: "Gaumont", logo: "/gaumont-cinema-logo.jpg" },
-  { name: "Malba", logo: "/malba-cinema-logo.jpg" },
-  { name: "Cosmos", logo: "/cosmos-cinema-logo.jpg" },
-  { name: "Sala Lugones", logo: "/sala-lugones-cinema-logo.jpg" },
-  { name: "Cine York", logo: "/cine-york-cinema-logo.jpg" },
-  { name: "CCK", logo: "/cck-cinema-logo.jpg" },
+  // { name: "Gaumont", logo: "/gaumont-cinema-logo.jpg" },
+  // { name: "Malba", logo: "/malba-cinema-logo.jpg" },
+  // { name: "Cosmos", logo: "/cosmos-cinema-logo.jpg" },
+  // { name: "Sala Lugones", logo: "/sala-lugones-cinema-logo.jpg" },
+  // { name: "Cine York", logo: "/cine-york-cinema-logo.jpg" },
+  // { name: "CCK", logo: "/cck-cinema-logo.jpg" },
 ];
 
 export default function ScreeningsPage() {
