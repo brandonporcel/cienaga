@@ -9,6 +9,7 @@
     "lint": "eslint",
     "scrape:directors": "pnpm exec tsx scripts/scrape-directors.ts",
     "scrape:screenings": "pnpm exec tsx scripts/scrape-screenings.ts",
+    "send:notifications": "pnpm exec tsx scripts/send-notificationts.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
+    "resend": "^6.1.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tsx": "^4.20.5",
