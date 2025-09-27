@@ -46,7 +46,7 @@ create table public.cinemas (
   image_url   text unique,
   enabled     boolean not null default true,
   slug        text not null unique,
-  last_scraped timestamptz
+  last_scraped timestamptz,
   scraping_frequency interval DEFAULT '12 hours'
 );
 
@@ -106,3 +106,17 @@ create table public.screenings (
   movie_id       uuid not null references public.movies(id) on delete cascade,
   created_at     timestamptz default now()
 );
+
+CREATE TABLE public.notifications (
+  id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id       uuid REFERENCES users(id),
+  screening_ids uuid[],
+  sent_at       timestamptz DEFAULT now(),
+  email_subject text,
+  metadata      jsonb,
+  created_at    timestamptz DEFAULT now()
+);
+
+-- Index para búsquedas eficientes por usuario
+CREATE INDEX idx_notifications_user_id_sent_at 
+ON public.notifications(user_id, sent_at DESC);
