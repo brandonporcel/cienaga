@@ -102,15 +102,12 @@ pnpm install
 Crear `.env.local`:
 
 ```bash
-# Supabase
 NEXT_PUBLIC_SUPABASE_URL=tu_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
 SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
 
-# GitHub Actions
 CRON_SECRET_KEY=tu_clave_secreta_para_cron
 
-# Email (próximamente)
 RESEND_API_KEY=tu_resend_key
 ```
 
@@ -170,77 +167,39 @@ GET  /api/screenings/personalized  # Cartelera filtrada por gustos
 
 ## 🎬 Cines monitoreados
 
-| Cine             | URL                                                   | Estado          |
-| ---------------- | ----------------------------------------------------- | --------------- |
-| **Malba**        | https://malba.org.ar/cine/                            | 📧 Newsletter   |
-| **Sala Lugones** | https://complejoteatral.gob.ar/cine                   | 🔄 Próximamente |
-| **Cine York**    | https://www.vicentelopez.gov.ar/agenda/agenda-lumiton | 🔄 Próximamente |
-| **CCK**          | https://palaciolibertad.gob.ar/cine/                  | 🔄 Próximamente |
-| **Gaumont**      | https://www.cinegaumont.ar/                           | 🔄 Próximamente |
-| **Cine Lorca**   | https://cinelorca.wixsite.com/cine-lorca              | 🔄 Próximamente |
-| **Cine Cosmos**  | https://www.cinecosmos.uba.ar/                        | 🔄 Próximamente |
+| Cine             | URL                                                            | Estado          |
+| ---------------- | -------------------------------------------------------------- | --------------- |
+| **Malba**        | https://malba.org.ar/cine/                                     | ✅              |
+| **Cine York**    | https://www.vicentelopez.gov.ar/agenda/agenda-lumiton          | ✅              |
+| **Sala Lugones** | https://complejoteatral.gob.ar/cine                            | 🔄 Próximamente |
+| **CCK**          | https://palaciolibertad.gob.ar/cine/                           | 🔄 Próximamente |
+| **Gaumont**      | https://www.cinegaumont.ar/                                    | 🔄 Próximamente |
+| **Cine Lorca**   | https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110 | 🔄 Próximamente |
+| **Cine Cosmos**  | https://www.cinecosmos.uba.ar/                                 | 🔄 Próximamente |
 
 ---
 
-## 🏗️ Stack tecnológico
+## 🏗️ Stack
 
-- **Frontend**: Next.js 15, TypeScript, shadcn/ui, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
-- **Automatización**: GitHub Actions, pnpm
-- **Scraping**: Cheerio, Axios
-- **Email**: Resend (próximamente)
-- **Deploy**: Vercel
+- Next.js - Supabase (PostgreSQL, Auth, Storage) - GitHub Actions - Resend
 
 ---
 
-## 📋 Roadmap
-
-### En desarrollo
-
-- [ ] Scraping de carteleras de cines
-- [ ] Sistema de notificaciones por email
-- [ ] Dashboard con coincidencias en tiempo real
-
-### Futuras features
+## 📋 To-Do
 
 - [ ] Integración con Google Calendar
 - [ ] Códigos QR para funciones
 - [ ] Soporte para más ciudades
-- [ ] App móvil
-- [ ] API pública
+- [ ] Usar funciones lambda
 
 ---
 
 ## 🤝 Contribuir
 
-Las contribuciones son bienvenidas. Para contribuir:
-
-1. Fork del proyecto
-2. Crear branch: `git checkout -b feature/nueva-feature`
-3. Commit: `git commit -m 'Add: nueva feature'`
-4. Push: `git push origin feature/nueva-feature`
-5. Abrir Pull Request
-
-### Reportar bugs
-
-Abre un [issue](https://github.com/brandonporcel/cienaga/issues) con:
-
-- Descripción del problema
-- Pasos para reproducir
-- Capturas de pantalla si aplica
+Si tienes ideas o mejoras, no dudes en hacer un fork del proyecto y enviar un pull request.
 
 ---
 
-## 📞 Contacto
+## 📞 Feedback
 
-**Brandon Porcel**
-
-- Email: [brandon7.7porcel@gmail.com](mailto:brandon7.7porcel@gmail.com)
-- LinkedIn: [brandonporcel](https://www.linkedin.com/in/brandonporcel/)
-- GitHub: [@brandonporcel](https://github.com/brandonporcel)
-
----
-
-<p align="center">
-  Hecho con ❤️ para cinéfilos en Buenos Aires
-</p>
+Me encantaría conocer tu opinión sobre el proyecto. Puedes enviarme un [email](https://mail.google.com/mail/?view=cm&fs=1&to=brandon7.7porcel@gmail.com&su=Cienaga) o a través de [LinkedIn](https://www.linkedin.com/in/brandonporcel/).

@@ -11,29 +11,21 @@ import {
   Star,
 } from "lucide-react";
 
+import Cinema from "@/types/cinema";
 import Screening from "@/types/screening";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useSidebar } from "@/components/ui/sidebar";
+import { getEnabledCinemas } from "@/app/actions/cinemas";
 import { getPersonalizedScreenings } from "@/app/actions/screenings";
-
-const cinemas = [
-  { name: "Todos los cines", logo: null },
-  // { name: "Gaumont", logo: "/gaumont-cinema-logo.jpg" },
-  // { name: "Malba", logo: "/malba-cinema-logo.jpg" },
-  // { name: "Cosmos", logo: "/cosmos-cinema-logo.jpg" },
-  // { name: "Sala Lugones", logo: "/sala-lugones-cinema-logo.jpg" },
-  // { name: "Cine York", logo: "/cine-york-cinema-logo.jpg" },
-  // { name: "CCK", logo: "/cck-cinema-logo.jpg" },
-];
 
 export default function ScreeningsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCinema, setSelectedCinema] = useState("Todos los cines");
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-
+  const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [screenings, setScreenings] = useState<Screening[]>([]);
 
   const { isMobile } = useSidebar();
@@ -65,11 +57,16 @@ export default function ScreeningsPage() {
   };
 
   useEffect(() => {
-    const getData = async () => {
+    const getScreenings = async () => {
       const res = await getPersonalizedScreenings();
       setScreenings(res);
     };
-    getData();
+    const getCinemas = async () => {
+      const res = await getEnabledCinemas();
+      setCinemas(res);
+    };
+    getCinemas();
+    getScreenings();
   }, []);
 
   return (
@@ -106,13 +103,6 @@ export default function ScreeningsPage() {
                 onClick={() => setSelectedCinema(cinema.name)}
                 className="flex items-center gap-2 whitespace-nowrap"
               >
-                {cinema.logo && (
-                  <Image
-                    src={cinema.logo || "/placeholder.svg"}
-                    alt={cinema.name}
-                    className="h-5 w-auto"
-                  />
-                )}
                 {cinema.name}
               </Button>
             ))}
@@ -131,11 +121,15 @@ export default function ScreeningsPage() {
               onMouseLeave={() => setHoveredCard(null)}
             >
               <div className="relative">
-                <img
-                  src={screening.thumbnail_url || "/placeholder.svg"}
-                  alt={"screening.title"}
+                <Image
+                  src={screening.thumbnail_url}
+                  alt={screening.movies.title}
+                  title={`${screening.movies.title} - ${screening.cinemas.name}`}
                   className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+                  width={600}
+                  height={500}
                 />
+
                 <div className="absolute top-3 right-3">
                   <Badge
                     variant="secondary"
@@ -145,11 +139,13 @@ export default function ScreeningsPage() {
                     {screening.movies.rating || "N/A"}
                   </Badge>
                 </div>
-                <div className="absolute bottom-3 left-3">
-                  <Badge className="bg-primary/90 backdrop-blur-sm">
-                    Terror
-                  </Badge>
-                </div>
+                {screening.event_type && (
+                  <div className="absolute bottom-3 left-3">
+                    <Badge className="bg-primary/90 backdrop-blur-sm">
+                      {screening.event_type}
+                    </Badge>
+                  </div>
+                )}
               </div>
 
               <CardContent className="p-4">
@@ -165,11 +161,13 @@ export default function ScreeningsPage() {
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <img
-                      src={screening.cinemas.image_url || "/placeholder.svg"}
-                      alt={screening.cinemas.name}
-                      className="h-4 w-auto"
-                    />
+                    {screening.cinemas.image_url && (
+                      <img
+                        src={screening.cinemas.image_url}
+                        alt={screening.cinemas.name}
+                        className="h-4 w-auto"
+                      />
+                    )}
                     <MapPin className="h-3 w-3" />
                     <span>{screening.cinemas.name}</span>
                   </div>
@@ -219,7 +217,7 @@ export default function ScreeningsPage() {
                       onClick={() =>
                         window.open(screening.original_url, "_blank")
                       }
-                      className="shrink-0"
+                      className="shrink-0 cursor-pointer"
                     >
                       <ExternalLink className="h-3 w-3" />
                     </Button>

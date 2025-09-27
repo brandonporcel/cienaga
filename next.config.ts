@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
       "lh3.googleusercontent.com",
       "ferf1mheo22r9ira.public.blob.vercel-storage.com",
       "image.tmdb.org",
+      "lumiton.ar",
     ],
   },
 };

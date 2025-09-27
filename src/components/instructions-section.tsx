@@ -1,4 +1,3 @@
-import CinemaBranding from "./instructions/cinema-branding";
 import CinemaListings from "./instructions/cinema-listings";
 import CTAFinal from "./instructions/cta-final";
 import EmailNotifications from "./instructions/email-notifications";
@@ -31,17 +30,13 @@ const cards = [
       "Scrapeamos Gaumont, Cosmos, Malba, Sala Lugones y más para actualizar las funciones.",
     Component: CinemaListings,
   },
+];
+const cards2 = [
   {
     title: "Notificaciones por mail",
     description:
       "Enterate enseguida cuándo un director de tu lista tiene una película en cartel.",
     Component: EmailNotifications,
-  },
-  {
-    title: "Cine que te encuentra",
-    description:
-      "Uní tus gustos con la magia del cine porteño. Diseño simple, centrado en vos.",
-    Component: CinemaBranding,
   },
   {
     title: "Descubrí tus próximos estrenos favoritos",
@@ -106,6 +101,11 @@ export default function InstructionsSection() {
         </div>
         <div className="self-stretch grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10">
           {cards.map((card, i) => (
+            <InstructionCard key={card.title + i} {...card} />
+          ))}
+        </div>
+        <div className="self-stretch flex grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10 justify-center">
+          {cards2.map((card, i) => (
             <InstructionCard key={card.title + i} {...card} />
           ))}
         </div>

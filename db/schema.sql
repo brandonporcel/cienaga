@@ -57,6 +57,8 @@ create table public.directors (
   name        text not null unique,
   url         text,
   image_url   text,
+  description text,
+  tmdb_id     text,
   created_at  timestamptz default now()
 );
 
@@ -96,7 +98,7 @@ create table public.user_movies (
 -- Proyecciones
 create table public.screenings (
   id             uuid primary key default uuid_generate_v4(),
-  event_type     text, -- 'malba: ciclo', 'estreno', 'continúa', 're-estreno', 'proyecciones', '37º Festival'
+  event_type     text,
   description    text,
   room           text,
   original_url   text,
