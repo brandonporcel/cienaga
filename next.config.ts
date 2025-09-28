@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       "ferf1mheo22r9ira.public.blob.vercel-storage.com",
       "image.tmdb.org",
       "lumiton.ar",
+      "malba.org.ar",
     ],
   },
 };

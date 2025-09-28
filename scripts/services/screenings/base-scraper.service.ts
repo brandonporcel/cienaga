@@ -6,13 +6,14 @@ import CinemaClass from "@/types/class/cinema.class";
 export interface ScrapedScreening {
   title: string;
   director?: string;
-  datetime: Date;
   cinemaName: string;
   originalUrl: string;
+  screeningTimes: string[];
   eventType?: string;
   description?: string;
   room?: string;
   thumbnailUrl?: string;
+  screeningTimeText?: string;
 }
 
 export abstract class BaseCinemaScraper {
@@ -90,7 +91,9 @@ export abstract class BaseCinemaScraper {
         `${process.env.APP_URL}/api/movies/search`,
         {
           params: { title, year },
-          headers: { Authorization: `Bearer ${process.env.CRON_SECRET_KEY}` },
+          headers: {
+            Authorization: `Bearer ${process.env.CRON_SECRET_KEY}`,
+          },
         },
       );
 

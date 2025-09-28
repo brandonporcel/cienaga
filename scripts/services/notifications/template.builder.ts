@@ -8,7 +8,7 @@ interface User {
 }
 
 interface Screening {
-  screening_time: string;
+  screening_time_text: string;
   room?: string;
   thumbnail_url?: string;
   original_url?: string;
@@ -104,7 +104,7 @@ export class EmailTemplateBuilder {
     const director = movie.directors;
     const cinema = screening.cinemas;
 
-    const date = new Date(screening.screening_time);
+    const date = new Date();
     const formattedDate = date.toLocaleDateString("es-AR", {
       weekday: "long",
       year: "numeric",

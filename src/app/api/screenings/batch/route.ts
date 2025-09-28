@@ -6,17 +6,16 @@ import { createClientForServer } from "@/lib/supabase/server";
 
 // Schema de validación con Zod
 const ScreeningSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title too long"),
+  title: z.string().min(1).max(200),
   director: z.string().optional(),
-  datetime: z.string().datetime("Invalid datetime format"),
-  cinemaName: z.string().min(1, "Cinema name is required"),
-  originalUrl: z.string().url("Invalid URL format"),
+  screeningTimes: z.array(z.iso.datetime()).min(1).max(20),
+  screeningTimeText: z.string().max(100).optional().nullable(),
+  cinemaName: z.string().min(1),
+  originalUrl: z.url(),
   eventType: z.string().optional(),
-  description: z.string().max(2000, "Description too long").optional(),
-  room: z.string().max(100, "Room name too long").optional(),
-  thumbnailUrl: z.string().url("Invalid thumbnail URL").optional(),
-  price: z.string().optional(),
-  bookingUrl: z.string().url("Invalid booking URL").optional(),
+  description: z.string().max(2000).optional(),
+  room: z.string().max(100).optional(),
+  thumbnailUrl: z.string().url().optional(),
 });
 
 const BatchScreeningsSchema = z.object({
@@ -54,6 +53,7 @@ export async function POST(request: NextRequest) {
     const validationResult = BatchScreeningsSchema.safeParse(body);
 
     if (!validationResult.success) {
+      console.log("entrara aca?", validationResult.error.message);
       return NextResponse.json(
         {
           error: "Validation failed",
@@ -127,7 +127,8 @@ async function processScreening(
   screeningData: ValidatedScreening,
   cinemaId: number,
 ): Promise<ProcessingResult> {
-  const { title, director, datetime, ...restData } = screeningData;
+  const { title, director, screeningTimeText, screeningTimes, ...restData } =
+    screeningData;
 
   try {
     // 1. Buscar o crear película
@@ -146,7 +147,8 @@ async function processScreening(
       .select("id")
       .eq("movie_id", movieId)
       .eq("cinema_id", cinemaId)
-      .eq("screening_time", datetime)
+      .eq("screening_time_text", screeningTimeText)
+
       .single();
 
     if (existingScreening) {
@@ -165,7 +167,7 @@ async function processScreening(
       .insert({
         movie_id: movieId,
         cinema_id: cinemaId,
-        screening_time: datetime,
+        screening_time_text: screeningTimeText,
         event_type: restData.eventType,
         description: restData.description,
         room: restData.room,
@@ -181,6 +183,20 @@ async function processScreening(
         success: false,
         error: `Database insert failed: ${insertError.message}`,
       };
+    }
+
+    // Crear todos los horarios específicos
+    const timeEntries = screeningTimes.map((time) => ({
+      screening_id: newScreening.id,
+      screening_datetime: time,
+    }));
+
+    const { error: timesError } = await supabase
+      .from("screening_times")
+      .insert(timeEntries);
+
+    if (timesError) {
+      console.error("Error inserting screening times:", timesError);
     }
 
     return {

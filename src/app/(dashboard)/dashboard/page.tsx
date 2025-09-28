@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import Cinema from "@/types/cinema";
-import Screening from "@/types/screening";
+import Screening, { ScreeningTime } from "@/types/screening";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,6 +59,7 @@ export default function ScreeningsPage() {
   useEffect(() => {
     const getScreenings = async () => {
       const res = await getPersonalizedScreenings();
+      console.log(res);
       setScreenings(res);
     };
     const getCinemas = async () => {
@@ -68,6 +69,64 @@ export default function ScreeningsPage() {
     getCinemas();
     getScreenings();
   }, []);
+
+  // Agrupar horarios por fecha
+  function groupScreeningsByDate(screeningTimes: ScreeningTime[]) {
+    const grouped = screeningTimes.reduce(
+      (acc, time) => {
+        const date = new Date(time.screening_datetime).toDateString();
+        if (!acc[date]) {
+          acc[date] = [];
+        }
+        acc[date].push(time);
+        return acc;
+      },
+      {} as Record<string, any[]>,
+    );
+
+    return Object.entries(grouped)
+      .map(([date, times]) => ({
+        date,
+        times: times.sort(
+          (a, b) =>
+            new Date(a.screening_datetime).getTime() -
+            new Date(b.screening_datetime).getTime(),
+        ),
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-AR", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  function formatTime(datetime: string) {
+    return new Date(datetime).toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function getNextScreeningTime(screeningTimes: any[]) {
+    const now = new Date();
+    const futureScreenings = screeningTimes
+      .filter((time) => new Date(time.screening_datetime) > now)
+      .sort(
+        (a, b) =>
+          new Date(a.screening_datetime).getTime() -
+          new Date(b.screening_datetime).getTime(),
+      );
+
+    return (
+      futureScreenings[0]?.screening_datetime ||
+      screeningTimes[0]?.screening_datetime
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,8 +214,10 @@ export default function ScreeningsPage() {
                       {screening.movies.title}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {screening.movies?.directors?.name} •{" "}
-                      {screening.movies.year || new Date().getFullYear()}
+                      {screening.movies?.directors?.name}
+                      {screening.movies.year
+                        ? `• ${screening.movies.year}`
+                        : ""}
                     </p>
                   </div>
 
@@ -170,56 +231,85 @@ export default function ScreeningsPage() {
                     )}
                     <MapPin className="h-3 w-3" />
                     <span>{screening.cinemas.name}</span>
+                    {screening.room && <span>• {screening.room}</span>}
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>
-                      {new Date(screening.screening_time).toLocaleDateString(
-                        "es-AR",
+                  {/* Mostrar texto original y fechas procesadas */}
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">
+                      <Clock className="h-3 w-3 inline mr-1" />
+                      <span className="italic">
+                        {screening.screening_time_text}
+                      </span>
+                    </div>
+
+                    {/* Fechas específicas agrupadas */}
+                    <div className="space-y-1">
+                      {groupScreeningsByDate(screening.screening_times).map(
+                        ({ date, times }) => (
+                          <div
+                            key={date}
+                            className="flex items-start gap-2 text-sm"
+                          >
+                            <span className="text-muted-foreground min-w-[80px]">
+                              {formatDate(date)}
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {times.map((time) => (
+                                <Badge
+                                  key={`${date}-${time.id}`}
+                                  variant="secondary"
+                                  className="text-xs cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                                  onClick={() =>
+                                    addToCalendar(
+                                      screening,
+                                      time.screening_datetime,
+                                    )
+                                  }
+                                >
+                                  {formatTime(time.screening_datetime)}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ),
                       )}
-                    </span>
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {["14:30", "17:00", "19:30"].map((time) => (
-                      <Badge key={time} variant="outline" className="text-xs">
-                        {time}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  {/* Action Buttons - Show on hover or always on mobile */}
+                  {/* Botones de acción */}
                   <div
-                    className={`flex gap-2 transition-all duration-300 ${
+                    className={`flex gap-2 pt-2 transition-all duration-300 ${
                       hoveredCard === screening.id || isMobile
                         ? "opacity-100 translate-y-0"
                         : "opacity-0 translate-y-2"
                     }`}
                   >
-                    <div className="flex gap-2 w-full">
-                      {["14:30", "17:00", "19:30"].map((time) => (
-                        <Button
-                          key={time}
-                          size="sm"
-                          variant="outline"
-                          onClick={() => addToCalendar(screening, time)}
-                          className="flex-1 text-xs"
-                        >
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {time}
-                        </Button>
-                      ))}
-                    </div>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() =>
                         window.open(screening.original_url, "_blank")
                       }
-                      className="shrink-0 cursor-pointer"
+                      className="flex-1"
                     >
-                      <ExternalLink className="h-3 w-3" />
+                      <ExternalLink className="h-3 w-3 mr-2" />
+                      Ver detalles
+                    </Button>
+
+                    {/* Botón de calendario para el próximo horario */}
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() =>
+                        addToCalendar(
+                          screening,
+                          getNextScreeningTime(screening.screening_times),
+                        )
+                      }
+                      className="shrink-0"
+                    >
+                      <Calendar className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>

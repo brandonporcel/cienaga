@@ -16,9 +16,9 @@ async function getPersonalizedScreenings() {
   // Query corregida: ir desde screenings hacia arriba
   const { data: screenings, error } = await supabase
     .from("screenings")
-    .select("*, movies!inner(*,directors!inner(*)), cinemas!inner(*)")
-    .gte("screening_time", new Date().toISOString())
-    .order("screening_time", { ascending: true });
+    .select(
+      "*,screening_times!inner(*), movies!inner(*,directors!inner(*)), cinemas!inner(*)",
+    );
 
   if (error) {
     console.error("Error fetching screenings:", error);

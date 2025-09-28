@@ -90,10 +90,15 @@ export class LumitonScraper extends BaseCinemaScraper {
         director = directorText.replace(/^Dirección:\s+/i, "").trim();
       }
 
+      const $dateTimeElement = $(".g-event-fecha");
+      const dateTimeText = $dateTimeElement.text().trim();
+
+      // if(!)
+
       return {
         title,
         director,
-        datetime: new Date(),
+        screeningTimes: [new Date().toISOString()],
         cinemaName: this.cinemaName,
         originalUrl: url,
         thumbnailUrl,

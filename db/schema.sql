@@ -97,17 +97,28 @@ create table public.user_movies (
 
 -- Proyecciones
 create table public.screenings (
-  id             uuid primary key default uuid_generate_v4(),
-  event_type     text,
-  description    text,
-  room           text,
-  original_url   text,
-  thumbnail_url  text,
-  screening_time timestamptz not null,
-  cinema_id      int  not null references public.cinemas(id) on delete cascade,
-  movie_id       uuid not null references public.movies(id) on delete cascade,
-  created_at     timestamptz default now()
+  id                  uuid primary key default uuid_generate_v4(),
+  event_type          text,
+  description         text,
+  room                text,
+  original_url        text,
+  thumbnail_url       text,
+  screening_time_text text,
+  cinema_id           int  not null references public.cinemas(id) on delete cascade,
+  movie_id            uuid not null references public.movies(id) on delete cascade,
+  created_at          timestamptz default now()
 );
+
+CREATE TABLE public.screening_times (
+  id                 uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  screening_id       uuid NOT NULL REFERENCES public.screenings(id) ON DELETE CASCADE,
+  screening_datetime timestamptz NOT NULL,
+  created_at         timestamptz DEFAULT now()
+);
+
+-- Index para búsquedas eficientes
+CREATE INDEX idx_screening_times_datetime ON public.screening_times(screening_datetime);
+CREATE INDEX idx_screening_times_screening_id ON public.screening_times(screening_id);
 
 CREATE TABLE public.notifications (
   id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),

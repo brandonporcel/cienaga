@@ -107,7 +107,7 @@ export class EmailService {
       const director = movie.directors;
       const cinema = screening.cinemas;
 
-      const date = new Date(screening.screening_time);
+      const date = new Date(screening.screening_time_text);
       const formattedDate = date.toLocaleDateString("es-AR");
       const formattedTime = date.toLocaleTimeString("es-AR", {
         hour: "2-digit",
