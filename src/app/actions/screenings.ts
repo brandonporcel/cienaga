@@ -14,11 +14,16 @@ async function getPersonalizedScreenings() {
   // const userId = userData.user.id;
 
   // Query corregida: ir desde screenings hacia arriba
+  // const { data: screenings, error } = await supabase
+  //   .from("screenings")
+  //   .select(
+  //     "*,screening_times!inner(*), movies!inner(*,directors!inner(*)), cinemas!inner(*)",
+  //   );
+
+  // const { data } = await supabase
   const { data: screenings, error } = await supabase
     .from("screenings")
-    .select(
-      "*,screening_times!inner(*), movies!inner(*,directors!inner(*)), cinemas!inner(*)",
-    );
+    .select("*, screening_times(*), movies(*, directors(*)), cinemas(*)");
 
   if (error) {
     console.error("Error fetching screenings:", error);

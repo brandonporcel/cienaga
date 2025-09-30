@@ -51,7 +51,7 @@ export class LumitonScraper extends BaseCinemaScraper {
             eventData.url,
             eventData.thumbnailUrl,
           );
-          console.log({ eventDetails });
+
           if (eventDetails) {
             screenings.push(eventDetails);
           }
@@ -62,7 +62,6 @@ export class LumitonScraper extends BaseCinemaScraper {
         }
       }
 
-      console.log(screenings.length + "screeningsscreeningsscreenings");
       return screenings;
     } catch (error) {
       console.error(`Error scraping ${this.cinemaName}:`, error);
@@ -90,15 +89,19 @@ export class LumitonScraper extends BaseCinemaScraper {
         director = directorText.replace(/^Dirección:\s+/i, "").trim();
       }
 
-      const $dateTimeElement = $(".g-event-fecha");
-      const dateTimeText = $dateTimeElement.text().trim();
-
-      // if(!)
+      const $dateElement = $(".g-event-fecha");
+      const dateText = $dateElement.text().trim();
+      const { times, originalText } = this.parseLumitonDateTime(dateText);
+      if (times.length === 0) {
+        console.warn(`Could not parse datetime from: ${originalText}`);
+        return null;
+      }
 
       return {
         title,
         director,
-        screeningTimes: [new Date().toISOString()],
+        screeningTimeText: originalText.replace(/\s+/g, " ").trim(),
+        screeningTimes: times.map((t) => t.toISOString()),
         cinemaName: this.cinemaName,
         originalUrl: url,
         thumbnailUrl,
@@ -106,6 +109,79 @@ export class LumitonScraper extends BaseCinemaScraper {
     } catch (error) {
       console.error(`Error scraping detail page ${url}:`, error);
       return null;
+    }
+  }
+
+  private parseLumitonDateTime(
+    dateTimeText: string,
+    timeText?: string,
+  ): {
+    times: Date[];
+    originalText: string;
+  } {
+    try {
+      const times: Date[] = [];
+
+      const parts = dateTimeText
+        .split("\n")
+        .map((part) => part.trim())
+        .filter((part) => part !== "");
+
+      if (parts.length >= 3) {
+        const [dayName, day, monthAbbr, fourthPart] = parts;
+
+        const dayNum = parseInt(day);
+        const month = this.getMonthNumber(monthAbbr);
+        if (month !== null && !isNaN(dayNum)) {
+          let hour = 20; // Default
+          let minute = 0;
+          let year = new Date().getFullYear();
+
+          // Verificar si el cuarto elemento es año o hora
+          if (fourthPart) {
+            // Si contiene ":" es hora, sino es año
+            const timeMatch = fourthPart.match(/(\d{1,2}):(\d{2})/);
+
+            if (timeMatch) {
+              // Es hora: "18:00hs"
+              hour = parseInt(timeMatch[1]);
+              minute = parseInt(timeMatch[2]);
+            } else {
+              // Es año: "2025"
+              const yearNum = parseInt(fourthPart);
+              if (!isNaN(yearNum)) {
+                year = yearNum;
+              }
+            }
+          }
+
+          // Si tenemos timeText adicional, usarlo (puede sobrescribir la hora del cuarto elemento)
+          if (timeText) {
+            const timeMatch = timeText.match(/(\d{1,2}):(\d{2})/);
+            if (timeMatch) {
+              hour = parseInt(timeMatch[1]);
+              minute = parseInt(timeMatch[2]);
+            }
+          }
+
+          const date = new Date(year, month, dayNum, hour, minute);
+
+          // Si la fecha ya pasó, asumir año siguiente
+          if (date < new Date()) {
+            date.setFullYear(year + 1);
+          }
+
+          times.push(date);
+        }
+      }
+
+      return {
+        times: times.filter((date) => date > new Date()),
+        originalText: dateTimeText + (timeText ? ` ${timeText}` : ""),
+      };
+    } catch (error) {
+      console.error("Error parsing Lumiton datetime:", error);
+      return { times: [], originalText: dateTimeText };
     }
   }
 }

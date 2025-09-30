@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const cutoff = searchParams.get("cutoff");
+    // const { searchParams } = new URL(request.url);
+    // const cutoff = searchParams.get("cutoff");
 
     const { data: matches } = await supabase
       .from("screenings")

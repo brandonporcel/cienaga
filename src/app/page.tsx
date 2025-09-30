@@ -6,6 +6,7 @@ import Header from "@/components/header";
 import { HeroSection } from "@/components/hero-section";
 import InstructionsSection from "@/components/instructions-section";
 import { LargeTestimonial } from "@/components/large-testimonial";
+import PublicScreenings from "@/components/public-screenings";
 import { SocialProof } from "@/components/social-proof";
 
 export default function HomePage() {
@@ -44,6 +45,14 @@ export default function HomePage() {
         delay={0.2}
       >
         <LargeTestimonial />
+      </AnimatedSection>
+
+      <AnimatedSection
+        id="faq-section"
+        className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16"
+        delay={0.2}
+      >
+        <PublicScreenings />
       </AnimatedSection>
 
       <AnimatedSection

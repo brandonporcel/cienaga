@@ -22,7 +22,7 @@ const BatchScreeningsSchema = z.object({
   screenings: z
     .array(ScreeningSchema)
     .min(1, "At least one screening required")
-    .max(50, "Too many screenings"),
+    .max(100, "Too many screenings"),
   cinemaId: z.number().int().positive("Invalid cinema ID"),
 });
 
@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
     const validationResult = BatchScreeningsSchema.safeParse(body);
 
     if (!validationResult.success) {
-      console.log("entrara aca?", validationResult.error.message);
       return NextResponse.json(
         {
           error: "Validation failed",

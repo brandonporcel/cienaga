@@ -103,6 +103,29 @@ export abstract class BaseCinemaScraper {
     }
   }
 
+  // Retorna el número de mes en formato numérico
+  protected getMonthNumber(monthName: string): number | null {
+    const months: Record<string, number> = {
+      enero: 0,
+      febrero: 1,
+      marzo: 2,
+      abril: 3,
+      mayo: 4,
+      junio: 5,
+      julio: 6,
+      agosto: 7,
+      sep: 8,
+      septiembre: 8,
+      oct: 9,
+      octubre: 9,
+      nov: 10,
+      noviembre: 10,
+      diciembre: 11,
+    };
+
+    return months[monthName.toLowerCase()] ?? null;
+  }
+
   // Método para ejecutar todo el proceso
   async execute(): Promise<{
     success: boolean;
