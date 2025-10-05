@@ -191,6 +191,10 @@ GET  /api/screenings/personalized  # Cartelera filtrada por gustos
 - [ ] Códigos QR para funciones
 - [ ] Soporte para más ciudades
 - [ ] Usar funciones lambda
+- [ ] Docker
+- [ ] Terminar scrapers de cines
+- [ ] Al guardar pelis skipear cortos. (<=40 min)
+- [ ] Tests
 
 ---
 

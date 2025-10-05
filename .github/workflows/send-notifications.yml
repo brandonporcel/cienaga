@@ -21,10 +21,11 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: npm install axios cheerio tsx @types/node
+        run: npm install axios cheerio tsx @types/node resend
 
       - name: Run script
         env:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: npx tsx scripts/send-notifications.ts
