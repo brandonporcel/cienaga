@@ -44,8 +44,10 @@ export class LumitonScraper extends BaseCinemaScraper {
       console.log(`Found ${entries.length} events to process`);
 
       // Procesar cada evento individualmente
-
-      for (const eventData of entries.slice(0, 1)) {
+      // for (const eventData of entries.slice(0, 1)) {
+      for (const eventData of entries.filter(
+        (m) => m.url === "https://lumiton.ar/evento/aterrados/",
+      )) {
         try {
           const eventDetails = await this.scrapeEventDetail(
             eventData.url,
@@ -83,11 +85,37 @@ export class LumitonScraper extends BaseCinemaScraper {
       if (!title) return null;
 
       // Director - formato "Dirección: Juanjo Pereira"
-      const directorText = $('*:contains("Dirección:")').text().trim();
-      let director: string | undefined;
-      if (directorText.startsWith("Dirección:")) {
-        director = directorText.replace(/^Dirección:\s+/i, "").trim();
-      }
+      const directorElement = $('b:contains("Dirección:")');
+      const director = directorElement
+        .parent()
+        .contents()
+        .filter(function () {
+          return this.type === "text" && $(this).text().trim() !== "";
+        })
+        .text()
+        .replace("Dirección:", "")
+        .trim();
+
+      // Extraer bloque con datos adicionales
+      const infoText = directorElement
+        .parent()
+        .find(".text-sm")
+        .text()
+        .replace(/\s+/g, " ")
+        .trim();
+      // Ejemplo: "Argentina. 87 min. Ficción . 2018."
+
+      // Separar por punto (.)
+      const parts = infoText
+        .split(".")
+        .map((p) => p.trim())
+        .filter(Boolean);
+
+      // Ejemplo → ["Argentina", "87 min", "Ficción", "2018"]
+
+      const [country, duration, genre, year] = parts;
+      const durationInMinutes = parseInt(duration, 10) || undefined;
+      const yearNumber = parseInt(year, 10) || undefined;
 
       const $dateElement = $(".g-event-fecha");
       const dateText = $dateElement.text().trim();
@@ -105,6 +133,10 @@ export class LumitonScraper extends BaseCinemaScraper {
         cinemaName: this.cinemaName,
         originalUrl: url,
         thumbnailUrl,
+        genre,
+        duration: durationInMinutes,
+        country,
+        year: yearNumber,
       };
     } catch (error) {
       console.error(`Error scraping detail page ${url}:`, error);

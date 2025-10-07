@@ -32,13 +32,16 @@ export class LetterboxdScraperService {
       ]);
       const $ = cheerio.load(response.data);
 
-      const data = {
+      const data: ScrapedMovieData = {
+        movieSlug: this.extractMovieSlug($),
+        directorSlug: this.extractDirectorSlug($),
         director: this.extractDirector($),
         directorUrl: this.extractDirectorUrl($),
         posterUrl: this.extractPosterUrl($),
         backgroundMovieImg: this.extractBackgroundMovieImg($),
         movieRating: this.extractMovieRating($),
         year: this.extractYear($),
+        movieNationalName: this.extractMovieNationalName($),
       };
 
       console.log(
@@ -102,6 +105,26 @@ export class LetterboxdScraperService {
     return null;
   }
 
+  private static extractDirectorSlug($: cheerio.CheerioAPI): string | null {
+    const directorLink = $('a[href*="/director/"]').first();
+    if (directorLink.length) {
+      const relativeUrl = directorLink.attr("href");
+      if (relativeUrl)
+        return relativeUrl.split("/")[relativeUrl.split("/").length - 2];
+    }
+    return null;
+  }
+
+  private static extractMovieSlug($: cheerio.CheerioAPI): string | null {
+    const movieLink = $('a[href*="/film/"]').first();
+    if (movieLink.length) {
+      const relativeUrl = movieLink.attr("href");
+      if (relativeUrl)
+        return relativeUrl.split("/")[relativeUrl.split("/").length - 2];
+    }
+    return null;
+  }
+
   private static extractPosterUrl($: cheerio.CheerioAPI): string | null {
     // Método 1: JSON-LD (mejor calidad, poster oficial)
     const jsonLdScript = $('script[type="application/ld+json"]').first().text();
@@ -122,7 +145,7 @@ export class LetterboxdScraperService {
     return null;
   }
 
-  private static extractMovieRating($: cheerio.CheerioAPI): string | null {
+  private static extractMovieRating($: cheerio.CheerioAPI): number | null {
     // Método 1: JSON-LD (mejor calidad, poster oficial)
     const jsonLdScript = $('script[type="application/ld+json"]').first().text();
     // elimina cualquier bloque /* ... */
@@ -177,6 +200,16 @@ export class LetterboxdScraperService {
       }
     }
 
+    return null;
+  }
+
+  private static extractMovieNationalName(
+    $: cheerio.CheerioAPI,
+  ): string | null {
+    const nationalNameLink = $(".originalname").first();
+    if (nationalNameLink.length) {
+      return nationalNameLink.text().trim();
+    }
     return null;
   }
 }

@@ -1,4 +1,3 @@
-// scripts/services/notifications/notification.service.ts
 import axios from "axios";
 
 import { EmailService } from "./email.service";
@@ -58,7 +57,6 @@ export class NotificationService {
           .filter(Boolean),
       ),
     ];
-
     if (userIds.length === 0) {
       console.log("No users found in matches");
       return [];

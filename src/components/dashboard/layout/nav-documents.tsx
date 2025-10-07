@@ -32,7 +32,7 @@ export function NavDocuments({ items }: { items: NavItem[] }) {
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild disabled className="cursor-not-allowed">
               <a href={item.href}>
                 <item.icon />
                 <span>{item.title}</span>
@@ -42,7 +42,8 @@ export function NavDocuments({ items }: { items: NavItem[] }) {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction
                   showOnHover
-                  className="data-[state=open]:bg-accent rounded-sm"
+                  className="data-[state=open]:bg-accent rounded-sm cursor-not-allowed"
+                  disabled
                 >
                   <IconDots />
                   <span className="sr-only">más</span>
@@ -70,12 +71,6 @@ export function NavDocuments({ items }: { items: NavItem[] }) {
             </DropdownMenu>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <IconDots className="text-sidebar-foreground/70" />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   );

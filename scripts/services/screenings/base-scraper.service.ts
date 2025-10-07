@@ -14,6 +14,10 @@ export interface ScrapedScreening {
   room?: string;
   thumbnailUrl?: string;
   screeningTimeText?: string;
+  genre?: string;
+  year?: number;
+  duration?: number;
+  country?: string;
 }
 
 export abstract class BaseCinemaScraper {

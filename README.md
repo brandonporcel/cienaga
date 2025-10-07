@@ -195,6 +195,7 @@ GET  /api/screenings/personalized  # Cartelera filtrada por gustos
 - [ ] Terminar scrapers de cines
 - [ ] Al guardar pelis skipear cortos. (<=40 min)
 - [ ] Tests
+- [ ] Agregar personalizacion para banda temporal para recibir de notificaciones. Screenings dentro de las proximos x horas/dias.
 
 ---
 

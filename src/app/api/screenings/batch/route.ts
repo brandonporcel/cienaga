@@ -3,6 +3,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { createClientForServer } from "@/lib/supabase/server";
+import { normalizeText } from "@/lib/utils";
 
 // Schema de validación con Zod
 const ScreeningSchema = z.object({
@@ -16,6 +17,10 @@ const ScreeningSchema = z.object({
   description: z.string().max(2000).optional(),
   room: z.string().max(100).optional(),
   thumbnailUrl: z.string().url().optional(),
+  genre: z.string().optional(),
+  year: z.number().optional(),
+  duration: z.number().optional(),
+  country: z.string().optional(),
 });
 
 const BatchScreeningsSchema = z.object({
@@ -27,6 +32,18 @@ const BatchScreeningsSchema = z.object({
 });
 
 type ValidatedScreening = z.infer<typeof ScreeningSchema>;
+
+function extractTitles(titleText: string): { main: string; alt?: string } {
+  // "PSICOSIS (PSYCHO)" → { main: "PSICOSIS", alt: "PSYCHO" }
+  const match = titleText.match(/^([^(]+)(?:\(([^)]+)\))?/);
+  if (match) {
+    return {
+      main: normalizeText(match[1]),
+      alt: match[2] ? normalizeText(match[2]) : undefined,
+    };
+  }
+  return { main: normalizeText(titleText) };
+}
 
 interface ProcessingResult {
   title: string;
@@ -126,12 +143,24 @@ async function processScreening(
   screeningData: ValidatedScreening,
   cinemaId: number,
 ): Promise<ProcessingResult> {
-  const { title, director, screeningTimeText, screeningTimes, ...restData } =
-    screeningData;
+  const {
+    title,
+    director,
+    screeningTimeText,
+    year,
+    duration,
+    screeningTimes,
+    ...restData
+  } = screeningData;
 
   try {
     // 1. Buscar o crear película
-    const movieId = await findOrCreateMovie(supabase, title, director);
+    const movieId = await findOrCreateMovie(supabase, {
+      title,
+      director,
+      year,
+      duration,
+    });
     if (!movieId) {
       return {
         title,
@@ -216,49 +245,78 @@ async function processScreening(
 
 async function findOrCreateMovie(
   supabase: SupabaseClient,
-  title: string,
-  director?: string,
+  movieData: {
+    title: string;
+    director?: string;
+    year?: number;
+    duration?: number;
+  },
 ): Promise<string | null> {
   try {
-    // Buscar película existente por título
-    const { data: existingMovie, error: searchError } = await supabase
+    const { title, director, year, duration } = movieData;
+    const { main: normalizedTitle, alt: alternativeTitle } =
+      extractTitles(title);
+
+    // Buscar por título normalizado (ambas variantes si existen)
+    let query = supabase
       .from("movies")
-      .select("id, director_id, directors(name)")
-      .ilike("title", title)
-      .single();
+      .select(
+        "id, title, national_title, year, duration, director_id, directors(name)",
+      )
+      .or(
+        `title.ilike.%${normalizedTitle}%,national_title.ilike.%${normalizedTitle}%`,
+      );
 
-    // Si encontramos la película
-    if (existingMovie && !searchError) {
-      // Si tiene director asignado, usar esa película
-      if (existingMovie.director_id) {
-        return existingMovie.id;
-      }
+    if (alternativeTitle) {
+      query = query.or(
+        `title.ilike.%${alternativeTitle}%,national_title.ilike.%${alternativeTitle}%`,
+      );
+    }
 
-      // Si no tiene director pero nosotros sí, intentar encontrar/crear el director
-      if (director) {
-        const directorId = await findOrCreateDirector(supabase, director);
-        if (directorId) {
-          await supabase
-            .from("movies")
-            .update({ director_id: directorId })
-            .eq("id", existingMovie.id);
+    const { data: candidates, error: searchError } = await query;
+
+    if (searchError) {
+      console.error("Error searching movies:", searchError);
+    }
+
+    // Evaluar candidatos con scoring
+    if (candidates && candidates.length > 0) {
+      const bestMatch = findBestMovieMatch(candidates, {
+        normalizedTitle,
+        alternativeTitle,
+        director,
+        year,
+        duration,
+      });
+
+      if (bestMatch) {
+        // Si no tiene director pero nosotros sí, actualizarlo
+        if (!bestMatch.director_id && director) {
+          const directorId = await findOrCreateDirector(supabase, director);
+          if (directorId) {
+            await supabase
+              .from("movies")
+              .update({ director_id: directorId })
+              .eq("id", bestMatch.id);
+          }
         }
+        return bestMatch.id;
       }
-
-      return existingMovie.id;
     }
 
-    // Si no encontramos la película, crearla
-    let directorId: number | null = null;
-    if (director) {
-      directorId = await findOrCreateDirector(supabase, director);
-    }
+    // No encontramos match, crear nueva película
+    const directorId = director
+      ? await findOrCreateDirector(supabase, director)
+      : null;
 
     const { data: newMovie, error: createError } = await supabase
       .from("movies")
       .insert({
-        title,
+        title: title, // Guardar título original
+        national_title: alternativeTitle || title,
         director_id: directorId,
+        year,
+        duration,
       })
       .select("id")
       .single();
@@ -273,6 +331,94 @@ async function findOrCreateMovie(
     console.error("Error in findOrCreateMovie:", error);
     return null;
   }
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function findBestMovieMatch(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  candidates: Record<string, any>[],
+  criteria: {
+    normalizedTitle: string;
+    alternativeTitle?: string;
+    director?: string;
+    year?: number;
+    duration?: number;
+  },
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let bestMatch: Record<string, any> | null = null;
+  let bestScore = 0;
+
+  for (const candidate of candidates) {
+    let score = 0;
+
+    // Score por título (40 puntos)
+    const candidateTitle = normalizeText(candidate.title);
+    const candidateNationalTitle = normalizeText(
+      candidate.national_title || "",
+    );
+
+    if (
+      candidateTitle === criteria.normalizedTitle ||
+      candidateNationalTitle === criteria.normalizedTitle
+    ) {
+      score += 40;
+    } else if (
+      criteria.alternativeTitle &&
+      (candidateTitle === criteria.alternativeTitle ||
+        candidateNationalTitle === criteria.alternativeTitle)
+    ) {
+      score += 35;
+    } else if (
+      candidateTitle.includes(criteria.normalizedTitle) ||
+      criteria.normalizedTitle.includes(candidateTitle)
+    ) {
+      score += 20;
+    }
+
+    // Score por director (30 puntos)
+    if (criteria.director && candidate.directors?.name) {
+      const normalizedCandidateDirector = normalizeText(
+        candidate.directors.name,
+      );
+      const normalizedCriteriaDirector = normalizeText(criteria.director);
+
+      if (normalizedCandidateDirector === normalizedCriteriaDirector) {
+        score += 30;
+      } else if (
+        normalizedCandidateDirector.includes(normalizedCriteriaDirector) ||
+        normalizedCriteriaDirector.includes(normalizedCandidateDirector)
+      ) {
+        score += 15;
+      }
+    }
+
+    // Score por año (20 puntos)
+    if (criteria.year && candidate.year) {
+      if (candidate.year === criteria.year) {
+        score += 20;
+      } else if (Math.abs(candidate.year - criteria.year) <= 1) {
+        score += 10; // Margen de 1 año
+      }
+    }
+
+    // Score por duración (10 puntos)
+    if (criteria.duration && candidate.duration) {
+      const diff = Math.abs(candidate.duration - criteria.duration);
+      if (diff <= 5) {
+        score += 10;
+      } else if (diff <= 10) {
+        score += 5;
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = candidate;
+    }
+  }
+
+  // Umbral mínimo de 50 puntos para considerar match válido
+  return bestScore >= 50 ? bestMatch : null;
 }
 
 async function findOrCreateDirector(

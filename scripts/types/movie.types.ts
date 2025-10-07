@@ -1,18 +1,14 @@
 export interface ScrapedMovieData {
-  director: string | null;
-  directorUrl: string | null;
-  posterUrl: string | null;
-  year: number | null;
-}
-
-export interface MovieDirector {
-  movieId: string;
-  director: string;
-  directorUrl?: string;
-  posterUrl?: string;
-  backgroundMovieImg?: string;
-  movieRating?: number;
-  year?: number;
+  movieSlug?: string | null;
+  movieId?: string | null;
+  directorSlug?: string | null;
+  director?: string | null;
+  directorUrl?: string | null;
+  posterUrl?: string | null;
+  backgroundMovieImg?: string | null;
+  movieRating?: number | null;
+  year?: number | null;
+  movieNationalName?: string | null;
 }
 
 export interface ProcessingResult {

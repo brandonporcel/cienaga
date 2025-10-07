@@ -1,27 +1,29 @@
 import fs from "fs/promises";
 import path from "path";
 
+import Cinema from "@/types/cinema";
+import { ScreeningTime } from "@/types/screening";
+
 interface User {
   id: string;
   email: string;
   full_name?: string;
 }
-
 interface Screening {
   screening_time_text: string;
   room?: string;
   thumbnail_url?: string;
   original_url?: string;
+  screening_times: ScreeningTime[];
   movies: {
     title: string;
     year?: number;
+    duration?: number;
     directors: {
       name: string;
     };
   };
-  cinemas: {
-    name: string;
-  };
+  cinemas: Cinema;
 }
 
 export class EmailTemplateBuilder {
@@ -104,23 +106,49 @@ export class EmailTemplateBuilder {
     const director = movie.directors;
     const cinema = screening.cinemas;
 
-    const date = new Date();
+    const date =
+      screening.screening_times.length > 0
+        ? new Date(screening.screening_times[0].screening_datetime)
+        : new Date();
     const formattedDate = date.toLocaleDateString("es-AR", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "America/Argentina/Buenos_Aires",
     });
     const formattedTime = date.toLocaleTimeString("es-AR", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "America/Argentina/Buenos_Aires",
     });
+    const durationText = movie.duration ? `• ${movie.duration} min` : "";
 
     return this.populateTemplate(template, {
       movie_title: movie.title,
       director_name: director.name,
       movie_year: movie.year?.toString() || "",
       cinema_name: cinema.name,
+      cinema_logo: cinema.image_url.endsWith(".svg")
+        ? ""
+        : `<img src="${cinema.image_url}" alt="${cinema.name}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 8px;">`,
+      duration_display: durationText,
+      screening_hours:
+        screening.screening_times.length > 0
+          ? screening.screening_times
+              .map((t) => {
+                const date = new Date(t.screening_datetime);
+                const formattedTime = date.toLocaleTimeString("es-AR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "America/Argentina/Buenos_Aires",
+                });
+                return `<span style="background-color: #f3f4f6; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #e5e7eb; margin-right: 4px;">
+                ${formattedTime}
+                </span>`;
+              })
+              .join(" ")
+          : "",
       formatted_date: formattedDate,
       formatted_time: formattedTime,
       room: screening.room || "",
