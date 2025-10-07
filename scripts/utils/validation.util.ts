@@ -2,7 +2,7 @@ export function validateEnvironmentVariables(): {
   baseUrl: string;
   secretKey: string;
 } {
-  const baseUrl = process.env.APP_URL;
+  const baseUrl = process.env.APP_URL || "http://localhost:3000";
   const secretKey = process.env.CRON_SECRET_KEY;
 
   if (!baseUrl || !secretKey) {

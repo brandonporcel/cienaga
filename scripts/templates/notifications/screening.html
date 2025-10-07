@@ -2,7 +2,7 @@
     style="background-color: #f9fafb; border-radius: 12px; margin-bottom: 24px; overflow: hidden; border: 1px solid #e5e7eb;">
     <tr>
         <td width="120" style="padding: 20px 0 20px 20px; vertical-align: top;">
-            <img src="{{thumbnail_url}}" alt="The Power of the Dog"
+            <img src="{{thumbnail_url}}" alt="{{movie_title}}"
                 style="width: 100px; height: 150px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         </td>
         <td style="padding: 20px 20px 20px 16px; vertical-align: top;">
@@ -10,14 +10,12 @@
                 {{movie_title}}
             </h4>
             <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280; line-height: 1.4;">
-                <strong style="color: #d97706;">{{director_name}}</strong> • {{movie_year}} • 128 min
+                <strong style="color: #d97706;">{{director_name}}</strong> • {{movie_year}} {{duration_display}}
             </p>
 
             <!-- Cinema Info -->
             <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                <!-- Hola {{user_name}}, -->
-                <img src="{{thumbnail_url}}" alt="Gaumont"
-                    style="width: 20px; height: 20px; margin-right: 8px; border-radius: 4px;">
+                {{cinema_logo}}
                 <span style="font-size: 14px; color: #6b7280;">📍 {{cinema_name}}</span>
             </div>
 
@@ -27,12 +25,7 @@
                     🗓️ {{formatted_date}} a las {{formatted_time}}
                 </p>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <span
-                        style="background-color: #f3f4f6; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #e5e7eb; margin-right: 4px;">14:30</span>
-                    <span
-                        style="background-color: #f3f4f6; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #e5e7eb; margin-right: 4px;">17:00</span>
-                    <span
-                        style="background-color: #f3f4f6; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #e5e7eb; margin-right: 4px;">19:30</span>
+                    {{screening_hours}}
                 </div>
             </div>
 

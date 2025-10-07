@@ -10,6 +10,9 @@ interface MovieDirectorData {
   year?: number;
   backgroundMovieImg?: string;
   movieRating?: number;
+  directorSlug?: string;
+  movieSlug?: string;
+  movieNationalName?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -44,6 +47,9 @@ export async function POST(request: NextRequest) {
         backgroundMovieImg,
         directorUrl,
         movieRating,
+        directorSlug,
+        movieNationalName,
+        movieSlug,
       } = movieData;
 
       try {
@@ -58,7 +64,7 @@ export async function POST(request: NextRequest) {
         if (backgroundMovieImg) {
           await supabase
             .from("movies")
-            .update({ background_img: backgroundMovieImg })
+            .update({ background_img_url: backgroundMovieImg })
             .eq("id", movieId);
         }
 
@@ -69,11 +75,24 @@ export async function POST(request: NextRequest) {
             .eq("id", movieId);
         }
 
+        if (movieNationalName)
+          await supabase
+            .from("movies")
+            .update({ national_name: movieNationalName })
+            .eq("id", movieId);
+
+        if (movieSlug)
+          await supabase
+            .from("movies")
+            .update({ slug: movieSlug })
+            .eq("id", movieId);
+
         // Buscar si el director ya existe
         const { data: existingDirector, error: directorError } = await supabase
           .from("directors")
           .select("id")
           .eq("name", director)
+          .eq("slug", directorSlug)
           .single();
 
         let directorId = existingDirector?.id;
@@ -82,7 +101,7 @@ export async function POST(request: NextRequest) {
           // Director no existe, crearlo
           const { data: newDirector, error: insertError } = await supabase
             .from("directors")
-            .insert({ name: director, url: directorUrl })
+            .insert({ name: director, url: directorUrl, slug: directorSlug })
             .select("id")
             .single();
 

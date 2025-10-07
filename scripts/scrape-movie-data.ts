@@ -11,7 +11,7 @@ const CONFIG = {
   MAX_EXECUTION_TIME: 8 * 60 * 1000, // 8 minutes
 } as const;
 
-class DirectorScrapingOrchestrator {
+class MovieDataScrapingOrchestrator {
   private apiService: ApiService;
   private timer: ExecutionTimer;
 
@@ -99,7 +99,7 @@ class DirectorScrapingOrchestrator {
 
 // Execute only if called directly
 async function main(): Promise<void> {
-  const orchestrator = new DirectorScrapingOrchestrator();
+  const orchestrator = new MovieDataScrapingOrchestrator();
   await orchestrator.execute();
 }
 

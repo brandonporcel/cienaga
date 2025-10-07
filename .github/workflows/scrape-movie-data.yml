@@ -1,4 +1,4 @@
-name: Scrape Movie Directors
+name: Scrape Movie Data
 
 on:
   schedule:
@@ -65,7 +65,7 @@ jobs:
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
         run: |
           echo "🚀 Starting director scraping process..."
-          pnpm exec tsx scripts/scrape-directors.ts
+          pnpm exec tsx scripts/scrape-movie-data.ts
           echo "✅ Scraping process completed"
 
       - name: Upload execution logs (on failure)

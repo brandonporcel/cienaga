@@ -8,10 +8,10 @@ import {
   IconBrandWhatsapp,
   IconChairDirector,
   IconDashboard,
-  IconHelpCircle,
+  // IconHelpCircle,
   IconMail,
   IconSeedling,
-  IconSparkles,
+  // IconSparkles,
 } from "@tabler/icons-react";
 
 import NavItem from "@/types/nav";
@@ -43,18 +43,13 @@ const data: Record<string, NavItem[]> = {
       href: ROUTES.directors.path,
       icon: IconChairDirector,
     },
-    {
-      title: "Asistente",
-      href: "#",
-      icon: IconSparkles,
-    },
   ],
   navSecondary: [
-    {
-      title: "Ayuda",
-      href: ROUTES.help.path,
-      icon: IconHelpCircle,
-    },
+    // {
+    //   title: "Ayuda",
+    //   href: ROUTES.help.path,
+    //   icon: IconHelpCircle,
+    // },
     {
       title: "Novedades",
       href: "#",

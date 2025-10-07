@@ -54,8 +54,9 @@ create table public.cinemas (
 -- Directores
 create table public.directors (
   id          uuid primary key default uuid_generate_v4(),
-  name        text not null unique,
+  name        text not null,
   url         text,
+  slug        text not null unique,
   image_url   text,
   description text,
   tmdb_id     text,
@@ -75,10 +76,15 @@ create table public.user_directors (
 create table public.movies (
   id                 uuid primary key default uuid_generate_v4(),
   title              text not null,
+  national_title     text not null,
   poster_url         text,
   background_img_url text,
   url                text,
   year               int,
+  duration           int,
+  country            text,
+  genre              text,
+  slug               text unique,
   rating             numeric(3, 1),
   director_id        uuid references public.directors(id) on delete set null,
   created_at         timestamptz default now()

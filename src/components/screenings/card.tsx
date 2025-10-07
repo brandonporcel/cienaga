@@ -127,7 +127,7 @@ function ScreeningCard({ screening }: { screening: Screening }) {
             </h3>
             <p className="text-sm text-muted-foreground">
               {screening.movies?.directors?.name}
-              {screening.movies.year ? `• ${screening.movies.year}` : ""}
+              {screening.movies.year ? ` • ${screening.movies.year}` : ""}
             </p>
           </div>
 

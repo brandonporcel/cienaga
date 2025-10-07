@@ -3,7 +3,7 @@ import axios from "axios";
 import Movie from "@/types/movie";
 
 import { ApiConfig, ApiResponse, SaveResponse } from "../../types/api.types";
-import { MovieDirector } from "../../types/movie.types";
+import { ScrapedMovieData } from "../../types/movie.types";
 
 export class ApiService {
   private config: ApiConfig;
@@ -38,7 +38,9 @@ export class ApiService {
     }
   }
 
-  async saveDirectors(movieDirectors: MovieDirector[]): Promise<SaveResponse> {
+  async saveDirectors(
+    movieDirectors: ScrapedMovieData[],
+  ): Promise<SaveResponse> {
     try {
       console.log(`💾 Saving ${movieDirectors.length} movie-director pairs...`);
 

@@ -1,6 +1,6 @@
 import Movie from "@/types/movie";
 
-import { MovieDirector } from "../../types/movie.types";
+import { ScrapedMovieData } from "../../types/movie.types";
 import { delay, ExecutionTimer } from "../../utils/delay.util";
 import { LetterboxdScraperService } from "./letterboxd-scraper.service";
 
@@ -17,8 +17,8 @@ export class BatchProcessorService {
     this.config = config;
   }
 
-  async processBatch(movies: Movie[]): Promise<MovieDirector[]> {
-    const results: MovieDirector[] = [];
+  async processBatch(movies: Movie[]): Promise<ScrapedMovieData[]> {
+    const results: ScrapedMovieData[] = [];
     const { maxConcurrent, delayBetweenRequests, timer } = this.config;
 
     console.log(
@@ -42,7 +42,7 @@ export class BatchProcessorService {
       );
 
       const promises = batch.map(
-        async (movie): Promise<MovieDirector | null> => {
+        async (movie): Promise<ScrapedMovieData | null> => {
           if (movie.url) {
             const scrapedData = await LetterboxdScraperService.scrapeMovieData(
               movie.url,
@@ -52,10 +52,7 @@ export class BatchProcessorService {
             if (scrapedData.director) {
               return {
                 movieId: movie.id,
-                director: scrapedData.director,
-                directorUrl: scrapedData.directorUrl || undefined,
-                posterUrl: scrapedData.posterUrl || undefined,
-                year: scrapedData.year || undefined,
+                ...scrapedData,
               };
             }
           }
@@ -65,7 +62,7 @@ export class BatchProcessorService {
 
       const batchResults = await Promise.all(promises);
       const validResults = batchResults.filter(
-        (r): r is MovieDirector => r !== null,
+        (r): r is ScrapedMovieData => r !== null,
       );
       results.push(...validResults);
 
