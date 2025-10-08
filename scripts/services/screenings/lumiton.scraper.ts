@@ -44,10 +44,7 @@ export class LumitonScraper extends BaseCinemaScraper {
       console.log(`Found ${entries.length} events to process`);
 
       // Procesar cada evento individualmente
-      // for (const eventData of entries.slice(0, 1)) {
-      for (const eventData of entries.filter(
-        (m) => m.url === "https://lumiton.ar/evento/aterrados/",
-      )) {
+      for (const eventData of entries.slice(0, 1)) {
         try {
           const eventDetails = await this.scrapeEventDetail(
             eventData.url,

@@ -1,0 +1,30 @@
+name: Scrape Directors
+on:
+  schedule:
+    - cron: "0 0 */3 * *" # Every 3 days
+  workflow_dispatch:
+
+jobs:
+  scrape-screenings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: npm install axios cheerio tsx @types/node
+
+      - name: Run script
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
+        run: npx tsx scripts/scrape-directors.ts

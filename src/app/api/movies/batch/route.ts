@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createClientForServer } from "@/lib/supabase/server";
 
-interface MovieDirectorData {
+interface MovieDataData {
   movieId: string;
   director: string;
   directorUrl?: string;
@@ -13,6 +13,7 @@ interface MovieDirectorData {
   directorSlug?: string;
   movieSlug?: string;
   movieNationalName?: string;
+  movieDuration?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { movieDirectors }: { movieDirectors: MovieDirectorData[] } =
+    const { movieDirectors }: { movieDirectors: MovieDataData[] } =
       await request.json();
 
     if (!movieDirectors || !Array.isArray(movieDirectors)) {
@@ -50,7 +51,11 @@ export async function POST(request: NextRequest) {
         directorSlug,
         movieNationalName,
         movieSlug,
+        movieDuration,
       } = movieData;
+
+      // Ignorar cortos
+      if (movieDuration !== undefined && movieDuration <= 40) continue;
 
       try {
         // Actualizar poster de película
@@ -65,6 +70,13 @@ export async function POST(request: NextRequest) {
           await supabase
             .from("movies")
             .update({ background_img_url: backgroundMovieImg })
+            .eq("id", movieId);
+        }
+
+        if (movieDuration) {
+          await supabase
+            .from("movies")
+            .update({ duration: movieDuration })
             .eq("id", movieId);
         }
 
