@@ -39,6 +39,7 @@ export class LetterboxdScraperService {
         directorUrl: this.extractDirectorUrl($),
         posterUrl: this.extractPosterUrl($),
         backgroundMovieImg: this.extractBackgroundMovieImg($),
+        movieDuration: this.extractMovieDuration($),
         movieRating: this.extractMovieRating($),
         year: this.extractYear($),
         movieNationalName: this.extractMovieNationalName($),
@@ -163,6 +164,12 @@ export class LetterboxdScraperService {
     }
 
     return null;
+  }
+
+  private static extractMovieDuration($: cheerio.CheerioAPI): number | null {
+    const $el = $("p.text-link.text-footer");
+    const durationText = $el.text().trim().split(" ")[0];
+    return parseInt(durationText);
   }
 
   private static extractBackgroundMovieImg(

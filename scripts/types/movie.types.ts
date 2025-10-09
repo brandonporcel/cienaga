@@ -6,6 +6,7 @@ export interface ScrapedMovieData {
   directorUrl?: string | null;
   posterUrl?: string | null;
   backgroundMovieImg?: string | null;
+  movieDuration?: number | null;
   movieRating?: number | null;
   year?: number | null;
   movieNationalName?: string | null;

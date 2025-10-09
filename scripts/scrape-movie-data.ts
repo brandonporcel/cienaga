@@ -1,5 +1,5 @@
-import { ApiService } from "./services/directors/api.director.service";
-import { BatchProcessorService } from "./services/directors/batch-processor.service";
+import { ApiService } from "./services/movie-data/api.director.service";
+import { BatchProcessorService } from "./services/movie-data/batch-processor.service";
 import { ExecutionTimer } from "./utils/delay.util";
 import { validateEnvironmentVariables } from "./utils/validation.util";
 

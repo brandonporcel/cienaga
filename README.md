@@ -196,6 +196,8 @@ GET  /api/screenings/personalized  # Cartelera filtrada por gustos
 - [ ] Al guardar pelis skipear cortos. (<=40 min)
 - [ ] Tests
 - [ ] Agregar personalizacion para banda temporal para recibir de notificaciones. Screenings dentro de las proximos x horas/dias.
+- [ ] Agregar tablas en listados [https://www.justinmind.com/ui-design/data-table](https://www.justinmind.com/ui-design/data-table)
+- [ ] En vez de scrapear obtener datos de json. https://letterboxd.com/film/when-evil-lurks/json/
 
 ---
 

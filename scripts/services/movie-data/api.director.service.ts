@@ -45,7 +45,7 @@ export class ApiService {
       console.log(`💾 Saving ${movieDirectors.length} movie-director pairs...`);
 
       const response = await axios.post<SaveResponse>(
-        `${this.config.baseUrl}/api/directors/batch`,
+        `${this.config.baseUrl}/api/movies/batch`,
         { movieDirectors },
         { headers: this.config.headers },
       );
