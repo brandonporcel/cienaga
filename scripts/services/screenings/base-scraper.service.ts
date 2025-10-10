@@ -16,6 +16,7 @@ export interface ScrapedScreening {
   screeningTimeText?: string;
   genre?: string;
   year?: number;
+  nationalTitle?: string;
   duration?: number;
   country?: string;
 }

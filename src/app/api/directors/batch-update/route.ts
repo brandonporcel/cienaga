@@ -7,20 +7,20 @@ import { createServiceClient } from "@/lib/supabase/service";
 // Schemas de validación con Zod
 const BasicMovieSchema = z.object({
   title: z.string().min(1).max(200),
-  url: z.string().url(),
+  url: z.url(),
   year: z
     .number()
     .int()
     .min(1888)
     .max(new Date().getFullYear() + 5),
-  thumbnailUrl: z.string().url().optional(),
+  thumbnailUrl: z.url().optional(),
 });
 
 const DirectorUpdateSchema = z.object({
-  directorId: z.string().uuid("Invalid director ID format"),
-  avatarUrl: z.string().url("Invalid avatar URL").nullable().optional(),
+  directorId: z.uuid("Invalid director ID format"),
+  avatarUrl: z.url("Invalid avatar URL").nullable().optional(),
   bio: z.string().max(5000, "Bio too long").nullable().optional(),
-  basicMovies: z.array(BasicMovieSchema).max(50, "Too many movies in batch"),
+  basicMovies: z.array(BasicMovieSchema).max(100, "Too many movies in batch"),
   TMDBId: z.number().int().positive().nullable().optional(),
 });
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Validation failed",
-          details: validationResult.error,
+          details: validationResult.error.message,
         },
         { status: 400 },
       );

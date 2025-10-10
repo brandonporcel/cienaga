@@ -7,9 +7,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 
 const LogNotificationSchema = z.object({
   userId: z.uuid(),
-  screeningIds: z.array(z.string().uuid()).min(1).max(50), // Max 50 screenings por notificación
+  screeningIds: z.array(z.uuid()).min(1).max(50), // Max 50 screenings por notificación
   emailSubject: z.string().min(1).max(200),
-  //   metadata: z.record(z.any()).optional(), // Para datos adicionales opcionales
 });
 
 export async function POST(request: NextRequest) {
