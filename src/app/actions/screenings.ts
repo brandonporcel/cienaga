@@ -1,36 +1,23 @@
+// actions/screenings.actions.ts
 "use server";
 
-import { MESSAGES } from "@/lib/constants/messages";
+import { ScreeningsService } from "@/lib/services/screenings.service";
 import { createClientForServer } from "@/lib/supabase/server";
 
-async function getPersonalizedScreenings() {
+export async function getPersonalizedScreenings() {
   const supabase = await createClientForServer();
+  const { data: userData } = await supabase.auth.getUser();
 
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData?.user) {
-    throw new Error(MESSAGES.errors.noSession);
+  if (!userData?.user) {
+    throw new Error("Not authenticated");
   }
 
-  // const userId = userData.user.id;
+  const screeningsService = new ScreeningsService();
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() + 30);
 
-  // Query corregida: ir desde screenings hacia arriba
-  // const { data: screenings, error } = await supabase
-  //   .from("screenings")
-  //   .select(
-  //     "*,screening_times!inner(*), movies!inner(*,directors!inner(*)), cinemas!inner(*)",
-  //   );
-
-  // const { data } = await supabase
-  const { data: screenings, error } = await supabase
-    .from("screenings")
-    .select("*, screening_times(*), movies(*, directors(*)), cinemas(*)");
-
-  if (error) {
-    console.error("Error fetching screenings:", error);
-    return [];
-  }
-
-  return screenings || [];
+  return await screeningsService.getPersonalizedScreenings({
+    userId: userData.user.id,
+    cutoffDate,
+  });
 }
-
-export { getPersonalizedScreenings };

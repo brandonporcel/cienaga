@@ -44,7 +44,7 @@ export class LumitonScraper extends BaseCinemaScraper {
       console.log(`Found ${entries.length} events to process`);
 
       // Procesar cada evento individualmente
-      for (const eventData of entries.slice(0, 1)) {
+      for (const eventData of entries) {
         try {
           const eventDetails = await this.scrapeEventDetail(
             eventData.url,
@@ -77,13 +77,26 @@ export class LumitonScraper extends BaseCinemaScraper {
 
       // Título de la película
       const titleElement = $("h1");
-      const title = this.cleanTitle(titleElement.text());
+      const rawTitle = this.cleanTitle(titleElement.text());
+
+      // Ejemplos:
+      // PSICOSIS (PSYCHO)
+      // FRANKENSTEIN
+      // Si hay paréntesis, la parte antes es el título nacional (español)
+      let nationalTitle = rawTitle;
+      let title = rawTitle;
+
+      const match = rawTitle.match(/^(.+?)\s*\(([^)]+)\)/);
+      if (match) {
+        nationalTitle = match[1].trim();
+        title = match[2].trim();
+      }
 
       if (!title) return null;
 
       // Director - formato "Dirección: Juanjo Pereira"
       const directorElement = $('b:contains("Dirección:")');
-      const director = directorElement
+      const directorr = directorElement
         .parent()
         .contents()
         .filter(function () {
@@ -92,6 +105,9 @@ export class LumitonScraper extends BaseCinemaScraper {
         .text()
         .replace("Dirección:", "")
         .trim();
+      const director = directorr.endsWith(".")
+        ? directorr.slice(0, -1)
+        : directorr;
 
       // Extraer bloque con datos adicionales
       const infoText = directorElement
@@ -101,11 +117,13 @@ export class LumitonScraper extends BaseCinemaScraper {
         .replace(/\s+/g, " ")
         .trim();
       // Ejemplo: "Argentina. 87 min. Ficción . 2018."
+      // EE.UU.. 109 min. Ficción. 1960.
 
       // Separar por punto (.)
       const parts = infoText
-        .split(".")
-        .map((p) => p.trim())
+        // separa solo si hay un punto seguido de espacio y una mayúscula o dígito
+        .split(/\.\s+(?=[A-ZÁÉÍÓÚÑ0-9])/)
+        .map((p) => p.replace(/\.+$/, "").trim()) // limpia puntos al final
         .filter(Boolean);
 
       // Ejemplo → ["Argentina", "87 min", "Ficción", "2018"]
@@ -124,6 +142,7 @@ export class LumitonScraper extends BaseCinemaScraper {
 
       return {
         title,
+        nationalTitle,
         director,
         screeningTimeText: originalText.replace(/\s+/g, " ").trim(),
         screeningTimes: times.map((t) => t.toISOString()),

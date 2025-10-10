@@ -1,10 +1,16 @@
+import { ScreeningsService } from "@/lib/services/screenings.service";
+
 import { NotificationService } from "./services/notifications/notification.service";
+
+import "dotenv/config";
 
 class NotificationOrchestrator {
   private notificationService: NotificationService;
+  private screeningsService: ScreeningsService;
 
   constructor() {
     this.notificationService = new NotificationService();
+    this.screeningsService = new ScreeningsService();
   }
 
   async execute(): Promise<void> {
@@ -20,7 +26,9 @@ class NotificationOrchestrator {
 
       // 1. Obtener coincidencias usuario-screening
       const matches =
-        await this.notificationService.getUserScreeningMatches(cutoffDate);
+        await this.screeningsService.getMatchedScreeningsForNotifications(
+          cutoffDate,
+        );
 
       if (matches.length === 0) {
         console.log("✅ No matches found. No notifications to send.");

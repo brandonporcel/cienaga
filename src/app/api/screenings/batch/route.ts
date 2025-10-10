@@ -8,6 +8,7 @@ import { normalizeText } from "@/lib/utils";
 // Schema de validación con Zod
 const ScreeningSchema = z.object({
   title: z.string().min(1).max(200),
+  nationalTitle: z.string().min(1).max(200).optional(),
   director: z.string().optional(),
   screeningTimes: z.array(z.iso.datetime()).min(1).max(20),
   screeningTimeText: z.string().max(100).optional().nullable(),
@@ -32,18 +33,6 @@ const BatchScreeningsSchema = z.object({
 });
 
 type ValidatedScreening = z.infer<typeof ScreeningSchema>;
-
-function extractTitles(titleText: string): { main: string; alt?: string } {
-  // "PSICOSIS (PSYCHO)" → { main: "PSICOSIS", alt: "PSYCHO" }
-  const match = titleText.match(/^([^(]+)(?:\(([^)]+)\))?/);
-  if (match) {
-    return {
-      main: normalizeText(match[1]),
-      alt: match[2] ? normalizeText(match[2]) : undefined,
-    };
-  }
-  return { main: normalizeText(titleText) };
-}
 
 interface ProcessingResult {
   title: string;
@@ -150,6 +139,7 @@ async function processScreening(
     year,
     duration,
     screeningTimes,
+    nationalTitle,
     ...restData
   } = screeningData;
 
@@ -160,6 +150,7 @@ async function processScreening(
       director,
       year,
       duration,
+      nationalTitle,
     });
     if (!movieId) {
       return {
@@ -250,30 +241,25 @@ async function findOrCreateMovie(
     director?: string;
     year?: number;
     duration?: number;
+    nationalTitle?: string;
   },
 ): Promise<string | null> {
   try {
-    const { title, director, year, duration } = movieData;
-    const { main: normalizedTitle, alt: alternativeTitle } =
-      extractTitles(title);
+    const { title, director, nationalTitle, year, duration } = movieData;
+    const normalizedTitle = normalizeText(title);
+    const alternativeTitle = normalizeText(nationalTitle || title);
 
-    // Buscar por título normalizado (ambas variantes si existen)
-    let query = supabase
+    const orConditions = [`title.ilike.%${normalizedTitle}%`];
+    if (alternativeTitle && alternativeTitle !== normalizedTitle) {
+      orConditions.push(`national_title.ilike.%${alternativeTitle}%`);
+    }
+
+    const { data: candidates, error: searchError } = await supabase
       .from("movies")
       .select(
         "id, title, national_title, year, duration, director_id, directors(name)",
       )
-      .or(
-        `title.ilike.%${normalizedTitle}%,national_title.ilike.%${normalizedTitle}%`,
-      );
-
-    if (alternativeTitle) {
-      query = query.or(
-        `title.ilike.%${alternativeTitle}%,national_title.ilike.%${alternativeTitle}%`,
-      );
-    }
-
-    const { data: candidates, error: searchError } = await query;
+      .or(orConditions.join(","));
 
     if (searchError) {
       console.error("Error searching movies:", searchError);
