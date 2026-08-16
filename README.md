@@ -68,14 +68,24 @@
 
 ```
 scripts/
-├── scrape-directors.ts           # Extrae metadatos de Letterboxd
+├── scrape-directors.ts           # Scraping de perfiles de directores (avatar, bio, tmdb_id)
+├── scrape-movie-data.ts          # Scraping de películas (asigna directores y metadatos)
 ├── scrape-screenings.ts          # Orchestrator de carteleras
+├── send-notifications.ts         # Envío de notificaciones por email
 └── services/
-    ├── screenings/               # Scrapers específicos por cine
-    │   ├── base-scraper.service.ts
-    │   ├── malba.scraper.ts
-    │   └── gaumont.scraper.ts
-    └── api.service.ts           # Comunicación con endpoints
+    ├── movie-data/               # Pipeline películas → directores
+    │   ├── api.director.service.ts
+    │   ├── batch-processor.service.ts
+    │   └── letterboxd-scraper.service.ts
+    ├── notifications/            # Agrupación y envío de emails
+    │   ├── email.service.ts
+    │   ├── notification.service.ts
+    │   └── template.builder.ts
+    └── screenings/               # Scrapers específicos por cine
+        ├── base-scraper.service.ts
+        ├── malba.scraper.ts
+        ├── lumiton.scraper.ts
+        └── scraper.factory.ts    # Mapea slug del cine → scraper
 ```
 
 ---
@@ -138,30 +148,32 @@ pnpm type-check            # Verificar TypeScript
 
 ## 🌐 API Endpoints
 
-### Scraping automatizado (protegidos con Bearer token)
+### Scraping automatizado (protegidos con `Authorization: Bearer <CRON_SECRET_KEY>`)
 
 ```
-GET  /api/movies/pending           # Películas sin director asignado
+GET  /api/movies/pending           # Películas sin director ni poster
 GET  /api/movies/count-pending     # Verificar si hay trabajo pendiente
-POST /api/directors/batch          # Guardar directores con metadatos
+POST /api/movies/batch             # Asignar directores y metadatos
+GET  /api/directors/pending        # Directores sin tmdb_id
+POST /api/directors/batch-update   # Actualizar perfiles de directores
 POST /api/screenings/batch         # Guardar eventos de cines en lote
+POST /api/users/bulk               # Emails de usuarios por ids
+POST /api/notifications/log        # Registrar envíos de notificaciones
 ```
 
-### Gestión de usuario
+### Públicos
 
 ```
-POST /api/movies/upload            # Subir CSV de Letterboxd
-GET  /api/user/dashboard           # Dashboard personalizado
+GET  /api/cinemas                  # Cines monitoreados (?enabled=true)
+GET  /api/screenings/featured      # Funciones para la home
 ```
 
-### Carteleras públicas
+### Server actions (sesión del usuario)
 
-```
-GET  /api/screenings/featured      # Top películas en cartelera
-GET  /api/screenings/personalized  # Cartelera filtrada por gustos
-```
+- `saveMoviesAction` — importación de CSVs de Letterboxd
+- `getPersonalizedScreenings` — dashboard personalizado
 
-**Validaciones**: Todos los endpoints usan Zod para validación robusta de datos
+**Validaciones**: Los endpoints usan Zod para validación robusta de datos
 
 ---
 
@@ -170,12 +182,14 @@ GET  /api/screenings/personalized  # Cartelera filtrada por gustos
 | Cine             | URL                                                            | Estado          |
 | ---------------- | -------------------------------------------------------------- | --------------- |
 | **Malba**        | https://malba.org.ar/cine/                                     | ✅              |
-| **Cine York**    | https://www.vicentelopez.gov.ar/agenda/agenda-lumiton          | ✅              |
-| **Sala Lugones** | https://complejoteatral.gob.ar/cine                            | 🔄 Próximamente |
-| **CCK**          | https://palaciolibertad.gob.ar/cine/                           | 🔄 Próximamente |
-| **Gaumont**      | https://www.cinegaumont.ar/                                    | 🔄 Próximamente |
-| **Cine Lorca**   | https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110 | 🔄 Próximamente |
-| **Cine Cosmos**  | https://www.cinecosmos.uba.ar/                                 | 🔄 Próximamente |
+| **Cine York (Lumiton)** | https://lumiton.ar/                                      | ✅              |
+| **Sala Lugones** | https://complejoteatral.gob.ar/cine                            | 🔄 Sin scraper |
+| **CCK**          | https://palaciolibertad.gob.ar/cine/                           | 🔄 Sin scraper |
+| **Gaumont**      | https://www.cinegaumont.ar/                                    | 🔄 Sin scraper |
+| **Cine Lorca**   | https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110 | 🔄 Sin scraper |
+| **Cine Cosmos**  | https://www.cinecosmos.uba.ar/                                 | 🔄 Sin scraper |
+
+Los cines sin scraper están deshabilitados en `db/seed.sql` (`enabled = false`) para que el workflow de carteleras no falle.
 
 ---
 
@@ -193,7 +207,6 @@ GET  /api/screenings/personalized  # Cartelera filtrada por gustos
 - [ ] Usar funciones lambda
 - [ ] Docker
 - [ ] Terminar scrapers de cines
-- [ ] Al guardar pelis skipear cortos. (<=40 min)
 - [ ] Tests
 - [ ] Agregar personalizacion para banda temporal para recibir de notificaciones. Screenings dentro de las proximos x horas/dias.
 - [ ] Agregar tablas en listados [https://www.justinmind.com/ui-design/data-table](https://www.justinmind.com/ui-design/data-table)
