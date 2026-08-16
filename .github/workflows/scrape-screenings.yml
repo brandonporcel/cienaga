@@ -4,27 +4,31 @@ on:
     - cron: "0 20 * * *"
   workflow_dispatch:
 
+env:
+  NODE_VERSION: "24"
+
 jobs:
   scrape-screenings:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
-        run: npm install axios cheerio tsx @types/node
+        run: pnpm install --no-frozen-lockfile
 
       - name: Scrape all cinemas
         env:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
-        run: npx tsx scripts/scrape-screenings.ts
+        run: pnpm exec tsx scripts/scrape-screenings.ts
