@@ -84,7 +84,7 @@ scripts/
 
 ### Prerrequisitos
 
-- Node.js 20+
+- Node.js 24+
 - pnpm
 - Cuenta de Supabase
 - Cuenta de GitHub (para Actions)
