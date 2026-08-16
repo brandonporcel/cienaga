@@ -244,6 +244,7 @@ async function processMovie(
     // Película no existe, crearla
     const { error: insertError } = await supabase.from("movies").insert({
       title: movie.title,
+      national_title: movie.title,
       url: movie.url,
       year: movie.year,
       director_id: directorId,

@@ -1,23 +1,8 @@
 # Roadmap
 
-> Bugs conocidos, decisiones y pendientes. Última actualización: 2026-08-15 (review post-clone).
+> Bugs conocidos, decisiones y pendientes. Última actualización: 2026-08-16.
 
 ## Bugs conocidos (priorizados)
-
-### P1 — Importación de Letterboxd rota contra el schema
-- `saveMoviesAction` (`src/app/actions/movies.ts`) inserta películas sin `national_title` (NOT NULL) → todas las inserciones fallan, se loguean y se continúa; la action devuelve `success: true` igual (falso éxito, toast engañoso).
-- **Decisión**: `national_title NOT NULL` es correcto — el bug es del código, no del schema.
-- **Fix**: incluir `national_title` (y de paso persistir el rating del CSV en `user_movies.rating`).
-- Estado: pendiente.
-
-### P1 — Directores nuevos nunca se crean en screenings/batch
-- `findOrCreateDirector` (`src/app/api/screenings/batch/route.ts`) inserta `{name}` sin `slug` (NOT NULL) → falla → películas de directores fuera del catálogo se descartan. Bonus: la firma dice `Promise<number | null>` pero `directors.id` es uuid.
-- Estado: pendiente.
-
-### P1 — Notificaciones re-envían todo cada 3 días (spam)
-- La tabla `notifications` se escribe (`POST /api/notifications/log`) pero nunca se consulta para excluir screenings ya notificados.
-- **Fix**: en `send-notifications.ts`, excluir screenings cuyos ids ya estén en `notifications.screening_ids` (o marcar por screening+movie).
-- Estado: pendiente.
 
 ### P2 — Links de unsubscribe inexistentes
 - `email.service.ts` y `template.builder.ts` arman `/unsubscribe?token=...` pero la ruta no existe. Crear la ruta (con token por usuario) o sacar el link.

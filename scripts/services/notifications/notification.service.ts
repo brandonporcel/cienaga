@@ -39,7 +39,10 @@ export class NotificationService {
     }
   }
 
-  async processMatches(matches: any[]): Promise<ProcessedMatches[]> {
+  async processMatches(
+    matches: any[],
+    notifiedKeys: Set<string> = new Set(),
+  ): Promise<ProcessedMatches[]> {
     if (!matches || matches.length === 0) {
       return [];
     }
@@ -66,7 +69,7 @@ export class NotificationService {
     const users = await this.fetchUsers(userIds);
 
     // Agrupar screenings por usuario
-    const userGroups = this.groupScreeningsByUser(matches, users);
+    const userGroups = this.groupScreeningsByUser(matches, users, notifiedKeys);
 
     return userGroups;
   }
@@ -98,6 +101,7 @@ export class NotificationService {
   private groupScreeningsByUser(
     matches: any[],
     users: User[],
+    notifiedKeys: Set<string>,
   ): ProcessedMatches[] {
     const userMap = new Map(users.map((user) => [user.id, user]));
     const groupedData = new Map<string, any[]>();
@@ -109,6 +113,11 @@ export class NotificationService {
       userDirectors.forEach((ud: any) => {
         const userId = ud.user_id;
         if (!userId) return;
+
+        // No re-enviar funciones ya notificadas en corridas anteriores
+        if (notifiedKeys.has(`${userId}:${match.id}`)) {
+          return;
+        }
 
         if (!groupedData.has(userId)) {
           groupedData.set(userId, []);

@@ -37,9 +37,15 @@ class NotificationOrchestrator {
         console.log(`🎬 Found ${matches.length} screening matches`);
       }
 
-      // 2. Procesar y agrupar por usuario
-      const processedMatches =
-        await this.notificationService.processMatches(matches);
+      // 2. Excluir funciones ya notificadas en corridas anteriores (dedup)
+      const notifiedKeys =
+        await this.screeningsService.getNotifiedScreeningKeys();
+
+      // 3. Procesar y agrupar por usuario
+      const processedMatches = await this.notificationService.processMatches(
+        matches,
+        notifiedKeys,
+      );
       console.log(
         `👥 Grouped into ${processedMatches.length} user notifications`,
       );
@@ -49,11 +55,11 @@ class NotificationOrchestrator {
         return;
       }
 
-      // 3. Enviar notificaciones
+      // 4. Enviar notificaciones
       const results =
         await this.notificationService.sendNotifications(processedMatches);
 
-      // 4. Reporte final
+      // 5. Reporte final
       console.log("📊 Notification Results:");
       console.log(`   ✅ Sent: ${results.sent}`);
       console.log(`   ❌ Failed: ${results.failed}`);

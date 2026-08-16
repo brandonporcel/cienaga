@@ -44,6 +44,28 @@ export class ScreeningsService {
   }
 
   /**
+   * Claves "userId:screeningId" ya notificadas en corridas anteriores
+   * (últimos 30 días) para no re-enviar la misma función a un usuario.
+   */
+  async getNotifiedScreeningKeys(): Promise<Set<string>> {
+    const from = new Date();
+    from.setDate(from.getDate() - 30);
+
+    const { data } = await this.supabase
+      .from("notifications")
+      .select("user_id, screening_ids")
+      .gte("sent_at", from.toISOString());
+
+    const keys = new Set<string>();
+    for (const notification of data || []) {
+      for (const screeningId of notification.screening_ids || []) {
+        keys.add(`${notification.user_id}:${screeningId}`);
+      }
+    }
+    return keys;
+  }
+
+  /**
    * Para dashboard personalizado (usuario específico)
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -46,6 +46,7 @@ async function saveMoviesAction(movies: LetterboxdMovie[]) {
           .from("movies")
           .insert({
             title: movie.title,
+            national_title: movie.title,
             year: movie.year,
             url: movie.url,
           })

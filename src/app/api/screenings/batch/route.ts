@@ -410,7 +410,7 @@ function findBestMovieMatch(
 async function findOrCreateDirector(
   supabase: SupabaseClient,
   directorName: string,
-): Promise<number | null> {
+): Promise<string | null> {
   try {
     // Buscar director existente
     const { data: existingDirector } = await supabase
@@ -423,19 +423,29 @@ async function findOrCreateDirector(
       return existingDirector.id;
     }
 
-    // Crear nuevo director
-    const { data: newDirector, error: createError } = await supabase
-      .from("directors")
-      .insert({ name: directorName })
-      .select("id")
-      .single();
+    // Crear nuevo director con slug derivado del nombre
+    const baseSlug = normalizeText(directorName).replace(/\s+/g, "-");
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const slug = attempt === 1 ? baseSlug : `${baseSlug}-${attempt}`;
+      const { data: newDirector, error: createError } = await supabase
+        .from("directors")
+        .insert({ name: directorName, slug })
+        .select("id")
+        .single();
 
-    if (createError) {
-      console.error("Error creating director:", createError);
-      return null;
+      if (newDirector) {
+        return newDirector.id;
+      }
+
+      // Reintentar solo ante colisión de slug único (código 23505)
+      if (createError?.code !== "23505") {
+        console.error("Error creating director:", createError);
+        return null;
+      }
     }
 
-    return newDirector.id;
+    console.error("Error creating director: slug collision after 3 attempts");
+    return null;
   } catch (error) {
     console.error("Error in findOrCreateDirector:", error);
     return null;
