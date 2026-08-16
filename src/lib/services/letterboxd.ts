@@ -10,12 +10,15 @@ export default class LetterboxdService {
         skipEmptyLines: true,
         complete: (results) => {
           try {
-            const movies = (results.data as LetterboxdCSVRow[]).map((row) => ({
-              title: row["Name"],
-              year: Number(row["Year"]),
-              rating: isNaN(Number(row["Rating"])) ? undefined : undefined,
-              url: row["Letterboxd URI"],
-            }));
+            const movies = (results.data as LetterboxdCSVRow[]).map((row) => {
+              const parsedRating = Number(row["Rating"]);
+              return {
+                title: row["Name"],
+                year: Number(row["Year"]),
+                rating: isNaN(parsedRating) ? undefined : parsedRating,
+                url: row["Letterboxd URI"],
+              };
+            });
             resolve(movies);
           } catch (err) {
             reject(err);
@@ -42,13 +45,21 @@ export default class LetterboxdService {
 
     const allMovies = allResults.flat();
 
-    // Eliminar duplicados
+    // Eliminar duplicados priorizando la entrada que trae rating
+    // (watched.csv se procesa antes que ratings.csv y no tiene rating)
     const deduped = allMovies.reduce<LetterboxdMovie[]>((acc, movie) => {
-      const existing = acc.find(
+      const existingIndex = acc.findIndex(
         (m) => m.title === movie.title && m.year === movie.year,
       );
-      if (!existing) {
+
+      if (existingIndex === -1) {
         acc.push(movie);
+      } else if (
+        movie.rating !== undefined &&
+        acc[existingIndex].rating === undefined
+      ) {
+        // El duplicado trae rating que el primero no tenía → usar el enriquecido
+        acc[existingIndex] = movie;
       }
       return acc;
     }, []);

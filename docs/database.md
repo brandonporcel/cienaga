@@ -46,7 +46,8 @@
 ### `user_directors`
 
 - PK compuesta `(user_id, director_id)`, FKs CASCADE.
-- Se genera en `POST /api/movies/batch`: **cualquier usuario con una película vista del director lo sigue** (sin umbral ni rating mínimo). Rediseñar pendiente en roadmap.
+- `source` indica cómo se creó la relación: `auto` (calculado por el algoritmo), `manual` (override del usuario) o `muted` (override: no recibir notificaciones). Los overrides manuales/muted nunca se pisan al recalcular.
+- Se genera en `POST /api/movies/batch` y `POST /api/directors/recalculate` con el criterio: **≥ 2 películas vistas Y ≥ 50% con rating ≥ 3.5, o ≥ 1 película con rating 5** (ver `src/lib/services/director-preference.ts`).
 - ⚠️ Sin índice sobre `user_id`.
 
 ### `movies`
@@ -66,7 +67,7 @@
 
 ### `user_movies`
 
-- PK compuesta `(user_id, movie_id)`, FKs CASCADE. `rating` nullable (el rating del CSV nunca se persiste).
+- PK compuesta `(user_id, movie_id)`, FKs CASCADE. `rating` nullable (rating del usuario para la película, desde el CSV de ratings).
 - ⚠️ Sin índices sobre `user_id` ni `movie_id`.
 
 ### `screenings`

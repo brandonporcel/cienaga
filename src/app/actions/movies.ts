@@ -17,7 +17,11 @@ async function saveMoviesAction(movies: LetterboxdMovie[]) {
     const userId = userData.user.id;
 
     // 1. Procesar cada película individualmente para evitar duplicados
-    const movieIds: string[] = [];
+    const userMovieInserts: {
+      user_id: string;
+      movie_id: string;
+      rating?: number;
+    }[] = [];
 
     for (const movie of movies) {
       // Verificar si la película ya existe
@@ -62,22 +66,20 @@ async function saveMoviesAction(movies: LetterboxdMovie[]) {
         console.log(`Created new movie: ${movie.title} (${movie.year})`);
       }
 
-      movieIds.push(movieId);
+      userMovieInserts.push({
+        user_id: userId,
+        movie_id: movieId,
+        ...(movie.rating !== undefined && { rating: movie.rating }),
+      });
     }
 
-    // 2. Crear relaciones user_movies (solo para películas nuevas del usuario)
-    const userMovieInserts = movieIds.map((movieId) => ({
-      user_id: userId,
-      movie_id: movieId,
-    }));
+    // 2. Crear relaciones user_movies (upsert para actualizar ratings al re-subir)
 
     if (userMovieInserts.length > 0) {
-      // Usar upsert para evitar duplicados
       const { error: userMoviesError } = await supabase
         .from("user_movies")
         .upsert(userMovieInserts, {
           onConflict: "user_id,movie_id",
-          ignoreDuplicates: true,
         });
 
       if (userMoviesError) {
@@ -103,12 +105,12 @@ async function saveMoviesAction(movies: LetterboxdMovie[]) {
     }
 
     console.log(
-      `Successfully processed ${movieIds.length} movies for user ${userId}`,
+      `Successfully processed ${userMovieInserts.length} movies for user ${userId}`,
     );
 
     return {
       success: true,
-      processedCount: movieIds.length,
+      processedCount: userMovieInserts.length,
       totalCount: movies.length,
     };
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { shouldFollowDirector } from "@/lib/services/director-preference";
 import { createClientForServer } from "@/lib/supabase/server";
 
 interface MovieDataData {
@@ -161,13 +162,14 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Sincronizar user_directors
+        // Sincronizar user_directors con el criterio de favoritos (fase 1)
         // Encontrar usuarios que tienen películas de este director
         const { data: usersWithMovies, error: queryError } = await supabase
           .from("user_movies")
           .select(
             `
             user_id,
+            rating,
             movies!inner (
               director_id
             )
@@ -176,15 +178,24 @@ export async function POST(request: NextRequest) {
           .eq("movies.director_id", directorId);
 
         if (!queryError && usersWithMovies && usersWithMovies.length > 0) {
-          // Extraer user_ids únicos
-          const uniqueUserIds = [
-            ...new Set(usersWithMovies.map((item) => item.user_id)),
-          ];
+          // Agrupar películas vistas por usuario
+          const filmsByUser = new Map<string, { rating: number | null }[]>();
 
-          // Para cada usuario, verificar si ya tiene la relación user_directors
-          const userDirectorInserts = [];
+          for (const item of usersWithMovies) {
+            const films = filmsByUser.get(item.user_id) ?? [];
+            films.push({ rating: item.rating });
+            filmsByUser.set(item.user_id, films);
+          }
 
-          for (const userId of uniqueUserIds) {
+          const userDirectorInserts: {
+            user_id: string;
+            director_id: string;
+            source: "auto";
+          }[] = [];
+
+          for (const [userId, films] of filmsByUser) {
+            if (!shouldFollowDirector(films)) continue;
+
             const { data: existingRelation } = await supabase
               .from("user_directors")
               .select("user_id")
@@ -196,6 +207,7 @@ export async function POST(request: NextRequest) {
               userDirectorInserts.push({
                 user_id: userId,
                 director_id: directorId,
+                source: "auto",
               });
             }
           }

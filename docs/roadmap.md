@@ -18,19 +18,23 @@
 - Estado: pendiente (pateado por el usuario).
 
 ### P2 — "Directores favoritos" no existe
-- `user_directors` se genera con "vio 1 película → lo sigue" en `movies/batch`. Sin umbral, rating mínimo ni selección explícita.
-- **Decisión tomada (2026-08-16)**: algoritmo fase 1 con umbrales por default — ver "Algoritmo fase 1" en Cambios recientes.
-- Estado: pendiente de implementar (prerequisito: persistir ratings — bug P3 de `letterboxd.ts`).
+- ~~`user_directors` se genera con "vio 1 película → lo sigue" en `movies/batch`.~~
+- **Implementado (2026-08-16)**: algoritmo fase 1 con umbrales en `movies/batch` + endpoint `POST /api/directors/recalculate` (respeta overrides manual/muted) + columna `source` en `user_directors`. Ver "Cambios recientes".
+- **Pendiente en prod**: correr la migración SQL (columna `source`), re-subir los CSVs (para persistir ratings con el fix), y correr el recalculate.
 
 ### P3 — Bugs menores
 - `count-pending` no valida Bearer y su filtro no coincide con `/api/movies/pending`.
-- Filtros client-side del dashboard no filtran la grilla (solo el mensaje de "sin resultados").
+- Filtros client-side del dashboard no filtran la grilla (solo el mensaje de "sin resultados"). ⚠️ Arreglado en `/directors` (2026-08-16: buscador + filtros por estado en `DirectorsGrid`); revisar si `/dashboard` tiene el mismo problema.
 - `addToCalendar` (`src/components/screenings/card.tsx`) usa `new Date()` en vez del horario de la función.
 - `email.service.ts` parsea `screening.screening_time_text` con `new Date()` → "Invalid Date" en el texto plano; `notification.service.ts` ordena por `screening.screening_time` (propiedad inexistente).
-- Workflows de scrape hacen `npm install` suelto (axios, cheerio...) en vez de instalar el proyecto con lockfile.
-- `rating: isNaN(...) ? undefined : undefined` en `letterboxd.ts` — no-op; el rating nunca se persiste.
+- ~~Workflows de scrape hacen `npm install` suelto (axios, cheerio...)~~ → arreglado 2026-08-16: los 3 workflows usan `pnpm install` con lockfile + `pnpm/action-setup@v4`.
+- ~~`rating: isNaN(...) ? undefined : undefined` en `letterboxd.ts`~~ → arreglado 2026-08-16: el rating del CSV se persiste en `user_movies` (el upsert actualiza ratings al re-subir).
 
 ## Infraestructura
+
+### Lint roto (errores preexistentes)
+- `pnpm lint` falla con 11 errores `@typescript-eslint/no-explicit-any` en `scripts/send-notifications.ts`, `scripts/services/email.service.ts`, `scripts/services/notification.service.ts` y 1 `no-empty-object-type` en `scripts/services/screenings/lumiton.scraper.ts`. Preexistentes al 2026-08-16; tipar con `unknown` + narrowing o casts explícitos.
+- Estado: pendiente.
 
 ### Sin CI de verificación
 - No hay tests ni workflow de lint/build en PRs. Mínimo viable: agregar `pnpm lint` + `pnpm type-check` a un workflow de PR.
@@ -48,6 +52,20 @@
 - En vez de scrapear, obtener datos del JSON de Letterboxd (`https://letterboxd.com/film/<slug>/json/`). ⚠️ **Probado y descartado el 2026-08-16**: Cloudflare responde 403 al fingerprint TLS de Node (axios y fetch); solo curl/browsers pasan. Si se retoma, requeriría browser real (Playwright) o proxy — ver "Cambios recientes".
 
 ## Cambios recientes
+
+### 2026-08-16 — Modal refinado: estrellas, buscador funcional y listado reactivo
+- **Estrellas estilo Letterboxd** en la filmografía del modal (relleno fraccional por estrella, soporta medios — los ratings del CSV van de 0.5 a 5).
+- **Buscador funcional** en `/directors`: `DirectorsGrid` (client) filtra por nombre en vivo; dropdown Filtrar con Seguidos/Favoritos/Silenciados/Alfabético; contador dinámico; empty state diferenciado (sin datos vs sin resultados). `filters.tsx` eliminado (era UI muerta).
+- **Listado reactivo**: al dejar de seguir desde el modal, el director se quita del grid sin recargar (callback `onPreferenceChanged`); al silenciar/des-silenciar, el badge se actualiza en vivo. Loader spinner en el botón de la acción en curso.
+
+### 2026-08-16 — Algoritmo fase 1 implementado, modal de detalle, fixes de pipeline
+- **Criterio en código compartido** (`src/lib/services/director-preference.ts`): `shouldFollowDirector(films)` — ≥ 2 vistas Y ≥ 50% con ≥ 3.5★, o ≥ 1 con 5★; + `getDirectorMetrics` para la justificación UI. Lo usan `movies/batch` y `recalculate` (DRY).
+- **`user_directors.source`** (`auto | manual | muted`): los overrides sobreviven al recálculo. Migración pendiente en prod.
+- **`POST /api/directors/recalculate`** (Bearer): recalcula para todos los usuarios, agrega los que cumplen, quita los `auto` que ya no cumplen, nunca toca `manual`/`muted`. Evita re-scrapear películas.
+- **Modal de detalle** (`src/components/directors/detail-dialog.tsx`): click en card → estado (badge), justificación ("Viste n pelis, m con 3.5★ (x%)" / "5★ en..."), filmografía vista con ratings, acciones Silenciar / Dejar de silenciar / Dejar de seguir.
+- **Card**: badge de estado reemplaza al botón "Deshabilitar" muerto; contador de directores en el listado.
+- **Fix ratings CSV**: `letterboxd.ts` persistía `undefined` siempre; ahora parsea y `saveMoviesAction` guarda el rating en `user_movies` (upsert que actualiza al re-subir).
+- **Fix workflows CI**: los 3 workflows (`scrape-directors`, `scrape-screenings`, `send-notifications`) hacían `npm install` suelto con `cache: pnpm` (→ "Path Validation Error" en GA) y `pnpm/action-setup@v2` (Node 20 deprecado). Alineados al patrón de `scrape-movie-data.yml`: `pnpm install --no-frozen-lockfile` + `pnpm exec tsx` + action-setup@v4.
 
 ### 2026-08-16 — Decisiones de producto: algoritmo fase 1, settings, CTA y feature lista
 Brainstorming con el usuario; quedan definidas estas decisiones y direcciones:
@@ -72,7 +90,7 @@ Brainstorming con el usuario; quedan definidas estas decisiones y direcciones:
 - Sin lógica de envío todavía.
 
 **Detalle de director — formato decidido: MODAL** (aprobado 2026-08-16):
-- Al clickear la card del director se abre un modal con: estado (auto/manual/silenciado), acciones seguir/ocultar/silenciar, y filmografía vista con sus ratings (mini-lista).
+- Al clickear la card del director se abre un modal con: estado (auto/manual/muted), acciones seguir/ocultar/silenciar, y filmografía vista con sus ratings (mini-lista).
 
 **Feature lista de Letterboxd ("Funciones en Buenos Aires"):**
 - Scrape del HTML `/list/<slug>/detail/` (paginado, 4 páginas) + parser de notas en texto libre (formatos: "Del 13 al 19", "13/8 a las 15:00 hs", "13, 14 y 18 de Agosto a las 17:00 hs").

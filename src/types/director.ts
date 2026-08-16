@@ -1,3 +1,7 @@
+import { DirectorSource } from "@/lib/services/director-preference";
+
+export type { DirectorSource };
+
 export interface Director {
   id: string;
   name: string;
@@ -5,4 +9,23 @@ export interface Director {
   image_url: string;
   user_directors?: { user_id: string }[];
   created_at: string;
+  source?: DirectorSource;
+}
+
+export interface DirectorDetail {
+  director: Director;
+  /** null = el usuario no tiene relación con este director */
+  source: DirectorSource | null;
+  metrics: {
+    watched: number;
+    rated35Plus: number;
+    ratedFiveStars: number;
+    pct35Plus: number;
+  };
+  filmography: {
+    title: string;
+    year: number | null;
+    poster_url: string | null;
+    rating: number | null;
+  }[];
 }
