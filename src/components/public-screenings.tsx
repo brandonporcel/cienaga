@@ -8,12 +8,21 @@ import ScreeningCard from "./screenings/card";
 
 export default function PublicScreenings() {
   const [screenings, setScreenings] = useState<Screening[]>([]);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const getScreenings = async () => {
-      const res = await fetch("/api/screenings/featured");
-      const parsedData: { data: Screening[] } = await res.json();
-      setScreenings(parsedData.data);
+      try {
+        const res = await fetch("/api/screenings/featured");
+        if (!res.ok) {
+          setError(true);
+          return;
+        }
+        const parsedData: { data: Screening[] | null } = await res.json();
+        setScreenings(parsedData.data ?? []);
+      } catch {
+        setError(true);
+      }
     };
     getScreenings();
   }, []);
@@ -34,11 +43,21 @@ export default function PublicScreenings() {
       </header>
 
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {screenings.map((screening) => (
-            <ScreeningCard key={screening.id} screening={screening} />
-          ))}
-        </div>
+        {error ? (
+          <p className="text-muted-foreground py-8 text-center">
+            No se pudieron cargar las funciones. Intentalo de nuevo mas tarde.
+          </p>
+        ) : screenings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {screenings.map((screening) => (
+              <ScreeningCard key={screening.id} screening={screening} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground py-8 text-center">
+            Todavia no hay funciones disponibles.
+          </p>
+        )}
       </div>
     </>
   );
