@@ -8,6 +8,7 @@ import {
   IconBrandWhatsapp,
   IconChairDirector,
   IconDashboard,
+  IconSettings,
   // IconHelpCircle,
   IconMail,
   IconSeedling,
@@ -42,6 +43,11 @@ const data: Record<string, NavItem[]> = {
       title: "Directores",
       href: ROUTES.directors.path,
       icon: IconChairDirector,
+    },
+    {
+      title: "Configuración",
+      href: ROUTES.settings.path,
+      icon: IconSettings,
     },
   ],
   navSecondary: [

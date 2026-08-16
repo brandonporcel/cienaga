@@ -1,7 +1,33 @@
-import { Calendar, KeyRound, Mail, Pencil, User } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  Film,
+  KeyRound,
+  Mail,
+  Pencil,
+  SlidersHorizontal,
+  User,
+} from "lucide-react";
 
 import { createClientForServer } from "@/lib/supabase/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default async function Settings() {
   const supabase = await createClientForServer();
@@ -10,11 +36,11 @@ export default async function Settings() {
   return (
     <>
       <h2 className="text-lg font-semibold text-neutral-500 mb-6">
-        Información del perfil
+        Configuración
       </h2>
 
-      {/* Correo electrónico */}
       <div className="space-y-6">
+        {/* Correo electrónico */}
         <div className="rounded-lg border text-card-foreground shadow-sm relative overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6">
             <div className="flex items-center gap-2">
@@ -107,6 +133,119 @@ export default async function Settings() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Notificaciones y recomendaciones */}
+      <h2 className="text-lg font-semibold text-neutral-500 mt-10 mb-6">
+        Notificaciones y recomendaciones
+      </h2>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Bell className="w-5 h-5" />
+              Notificaciones
+            </CardTitle>
+            <CardDescription>
+              Elegí cómo y cuándo Ciénaga te avisa de las funciones de tus
+              directores.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="range">Ventana de funciones</Label>
+              <Select disabled defaultValue="7">
+                <SelectTrigger id="range" className="w-full sm:w-64">
+                  <SelectValue placeholder="Seleccioná una ventana" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Próxima semana (7 días)</SelectItem>
+                  <SelectItem value="14">Próximos 14 días</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Funciones que entran en el rango elegido a partir de hoy.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="frequency">Frecuencia de resumen</Label>
+              <Select disabled defaultValue="new">
+                <SelectTrigger id="frequency" className="w-full sm:w-64">
+                  <SelectValue placeholder="Seleccioná una frecuencia" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">Solo funciones nuevas</SelectItem>
+                  <SelectItem value="daily">Resumen diario</SelectItem>
+                  <SelectItem value="weekly">Resumen semanal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Button disabled>Guardar cambios</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <SlidersHorizontal className="w-5 h-5" />
+              Directores favoritos
+            </CardTitle>
+            <CardDescription>
+              Cómo Ciénaga decide a qué directores seguís automáticamente.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-md border bg-muted/40 p-4 text-sm">
+              Seguimos a un director cuando:
+              <ul className="mt-2 list-disc pl-5 space-y-1">
+                <li>
+                  Viste <strong>2 o más</strong> películas suyas y a la{" "}
+                  <strong>mitad o más</strong> les diste <strong>3.5★ o más</strong>,
+                  o
+                </li>
+                <li>
+                  Le diste <strong>5★</strong> a al menos una de sus películas.
+                </li>
+              </ul>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Podés seguir o silenciar cualquier director manualmente desde su
+              detalle: eso tiene prioridad sobre los umbrales.
+            </p>
+            <div>
+              <Button variant="outline" disabled>
+                Ajustar umbrales (próximamente)
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Film className="w-5 h-5" />
+              Cines
+            </CardTitle>
+            <CardDescription>
+              Cines que monitorea Ciénaga para las funciones de tus directores.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">Malba</Badge>
+              <Badge variant="secondary">Lumiton</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Los cines se suman automáticamente a medida que Ciénaga los
+              detecta.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </>
   );

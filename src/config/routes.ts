@@ -17,6 +17,6 @@ export const ROUTES: Record<Route, RouteObject> = {
   dashboard: { path: "/dashboard", label: "Cartelera" },
   directors: { path: "/directors", label: "Directores" },
   help: { path: "/help", label: "Centro de Ayuda" },
-  settings: { path: "/settings", label: "Perfil" },
+  settings: { path: "/settings", label: "Configuración" },
   billing: { path: "/billing", label: "Facturación" },
 } as const;

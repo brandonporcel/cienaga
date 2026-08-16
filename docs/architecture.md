@@ -51,6 +51,8 @@ scrape-movie-data.ts
       └─ además genera user_directors: cualquier user con user_movies de un director lo sigue
 ```
 
+⚠️ **Hallazgo (2026-08-16)**: el endpoint JSON de Letterboxd (`/film/<slug>/json/`) responde **403 a clientes Node** (axios y fetch — fingerprint TLS bloqueado por Cloudflare); solo responde a curl/browsers. No usar ese endpoint desde los scripts. Ver `docs/roadmap.md`.
+
 ## Flujo 3 — Scraping de perfiles de directores (GitHub Actions, cada 3 días)
 
 ```
