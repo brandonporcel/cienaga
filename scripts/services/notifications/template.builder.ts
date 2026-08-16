@@ -129,7 +129,7 @@ export class EmailTemplateBuilder {
       director_name: director.name,
       movie_year: movie.year?.toString() || "",
       cinema_name: cinema.name,
-      cinema_logo: cinema.image_url.endsWith(".svg")
+      cinema_logo: cinema.image_url?.endsWith(".svg") || !cinema.image_url
         ? ""
         : `<img src="${cinema.image_url}" alt="${cinema.name}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 8px;">`,
       duration_display: durationText,

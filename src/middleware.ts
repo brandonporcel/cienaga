@@ -6,6 +6,7 @@ import { ROUTES } from "./config/routes";
 const protectedRoutes: string[] = [
   ROUTES.dashboard.path,
   ROUTES.directors.path,
+  ROUTES.settings.path,
 ];
 
 /**

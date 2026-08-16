@@ -76,7 +76,7 @@ export default async function Settings() {
               Fecha de registro
             </div>
             <div className="text-sm text-muted-foreground">
-              Tu fecha de registro en Gasti
+              Tu fecha de registro en Ciénaga
             </div>
           </div>
           <div className="p-6 pt-0">

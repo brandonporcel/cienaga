@@ -87,11 +87,16 @@ export async function POST(request: NextRequest) {
             .eq("id", movieId);
         }
 
-        if (movieNationalName)
-          await supabase
+        if (movieNationalName) {
+          const { error: nationalTitleError } = await supabase
             .from("movies")
-            .update({ national_name: movieNationalName })
+            .update({ national_title: movieNationalName })
             .eq("id", movieId);
+
+          if (nationalTitleError) {
+            console.error("Error updating national_title:", nationalTitleError);
+          }
+        }
 
         if (movieSlug)
           await supabase

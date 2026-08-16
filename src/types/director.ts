@@ -1,5 +1,5 @@
 export interface Director {
-  id: number;
+  id: string;
   name: string;
   url: string;
   image_url: string;
