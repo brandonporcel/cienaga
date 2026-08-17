@@ -47,62 +47,53 @@ export default function ScreeningsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-border backdrop-blur-sm sticky top-0 z-50 bg-gradient-to-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-balance">🌊 Ciénaga</h1>
-              <p className="text-muted-foreground text-pretty">
-                Películas de tus directores favoritos en Buenos Aires
-              </p>
-            </div>
-          </div>
+    <>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">Cartelera</h1>
+        <p className="text-muted-foreground text-sm">
+          Funciones de tus directores favoritos en Buenos Aires
+        </p>
+      </div>
 
-          {/* Search Bar */}
-          <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Buscar por película o director..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-background/50 backdrop-blur-sm"
-            />
-          </div>
+      {/* Search Bar */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          placeholder="Buscar por película o director..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
-          {/* Cinema Filter */}
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {cinemas.map((cinema) => (
-              <Button
-                key={cinema.name}
-                variant={selectedCinema === cinema.name ? "default" : "outline"}
-                onClick={() => setSelectedCinema(cinema.name)}
-                className="flex items-center gap-2 whitespace-nowrap"
-              >
-                {cinema.name}
-              </Button>
-            ))}
-          </div>
+      {/* Cinema Filter */}
+      <div className="flex gap-3 overflow-x-auto pb-4">
+        {cinemas.map((cinema) => (
+          <Button
+            key={cinema.name}
+            variant={selectedCinema === cinema.name ? "default" : "outline"}
+            onClick={() => setSelectedCinema(cinema.name)}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            {cinema.name}
+          </Button>
+        ))}
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {screenings.map((screening) => (
+          <ScreeningCard key={screening.id} screening={screening} />
+        ))}
+      </div>
+
+      {filteredScreenings.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-sm">
+            No se encontraron funciones que coincidan con tu búsqueda.
+          </p>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {screenings.map((screening) => (
-            <ScreeningCard key={screening.id} screening={screening} />
-          ))}
-        </div>
-
-        {filteredScreenings.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              No se encontraron funciones que coincidan con tu búsqueda.
-            </p>
-          </div>
-        )}
-      </main>
-    </div>
+      )}
+    </>
   );
 }

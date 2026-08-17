@@ -7,12 +7,8 @@ export default async function DirectorsPage() {
   const directors = await getDirectors();
 
   return (
-    <div className="min-h-screen w-full max-w-7xl mx-auto">
-      <div className="flex items-center justify-end mb-4">
-        <UploadDialog />
-      </div>
-
-      <DirectorsGrid directors={directors} />
+    <div className="w-full">
+      <DirectorsGrid directors={directors} toolbar={<UploadDialog />} />
     </div>
   );
 }

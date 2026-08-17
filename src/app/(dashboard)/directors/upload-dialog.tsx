@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -24,6 +24,38 @@ import {
 } from "@/components/ui/dialog";
 import { saveMoviesAction } from "@/app/actions/movies";
 
+type SubmitStep = "idle" | "parsing" | "saving" | "done";
+
+function getNextDirectorRun(): string {
+  const now = new Date();
+  // Cron: "0 0 */3 * *" = every 3 days at 00:00 UTC
+  const dayOfMonth = now.getUTCDate();
+  const daysInMonth = new Date(
+    now.getUTCFullYear(),
+    now.getUTCMonth() + 1,
+    0,
+  ).getUTCDate();
+
+  // Find next multiple of 3 that's >= today (1-indexed)
+  let nextDay = Math.ceil(dayOfMonth / 3) * 3;
+  if (nextDay < dayOfMonth) nextDay += 3;
+  if (nextDay > daysInMonth) nextDay = 3; // rollover to next month
+
+  const next = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), nextDay, 0, 0, 0),
+  );
+  if (next <= now) {
+    next.setUTCDate(next.getUTCDate() + 3);
+  }
+
+  return next.toLocaleDateString("es-AR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "America/Argentina/Buenos_Aires",
+  });
+}
+
 export function UploadDialog() {
   const { handleSubmit, setValue, reset, formState, watch } =
     useForm<FilesSchemaType>({
@@ -34,26 +66,44 @@ export function UploadDialog() {
   const ratingsFile = watch("ratings");
   const [isOpen, setIsOpen] = useState(false);
   const [confirmAbort, setConfirmAbort] = useState(false);
+  const [detectedCount, setDetectedCount] = useState<number | null>(null);
+  const [submitStep, setSubmitStep] = useState<SubmitStep>("idle");
   const isSubmitting = formState.isSubmitting;
 
-  const handleFilesSelected = (files: FileList) => {
+  const handleFilesSelected = async (files: FileList) => {
     Array.from(files).forEach((file) => {
       if (file.name.includes("watched")) setValue("watched", file);
       if (file.name.includes("ratings")) setValue("ratings", file);
     });
+
+    // Parsear CSVs inmediatamente para mostrar cantidad detectada
+    try {
+      const fileMap: FilesSchemaType = { watched: undefined, ratings: undefined };
+      Array.from(files).forEach((file) => {
+        if (file.name.includes("watched")) fileMap.watched = file;
+        if (file.name.includes("ratings")) fileMap.ratings = file;
+      });
+
+      const movies = await LetterboxdService.getMovies(fileMap);
+      setDetectedCount(movies.length);
+    } catch {
+      // Silenciar errores de parsing aquí — se mostrarán al submit
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
     if (!open && isSubmitting) {
-      // Si se intenta cerrar mientras se procesan los archivos, pedir confirmación
       setConfirmAbort(true);
       return;
     }
     setIsOpen(open);
-    if (!open) reset();
+    if (!open) {
+      reset();
+      setDetectedCount(null);
+      setSubmitStep("idle");
+    }
   };
 
-  // Click fuera, Escape o drag fuera durante la subida: no cerrar, preguntar
   const blockCloseWhileSubmitting = (event: Event) => {
     if (isSubmitting) {
       event.preventDefault();
@@ -65,21 +115,45 @@ export function UploadDialog() {
     setConfirmAbort(false);
     reset();
     setIsOpen(false);
+    setDetectedCount(null);
+    setSubmitStep("idle");
   };
 
   const onSubmit = async (values: FilesSchemaType) => {
     try {
+      setSubmitStep("parsing");
       const movies = await LetterboxdService.getMovies(values);
+
+      setSubmitStep("saving");
       await saveMoviesAction(movies);
+
+      setSubmitStep("done");
+      const nextRun = getNextDirectorRun();
       toast.success(
-        "Películas importadas. En unas horas verás tus directores favoritos.",
+        `¡${movies.length} película${movies.length !== 1 ? "s" : ""} importada${movies.length !== 1 ? "s" : ""}! Tus directores favoritos se actualizarán el ${nextRun}.`,
       );
       reset();
       setIsOpen(false);
+      setDetectedCount(null);
+      setSubmitStep("idle");
     } catch (error) {
       showCatchErrorToast(error);
+    } finally {
+      setSubmitStep("idle");
     }
   };
+
+  const stepLabel =
+    submitStep === "parsing"
+      ? "Analizando archivos..."
+      : submitStep === "saving"
+        ? "Guardando películas..."
+        : submitStep === "done"
+          ? "¡Listo!"
+          : "Procesar archivos";
+
+  const hasFiles = !!(watchedFile || ratingsFile);
+  const buttonDisabled = isSubmitting || !hasFiles;
 
   return (
     <>
@@ -118,6 +192,15 @@ export function UploadDialog() {
             {ratingsFile && (
               <p className="text-xs text-green-500">✅ {ratingsFile.name}</p>
             )}
+            {detectedCount !== null && (
+              <p className="text-sm font-medium text-muted-foreground mt-2">
+                Se detectaron{" "}
+                <span className="text-foreground font-semibold">
+                  {detectedCount}
+                </span>{" "}
+                película{detectedCount !== 1 ? "s" : ""}
+              </p>
+            )}
           </div>
 
           <UploadInstructions />
@@ -138,9 +221,12 @@ export function UploadDialog() {
             </DialogClose>
             <Button
               onClick={handleSubmit(onSubmit)}
-              disabled={isSubmitting}
+              disabled={buttonDisabled}
             >
-              {isSubmitting ? "Cargando..." : "Procesar archivos"}
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {stepLabel}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -24,7 +24,7 @@ const FILTER_LABELS: Record<Exclude<ListFilter, "all" | "alpha">, string> = {
   muted: "Silenciados",
 };
 
-export function DirectorsGrid({ directors: initial }: { directors: Director[] }) {
+export function DirectorsGrid({ directors: initial, toolbar }: { directors: Director[]; toolbar?: React.ReactNode }) {
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>("all");
@@ -111,6 +111,7 @@ export function DirectorsGrid({ directors: initial }: { directors: Director[] })
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        {toolbar}
       </div>
 
       {filtered.length === 0 ? (

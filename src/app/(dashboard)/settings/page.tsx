@@ -45,7 +45,7 @@ export default async function Settings() {
           <div className="flex flex-col space-y-1.5 p-6">
             <div className="flex items-center gap-2">
               <Mail className="w-6 h-6 text-white" />
-              <h3 className="text-2xl font-semibold tracking-tight">
+              <h3 className="text-base font-semibold tracking-tight">
                 Correo electrónico
               </h3>
             </div>
@@ -73,7 +73,7 @@ export default async function Settings() {
         {/* Tu nombre */}
         <div className="rounded-lg border text-card-foreground shadow-sm relative overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6">
-            <div className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+            <div className="text-base font-semibold leading-none tracking-tight flex items-center gap-2">
               <User />
               Tu nombre
             </div>
@@ -97,7 +97,7 @@ export default async function Settings() {
         {/* Fecha de registro */}
         <div className="rounded-lg border text-card-foreground shadow-sm relative overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6">
-            <div className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+            <div className="text-base font-semibold leading-none tracking-tight flex items-center gap-2">
               <Calendar />
               Fecha de registro
             </div>
@@ -113,7 +113,7 @@ export default async function Settings() {
         {/* Seguridad */}
         <div className="rounded-lg border text-card-foreground shadow-sm relative overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6">
-            <div className="text-2xl font-semibold leading-none tracking-tight flex items-center gap-2">
+            <div className="text-base font-semibold leading-none tracking-tight flex items-center gap-2">
               <KeyRound />
               Seguridad
             </div>
