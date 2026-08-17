@@ -21,6 +21,7 @@
 - **Importar historial de Letterboxd**: Sube tus archivos `watched.csv` y `ratings.csv`
 - **Extracción automática de directores**: Sistema de scraping que obtiene directores, posters, y metadatos desde Letterboxd
 - **Scraping de carteleras**: Monitoreo automático de cines porteños con datos detallados (horarios, salas, precios)
+- **Lista de funciones**: Scraping semanal de la [lista de Letterboxd](https://letterboxd.com/lamateroric/list/funciones-en-buenos-aires/) con cines nuevos descubiertos automáticamente
 - **Seguimiento inteligente**: Automáticamente identifica directores favoritos basado en tu historial
 - **Notificaciones personalizadas**: Te avisa por email cuando hay películas de directores que seguís
 - **Dashboard rico**: Muestra coincidencias con información completa de eventos
@@ -71,12 +72,15 @@ scripts/
 ├── scrape-directors.ts           # Scraping de perfiles de directores (avatar, bio, tmdb_id)
 ├── scrape-movie-data.ts          # Scraping de películas (asigna directores y metadatos)
 ├── scrape-screenings.ts          # Orchestrator de carteleras
+├── scrape-list.ts                # Scraping de lista Letterboxd (funciones en Buenos Aires)
 ├── send-notifications.ts         # Envío de notificaciones por email
 └── services/
     ├── movie-data/               # Pipeline películas → directores
     │   ├── api.director.service.ts
     │   ├── batch-processor.service.ts
     │   └── letterboxd-scraper.service.ts
+    ├── list/                     # Parser de notas de la lista Letterboxd
+    │   └── list-note-parser.ts
     ├── notifications/            # Agrupación y envío de emails
     │   ├── email.service.ts
     │   ├── notification.service.ts
@@ -141,6 +145,7 @@ psql -f db/seed.sql
 ```bash
 pnpm dev                    # Servidor de desarrollo
 pnpm scrape:directors      # Probar scraping local
+pnpm scrape:list           # Probar scraping de lista Letterboxd
 pnpm type-check            # Verificar TypeScript
 ```
 
@@ -157,6 +162,7 @@ POST /api/movies/batch             # Asignar directores y metadatos
 GET  /api/directors/pending        # Directores sin tmdb_id
 POST /api/directors/batch-update   # Actualizar perfiles de directores
 POST /api/screenings/batch         # Guardar eventos de cines en lote
+POST /api/list/batch                # Guardar funciones desde lista Letterboxd
 POST /api/users/bulk               # Emails de usuarios por ids
 POST /api/notifications/log        # Registrar envíos de notificaciones
 ```
@@ -190,6 +196,8 @@ GET  /api/screenings/featured      # Funciones para la home
 | **Cine Cosmos**  | https://www.cinecosmos.uba.ar/                                 | 🔄 Sin scraper |
 
 Los cines sin scraper están deshabilitados en `db/seed.sql` (`enabled = false`) para que el workflow de carteleras no falle.
+
+Además, la **lista de funciones** descubre cines nuevos automáticamente (Cine Lorca, MALBA, CCK, Cine Arte Cacodelphia, Centro Cultural Recoleta, etc.). Se crean con `enabled = false` en la DB — la lista es la fuente de datos para estos cines.
 
 ---
 

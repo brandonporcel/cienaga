@@ -67,6 +67,15 @@
 - **Fix ratings CSV**: `letterboxd.ts` persistía `undefined` siempre; ahora parsea y `saveMoviesAction` guarda el rating en `user_movies` (upsert que actualiza al re-subir).
 - **Fix workflows CI**: los 3 workflows (`scrape-directors`, `scrape-screenings`, `send-notifications`) hacían `npm install` suelto con `cache: pnpm` (→ "Path Validation Error" en GA) y `pnpm/action-setup@v2` (Node 20 deprecado). Alineados al patrón de `scrape-movie-data.yml`: `pnpm install --no-frozen-lockfile` + `pnpm exec tsx` + action-setup@v4.
 
+### 2026-08-16 — Feature lista de Letterboxd implementada
+- **`scripts/scrape-list.ts`**: scraper principal que pagina la lista "Funciones en Buenos Aires" de lamateroric (4 páginas, ~333 films). Extrae datos del film (slug, título, año), parsea las notas (cine, dirección, fechas/horarios), resuelve directores (DB primero, luego scrape de film page con rate limiting 2s), y envía batches de 50 al endpoint.
+- **`scripts/services/list/list-note-parser.ts`**: parser puro de notas HTML. Maneja formatos argentinos: "Del 13 al 19", "13/8 a las 15:00 hs", "15, 22 y 29 de Agosto a las 18:00 hs", multi-cine por nota, multi-sala, URLs en `<a>`.
+- **`POST /api/list/batch`** (Bearer): endpoint dedicado. Por cada entrada: find/create cinema (nuevos con `enabled: false`), find/create movie por slug, find/create director + link, upsert screening deduplicado por (movie, cinema, screening_time_text), insert screening_time con primer día de la ventana/rango a la primera hora indicada.
+- **Workflow GA** semanal (lunes 6am UTC): `scrape-list.yml` con patrón pnpm.
+- **`pnpm scrape:list`** agregado a package.json.
+- **Decisión de diseño**: ventanas "Del X al Y" generan un screening con `screening_times` = primer día de la ventana a la primera hora; `screening_time_text` = texto crudo de la nota completa. El mail muestra el texto crudo (honesto, sin mentir sobre la fecha).
+- **Decisión de librería**: se descartaron librerías de terceros (todas Python y frágiles) y la API oficial (by-request, OAuth2). Se usó cheerio propio, patrón ya probado en el proyecto.
+
 ### 2026-08-16 — Decisiones de producto: algoritmo fase 1, settings, CTA y feature lista
 Brainstorming con el usuario; quedan definidas estas decisiones y direcciones:
 
@@ -93,10 +102,8 @@ Brainstorming con el usuario; quedan definidas estas decisiones y direcciones:
 - Al clickear la card del director se abre un modal con: estado (auto/manual/muted), acciones seguir/ocultar/silenciar, y filmografía vista con sus ratings (mini-lista).
 
 **Feature lista de Letterboxd ("Funciones en Buenos Aires"):**
-- Scrape del HTML `/list/<slug>/detail/` (paginado, 4 páginas) + parser de notas en texto libre (formatos: "Del 13 al 19", "13/8 a las 15:00 hs", "13, 14 y 18 de Agosto a las 17:00 hs").
-- **Match contra TODOS los cines** (no solo los habilitados): el objetivo es **descubrir cines nuevos** — si la peli favorita del usuario está en otro cine, la ve igual.
-- Los cines de la lista no necesitan scraper: la lista ES la fuente (los screenings se marcan con origen lista).
-- Cines nuevos encontrados → crear en tabla `cinemas` (decidir `enabled` default) y vincular screenings.
+- **Implementado (2026-08-16)**: `scrape-list.ts` + `list-note-parser.ts` + `POST /api/list/batch` + workflow semanal. Ver "Cambios recientes" arriba para detalles.
+- Decisión: cines nuevos se crean con `enabled=false` (la lista ES la fuente). Ventanas sin horario puntual generan un screening con primer día de la ventana + texto crudo en `screening_time_text`.
 
 ### 2026-08-16 — Descartado el refactor del scraper al JSON de Letterboxd
 - Se intentó reemplazar el parseo HTML por el endpoint `/film/<slug>/json/`. Resultado: **403 de Cloudflare** para axios y fetch de Node ("Just a moment..."); curl y el HTML público pasan (200). La protección es selectiva por TLS fingerprint sobre la ruta `/json/`.

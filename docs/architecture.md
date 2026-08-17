@@ -75,6 +75,24 @@ scrape-screenings.ts
 
 ⚠️ **Bug conocido**: `findOrCreateDirector` inserta directores sin `slug` (NOT NULL) → los directores nuevos nunca se crean y las películas asociadas se descartan. Ver `docs/roadmap.md`.
 
+## Flujo 4.5 — Scraping de lista Letterboxd (GitHub Actions, semanal)
+
+```
+scrape-list.ts
+  → pagina la lista /list/funciones-en-buenos-aires/detail/ (4 páginas, ~333 films)
+  → extrae datos del film (slug, título, año) y nota HTML
+  → parseListNote() → cinema + dirección + fechas/horarios (formatos argentinos)
+  → resuelve director: movies table primero, luego scrape de /film/<slug>/ (rate limiting 2s)
+  → POST /api/list/batch (Bearer; batches de 50)
+      → find/create cinema (enabled=false para nuevos)
+      → find/create movie por slug
+      → find/create director + link
+      → upsert screening (deduplicado por movie+cinema+text)
+      → insert screening_time (primer día de ventana/rango)
+```
+
+⚠️ Los cines nuevos se crean con `enabled=false` porque la lista ES la fuente (no necesitan scraper). Las ventanas "Del X al Y" generan un screening con `screening_times` = primer día a la primera hora indicada; el `screening_time_text` contiene el texto crudo de la nota.
+
 ## Flujo 5 — Dashboard personalizado
 
 - Server action `getPersonalizedScreenings` (`src/app/actions/screenings.ts`) → `ScreeningsService.getPersonalizedScreenings` (`src/lib/services/screenings.service.ts`).
@@ -116,6 +134,7 @@ send-notifications.ts
 | GET | `/api/directors/pending?limit=` | Directores sin tmdb_id |
 | POST | `/api/directors/batch-update` | Actualiza perfiles de directores |
 | POST | `/api/screenings/batch` | Crea screenings + screening_times |
+| POST | `/api/list/batch` | Crea screenings desde la lista Letterboxd (crea cines nuevos) |
 | POST | `/api/users/bulk` | Emails de usuarios por ids |
 | POST | `/api/notifications/log` | Registra envíos (GET y POST validan Bearer) |
 
@@ -134,6 +153,6 @@ send-notifications.ts
 
 ## Convenciones de datos
 
-- `screening_times.screening_datetime` es la única fuente de horarios parseados; `screenings.screening_time_text` es el texto crudo del cine.
+- `screening_times.screening_datetime` es la única fuente de horarios parseados; `screenings.screening_time_text` es el texto crudo del cine (o de la nota de la lista Letterboxd).
 - Horarios en `timestamptz` (UTC). Filtros de dashboard/notificaciones usan `now()` del runtime.
 - Dedupe de películas: `title + year + url`.

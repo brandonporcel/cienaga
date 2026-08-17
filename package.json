@@ -15,6 +15,7 @@
     "scrape:screenings": "pnpm exec tsx scripts/scrape-screenings.ts",
     "scrape:directors": "pnpm exec tsx scripts/scrape-directors.ts",
     "send:notifications": "pnpm exec tsx scripts/send-notifications.ts",
+    "scrape:list": "pnpm exec tsx scripts/scrape-list.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "dependencies": {
