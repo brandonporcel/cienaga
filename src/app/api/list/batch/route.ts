@@ -10,6 +10,7 @@ const ListEntrySchema = z.object({
   filmTitle: z.string().min(1).max(200),
   filmYear: z.number().int(),
   directorName: z.string().optional(),
+  posterUrl: z.string().url().optional(),
   cinemaName: z.string().min(1),
   cinemaAddress: z.string().optional(),
   screeningTimeText: z.string().max(500),
@@ -114,6 +115,7 @@ async function processEntry(
       entry.filmTitle,
       entry.filmYear,
       entry.originalUrl,
+      entry.posterUrl,
     );
     if (!movieId) {
       return { title: entry.filmTitle, success: false, error: "Failed to find or create movie" };
@@ -233,14 +235,24 @@ async function findOrCreateMovie(
   title: string,
   year: number,
   url: string,
+  posterUrl?: string,
 ): Promise<string | null> {
   const { data: existing } = await supabase
     .from("movies")
-    .select("id")
+    .select("id, poster_url")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (existing) return existing.id;
+  if (existing) {
+    // Actualizar poster si no lo tiene
+    if (!existing.poster_url && posterUrl) {
+      await supabase
+        .from("movies")
+        .update({ poster_url: posterUrl })
+        .eq("id", existing.id);
+    }
+    return existing.id;
+  }
 
   const { data: newMovie, error } = await supabase
     .from("movies")
@@ -250,6 +262,7 @@ async function findOrCreateMovie(
       national_title: title,
       year,
       url,
+      poster_url: posterUrl || null,
     })
     .select("id")
     .single();

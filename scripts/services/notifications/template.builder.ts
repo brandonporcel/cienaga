@@ -19,6 +19,7 @@ interface Screening {
     title: string;
     year?: number;
     duration?: number;
+    poster_url?: string;
     directors: {
       name: string;
     };
@@ -50,7 +51,6 @@ export class EmailTemplateBuilder {
     totalMatches: number;
   }): Promise<string> {
     try {
-      // Cargar templates
       const [base, header, screeningTemplate, cta, footer] = await Promise.all([
         this.loadTemplate("base"),
         this.loadTemplate("header"),
@@ -59,21 +59,50 @@ export class EmailTemplateBuilder {
         this.loadTemplate("footer"),
       ]);
 
-      // Construir header
+      // Cargar templates de cine (con fallbacks)
+      let cinemaGroupTemplate: string;
+      let cinemaGroupFooterTemplate: string;
+      try {
+        cinemaGroupTemplate = await this.loadTemplate("cinema-group");
+      } catch {
+        cinemaGroupTemplate = this.getFallbackTemplate("cinema-group");
+      }
+      try {
+        cinemaGroupFooterTemplate = await this.loadTemplate("cinema-group-footer");
+      } catch {
+        cinemaGroupFooterTemplate = this.getFallbackTemplate("cinema-group-footer");
+      }
+
+      // Header
       const headerHtml = this.populateTemplate(header, {
         user_name: data.user.full_name || "Cinéfilo",
         greeting: this.getGreeting(data.totalMatches),
         total_matches: data.totalMatches.toString(),
       });
 
-      // Construir screenings
-      const screeningsHtml = data.screenings
-        .map((screening) =>
-          this.buildScreeningHtml(screeningTemplate, screening),
-        )
+      // Agrupar screenings por cine
+      const cinemaGroups = this.groupScreeningsByCinema(data.screenings);
+
+      // Construir HTML de cada grupo de cine
+      const screeningsHtml = cinemaGroups
+        .map((group) => {
+          const cinemaHeader = this.buildCinemaGroupHeader(
+            cinemaGroupTemplate,
+            group.cinema,
+            group.screenings.length,
+          );
+
+          const filmRows = group.screenings
+            .map((screening) =>
+              this.buildScreeningHtml(screeningTemplate, screening),
+            )
+            .join("");
+
+          return cinemaHeader + filmRows + cinemaGroupFooterTemplate;
+        })
         .join("");
 
-      // Construir footer
+      // Footer
       const footerHtml = this.populateTemplate(footer, {
         app_url: process.env.APP_URL || "#",
         unsubscribe_url: `${process.env.APP_URL}/unsubscribe?token=${data.user.id}`,
@@ -85,7 +114,7 @@ export class EmailTemplateBuilder {
       return this.populateTemplate(base, {
         header: headerHtml,
         screenings: `<tr>
-                        <td style="padding: 0 40px 40px 40px;">
+                        <td style="padding: 0 24px 24px 24px;">
                         ${screeningsHtml}
                         </td>
                         </tr>
@@ -101,69 +130,95 @@ export class EmailTemplateBuilder {
     }
   }
 
+  private groupScreeningsByCinema(
+    screenings: Screening[],
+  ): { cinema: Cinema; screenings: Screening[] }[] {
+    const groups = new Map<string, { cinema: Cinema; screenings: Screening[] }>();
+
+    for (const screening of screenings) {
+      const cinemaId = String(screening.cinemas?.id || screening.cinemas?.name || "unknown");
+
+      if (!groups.has(cinemaId)) {
+        groups.set(cinemaId, {
+          cinema: screening.cinemas,
+          screenings: [],
+        });
+      }
+      groups.get(cinemaId)!.screenings.push(screening);
+    }
+
+    // Ordenar cines alfabéticamente
+    return Array.from(groups.values()).sort((a, b) =>
+      a.cinema.name.localeCompare(b.cinema.name),
+    );
+  }
+
+  private buildCinemaGroupHeader(
+    template: string,
+    cinema: Cinema,
+    filmCount: number,
+  ): string {
+    const cinemaLogoHtml =
+      cinema.image_url && !cinema.image_url.endsWith(".svg")
+        ? `<img src="${cinema.image_url}" alt="${cinema.name}" style="width: 28px; height: 28px; border-radius: 50%; margin-right: 10px; vertical-align: middle;">`
+        : "";
+
+    return this.populateTemplate(template, {
+      cinema_name: cinema.name,
+      cinema_logo: cinemaLogoHtml,
+      film_count: `${filmCount} película${filmCount > 1 ? "s" : ""}`,
+    });
+  }
+
   private buildScreeningHtml(template: string, screening: Screening): string {
     const movie = screening.movies;
     const director = movie.directors;
-    const cinema = screening.cinemas;
 
     const date =
       screening.screening_times.length > 0
         ? new Date(screening.screening_times[0].screening_datetime)
         : new Date();
     const formattedDate = date.toLocaleDateString("es-AR", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
+      weekday: "short",
       day: "numeric",
+      month: "short",
       timeZone: "America/Argentina/Buenos_Aires",
     });
-    const formattedTime = date.toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "America/Argentina/Buenos_Aires",
-    });
-    const durationText = movie.duration ? `• ${movie.duration} min` : "";
+
+    // Poster: usar movie.poster_url primero, luego screening.thumbnail_url
+    const posterUrl = movie.poster_url || screening.thumbnail_url || "";
 
     return this.populateTemplate(template, {
       movie_title: movie.title,
       director_name: director.name,
       movie_year: movie.year?.toString() || "",
-      cinema_name: cinema.name,
-      cinema_logo: cinema.image_url?.endsWith(".svg") || !cinema.image_url
-        ? ""
-        : `<img src="${cinema.image_url}" alt="${cinema.name}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 8px;">`,
-      duration_display: durationText,
+      cinema_name: screening.cinemas.name,
+      cinema_logo: "",
+      duration_display: "",
       screening_hours:
         screening.screening_times.length > 0
           ? screening.screening_times
               .map((t) => {
-                const date = new Date(t.screening_datetime);
-                const formattedTime = date.toLocaleTimeString("es-AR", {
+                const time = new Date(t.screening_datetime);
+                const formattedTime = time.toLocaleTimeString("es-AR", {
                   hour: "2-digit",
                   minute: "2-digit",
                   timeZone: "America/Argentina/Buenos_Aires",
                 });
-                return `<span style="background-color: #f3f4f6; color: #d97706; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid #e5e7eb; margin-right: 4px;">
+                return `<td style="background-color: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid #fcd34d; white-space: nowrap;">
                 ${formattedTime}
-                </span>`;
+                </td>`;
               })
               .join(" ")
-          : "",
+          : `<td></td>`,
       formatted_date: formattedDate,
-      formatted_time: formattedTime,
+      formatted_time: "",
       room: screening.room || "",
-      room_display: screening.room
-        ? `<p style="margin: 0 0 10px 0; color: #ccc; font-size: 12px;">Sala: ${screening.room}</p>`
-        : "",
-      thumbnail_url: screening.thumbnail_url || "",
-      thumbnail_display: this.getThumbnailDisplay(
-        screening.thumbnail_url,
-        movie.title,
-      ),
+      room_display: "",
+      thumbnail_url: posterUrl,
+      thumbnail_display: this.getThumbnailDisplay(posterUrl, movie.title),
       original_url: screening.original_url || "",
-      details_button: screening.original_url
-        ? `<a href="${screening.original_url}" style="background: #ffd700; color: #000; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;">Ver detalles</a>`
-        : "",
+      details_button: "",
     });
   }
 
@@ -172,9 +227,9 @@ export class EmailTemplateBuilder {
     movieTitle?: string,
   ): string {
     if (thumbnailUrl) {
-      return `<img src="${thumbnailUrl}" alt="${movieTitle}" style="width: 70px; height: 100px; object-fit: cover; border-radius: 4px;">`;
+      return `<img src="${thumbnailUrl}" alt="${movieTitle}" style="width: 44px; height: 66px; object-fit: cover; border-radius: 4px;">`;
     }
-    return `<div style="width: 70px; height: 100px; background: #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #666;">Sin imagen</div>`;
+    return `<div style="width: 44px; height: 66px; background: #1f2937; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #6b7280;">🎬</div>`;
   }
 
   private getGreeting(totalMatches: number): string {
@@ -218,33 +273,42 @@ export class EmailTemplateBuilder {
   <p style="color: #ccc; font-size: 16px; margin: 0;">{{greeting}} en Buenos Aires</p>
 </div>`;
 
+      case "cinema-group":
+        return `
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 16px;">
+  <tr>
+    <td style="padding: 14px 16px; background-color: #111827; border-radius: 8px 8px 0 0; border-bottom: 2px solid #d97706;">
+      <span style="font-size: 16px; font-weight: 700; color: #f9fafb;">{{cinema_name}}</span>
+      <span style="font-size: 12px; color: #9ca3af; float: right;">{{film_count}}</span>
+    </td>
+  </tr>
+</table>`;
+
+      case "cinema-group-footer":
+        return `
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+  <tr>
+    <td style="height: 1px; background-color: #374151; margin-bottom: 24px;"></td>
+  </tr>
+</table>
+<div style="height: 24px;"></div>`;
+
       case "screening":
         return `
-<tr style="border-bottom: 1px solid #333;">
-  <td style="padding: 20px;">
-    <table style="width: 100%;">
-      <tr>
-        <td style="width: 80px; vertical-align: top;">
-          {{thumbnail_display}}
-        </td>
-        <td style="padding-left: 15px; vertical-align: top;">
-          <h3 style="margin: 0 0 5px 0; color: #fff; font-size: 18px;">{{movie_title}}</h3>
-          <p style="margin: 0 0 10px 0; color: #ccc; font-size: 14px;">
-            De {{director_name}} {{movie_year}}
-          </p>
-          <p style="margin: 0 0 8px 0; color: #ffd700; font-size: 14px;">
-            📍 {{cinema_name}}
-          </p>
-          <p style="margin: 0 0 10px 0; color: #fff; font-size: 14px;">
-            🗓️ {{formatted_date}} a las {{formatted_time}}
-          </p>
-          {{room_display}}
-          {{details_button}}
-        </td>
-      </tr>
-    </table>
-  </td>
-</tr>`;
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 2px; background-color: #1a1a2e;">
+  <tr>
+    <td style="padding: 10px 16px; vertical-align: top;">
+      <span style="color: #fff; font-size: 14px; font-weight: 600;">{{movie_title}}</span>
+      <span style="color: #999; font-size: 12px; margin-left: 6px;">{{movie_year}}</span>
+      <br>
+      <span style="color: #d97706; font-size: 12px;">{{director_name}}</span>
+      <span style="color: #666; font-size: 12px; margin-left: 4px;">•</span>
+      <span style="color: #999; font-size: 12px; margin-left: 4px;">{{formatted_date}}</span>
+      <br>
+      <a href="{{original_url}}" style="color: #d97706; font-size: 12px; text-decoration: none; margin-top: 6px; display: inline-block;">Reservar →</a>
+    </td>
+  </tr>
+</table>`;
 
       case "footer":
         return `
@@ -265,7 +329,7 @@ export class EmailTemplateBuilder {
     user: User;
     screenings: Screening[];
     totalMatches: number;
-  }): string {
+  }) {
     return `
       <html>
         <body style="font-family: Arial, sans-serif; background: #000; color: #fff;">

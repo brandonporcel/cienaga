@@ -10,12 +10,18 @@ interface ListEntry {
   filmTitle: string;
   filmYear: number;
   directorName?: string;
+  posterUrl?: string;
   cinemaName: string;
   cinemaAddress?: string;
   screeningTimeText: string;
   screeningDatetime: string;
   description?: string;
   originalUrl: string;
+}
+
+interface FilmInfo {
+  director?: string;
+  posterUrl?: string;
 }
 
 interface ParsedFilmName {
@@ -161,17 +167,23 @@ class ListScrapingOrchestrator {
     });
 
     for (const entry of entries) {
-      if (!entry.directorName) {
+      if (!entry.directorName || !entry.posterUrl) {
         try {
-          entry.directorName = await this.resolveDirector(
+          const filmInfo = await this.resolveDirector(
             entry.filmSlug,
             entry.filmTitle,
             entry.filmYear,
           );
+          if (!entry.directorName && filmInfo.director) {
+            entry.directorName = filmInfo.director;
+          }
+          if (!entry.posterUrl && filmInfo.posterUrl) {
+            entry.posterUrl = filmInfo.posterUrl;
+          }
           await this.delay(2000);
         } catch (error) {
           console.error(
-            `   ⚠️  Could not resolve director for ${entry.filmTitle}: ${error}`,
+            `   ⚠️  Could not resolve info for ${entry.filmTitle}: ${error}`,
           );
         }
       }
@@ -190,7 +202,7 @@ class ListScrapingOrchestrator {
     filmSlug: string,
     title: string,
     year: number,
-  ): Promise<string | undefined> {
+  ): Promise<FilmInfo> {
     try {
       const response = await axios.get(
         `${this.apiBaseUrl}/api/movies/search`,
@@ -201,7 +213,7 @@ class ListScrapingOrchestrator {
       );
 
       if (response.data.directorId || response.data.director) {
-        return response.data.directorName || undefined;
+        return { director: response.data.directorName || undefined };
       }
     } catch {
       // Movie not found in DB, fall through to scraping
@@ -234,7 +246,11 @@ class ListScrapingOrchestrator {
       }
     }
 
-    return director?.trim() || undefined;
+    // Extraer poster del OG image
+    const posterUrl =
+      $('meta[property="og:image"]').attr("content") || undefined;
+
+    return { director: director?.trim() || undefined, posterUrl };
   }
 
   private async sendBatch(

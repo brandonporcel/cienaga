@@ -40,9 +40,9 @@ jobs:
 
       - name: Setup pnpm
         if: steps.check_work.outputs.has_work == 'true'
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: "10"
 
       - name: Setup Node.js
         if: steps.check_work.outputs.has_work == 'true'
