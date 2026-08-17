@@ -6,5 +6,6 @@ export default interface Movie {
   url: string;
   rating: number | null;
   year?: number;
+  poster_url?: string | null;
   directors?: Director;
 }

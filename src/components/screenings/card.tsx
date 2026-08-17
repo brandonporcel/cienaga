@@ -92,14 +92,20 @@ function ScreeningCard({ screening }: { screening: Screening }) {
       onMouseLeave={() => setHoveredCard(null)}
     >
       <div className="relative">
-        <Image
-          src={screening.thumbnail_url}
-          alt={screening.movies.title}
-          title={`${screening.movies.title} - ${screening.cinemas.name}`}
-          className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
-          width={600}
-          height={500}
-        />
+        {(screening.thumbnail_url || screening.movies?.poster_url) ? (
+          <Image
+            src={screening.thumbnail_url || screening.movies?.poster_url || ""}
+            alt={screening.movies.title}
+            title={`${screening.movies.title} - ${screening.cinemas.name}`}
+            className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105"
+            width={600}
+            height={500}
+          />
+        ) : (
+          <div className="w-full h-64 bg-zinc-800 flex items-center justify-center text-zinc-500 text-sm">
+            🎬 {screening.movies.title}
+          </div>
+        )}
 
         <div className="absolute top-3 right-3">
           <Badge

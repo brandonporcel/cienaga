@@ -329,16 +329,9 @@ class ListScrapingOrchestrator {
         timeoutPromise,
       ]);
       return cheerio.load(response.data);
-    } catch (error) {
-      // Cloudflare bloquea axios/fetch en páginas paginadas — curl pasa
-      if (
-        axios.isAxiosError(error) &&
-        (error.response?.status === 403 || error.response?.status === 429)
-      ) {
-        console.log(`   ⚠️  Axios ${error.response.status}, trying curl fallback...`);
-        return this.fetchPageWithCurl(url);
-      }
-      throw error;
+    } catch {
+      // Siempre intentar curl como fallback
+      return this.fetchPageWithCurl(url);
     }
   }
 
