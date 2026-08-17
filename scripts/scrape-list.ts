@@ -166,14 +166,32 @@ class ListScrapingOrchestrator {
       }
     });
 
+    // Deduplicar por filmSlug para no scrapear la misma peli dos veces
+    const resolvedSlugs = new Map<string, FilmInfo>();
+
     for (const entry of entries) {
-      if (!entry.directorName || !entry.posterUrl) {
+      const needPoster = !entry.posterUrl;
+      const needDirector = !entry.directorName;
+      const alreadyResolved = resolvedSlugs.has(entry.filmSlug);
+
+      if (alreadyResolved) {
+        // Reusar info ya resuelta
+        const cached = resolvedSlugs.get(entry.filmSlug)!;
+        if (!entry.directorName && cached.director) entry.directorName = cached.director;
+        if (!entry.posterUrl && cached.posterUrl) entry.posterUrl = cached.posterUrl;
+        continue;
+      }
+
+      if (needDirector || needPoster) {
         try {
           const filmInfo = await this.resolveDirector(
             entry.filmSlug,
             entry.filmTitle,
             entry.filmYear,
+            needPoster,
           );
+          resolvedSlugs.set(entry.filmSlug, filmInfo);
+
           if (!entry.directorName && filmInfo.director) {
             entry.directorName = filmInfo.director;
           }
@@ -185,6 +203,7 @@ class ListScrapingOrchestrator {
           console.error(
             `   ⚠️  Could not resolve info for ${entry.filmTitle}: ${error}`,
           );
+          resolvedSlugs.set(entry.filmSlug, {});
         }
       }
     }
@@ -202,23 +221,28 @@ class ListScrapingOrchestrator {
     filmSlug: string,
     title: string,
     year: number,
+    needPoster: boolean,
   ): Promise<FilmInfo> {
-    try {
-      const response = await axios.get(
-        `${this.apiBaseUrl}/api/movies/search`,
-        {
-          params: { title, year },
-          headers: { Authorization: `Bearer ${this.secretKey}` },
-        },
-      );
+    // Si no necesitamos poster, intentar resolver导演 de la DB
+    if (!needPoster) {
+      try {
+        const response = await axios.get(
+          `${this.apiBaseUrl}/api/movies/search`,
+          {
+            params: { title, year },
+            headers: { Authorization: `Bearer ${this.secretKey}` },
+          },
+        );
 
-      if (response.data.directorId || response.data.director) {
-        return { director: response.data.directorName || undefined };
+        if (response.data.directorId || response.data.director) {
+          return { director: response.data.directorName || undefined };
+        }
+      } catch {
+        // Movie not found in DB, fall through to scraping
       }
-    } catch {
-      // Movie not found in DB, fall through to scraping
     }
 
+    // Scrapear film page para director + poster
     const filmUrl = `${this.baseUrl}/film/${filmSlug}/`;
     const $ = await this.fetchPage(filmUrl);
 
