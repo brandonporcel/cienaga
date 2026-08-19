@@ -1,4 +1,4 @@
-import { Github, Linkedin } from "lucide-react";
+import { Github } from "lucide-react";
 
 export function FooterSection() {
   return (
@@ -11,7 +11,7 @@ export function FooterSection() {
           </div>
         </div>
         <p className="text-foreground/90 text-sm font-medium leading-[18px] text-left">
-          Peliculas y Cines
+          Películas y cines en Buenos Aires
         </p>
         <div className="flex justify-start items-start gap-3">
           <a
@@ -22,129 +22,32 @@ export function FooterSection() {
           >
             <Github className="w-full h-full text-muted-foreground" />
           </a>
-          <a
-            href="https://www.linkedin.com/in/brandonporcel/"
-            aria-label="LinkedIn"
-            className="w-4 h-4 flex items-center justify-center"
-            target="_blank"
-          >
-            <Linkedin className="w-full h-full text-muted-foreground" />
-          </a>
         </div>
       </div>
-      {/* Right Section: Product, Company, Resources */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 p-4 md:p-8 w-full md:w-auto">
-        <div className="flex flex-col justify-start items-start gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium leading-5">
-            Product
-          </h3>
-          <div className="flex flex-col justify-end items-start gap-2">
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Features
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Pricing
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Integrations
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Real-time Previews
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Multi-Agent Coding
-            </a>
-          </div>
-        </div>
-        <div className="flex flex-col justify-start items-start gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium leading-5">
-            Company
-          </h3>
-          <div className="flex flex-col justify-center items-start gap-2">
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              About us
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Our team
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Careers
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Brand
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Contact
-            </a>
-          </div>
-        </div>
-        <div className="flex flex-col justify-start items-start gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium leading-5">
-            Resources
-          </h3>
-          <div className="flex flex-col justify-center items-start gap-2">
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Terms of use
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              API Reference
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Documentation
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Community
-            </a>
-            <a
-              href="#"
-              className="text-foreground text-sm font-normal leading-5 hover:underline"
-            >
-              Support
-            </a>
-          </div>
-        </div>
+
+      {/* Center Section */}
+      <div className="flex flex-col justify-start items-center gap-3 p-4 md:p-8">
+        <p className="text-muted-foreground text-sm font-medium leading-5">
+          Hecho con ❤️ en Buenos Aires
+        </p>
+      </div>
+
+      {/* Right Section: Links */}
+      <div className="flex flex-col justify-start items-start gap-3 p-4 md:p-8">
+        <a
+          href="https://github.com/brandonporcel/"
+          className="text-foreground text-sm font-normal leading-5 hover:underline"
+          target="_blank"
+        >
+          GitHub
+        </a>
+        <a
+          href="https://letterboxd.com/"
+          className="text-foreground text-sm font-normal leading-5 hover:underline"
+          target="_blank"
+        >
+          Letterboxd
+        </a>
       </div>
     </footer>
   );

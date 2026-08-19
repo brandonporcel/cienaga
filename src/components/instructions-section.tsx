@@ -1,5 +1,3 @@
-import CinemaListings from "./instructions/cinema-listings";
-import CTAFinal from "./instructions/cta-final";
 import EmailNotifications from "./instructions/email-notifications";
 import ExportLetterboxd from "./instructions/export-letterboxd";
 import FavoriteDirectors from "./instructions/favorite-directors";
@@ -10,38 +8,22 @@ type InstructionCard = {
   Component: React.FC;
 };
 
-const cards = [
+const cards: InstructionCard[] = [
   {
-    title: "Importá tu historial de Letterboxd.",
+    title: "Exportá tu historial",
     description:
-      "Subí tu archivo CSV y detectamos automáticamente tus directores favoritos.",
-    image: "/instructions/export-letterboxd.png",
+      "Subí tu CSV de Letterboxd y detectamos tus directores favoritos.",
     Component: ExportLetterboxd,
   },
   {
-    title: "Tus directores favoritos",
-    description:
-      "Ciénaga los guarda en tu perfil y los sigue de manera automática.",
+    title: "Seguí tus directores",
+    description: "Ciénaga los guarda en tu perfil y los sigue automáticamente.",
     Component: FavoriteDirectors,
   },
   {
-    title: "Cartelera porteña al día",
-    description:
-      "Scrapeamos Gaumont, Cosmos, Malba, Sala Lugones y más para actualizar las funciones.",
-    Component: CinemaListings,
-  },
-];
-const cards2 = [
-  {
-    title: "Notificaciones por mail",
-    description:
-      "Enterate enseguida cuándo un director de tu lista tiene una película en cartel.",
+    title: "Recibí notificaciones",
+    description: "Enterate al toque cuando una de tus pelis esté en cartel.",
     Component: EmailNotifications,
-  },
-  {
-    title: "Descubrí tus próximos estrenos favoritos",
-    description: "Subí tu CSV y empezá a recibir alertas hoy mismo.",
-    Component: CTAFinal,
   },
 ];
 
@@ -59,7 +41,6 @@ const InstructionCard = ({
         WebkitBackdropFilter: "blur(10px)",
       }}
     />
-    {/* Additional subtle gradient overlay */}
     <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-2xl" />
 
     <div
@@ -91,21 +72,15 @@ export default function InstructionsSection() {
         <div className="self-stretch py-8 md:py-14 flex flex-col justify-center items-center gap-2 z-10">
           <div className="flex flex-col justify-start items-center gap-4">
             <h2 className="w-full max-w-[655px] text-center text-foreground text-4xl md:text-6xl font-semibold leading-tight md:leading-[66px]">
-              Seguí conectado con la Cultura y el Cine
+              Cómo funciona
             </h2>
             <p className="w-full max-w-[600px] text-center text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
-              No te pierdas más la experiencia de seguir relacionado con tus
-              peliculas favoritas y la ciudad de Buenos Aires.
+              Tres pasos para no perderte ninguna función.
             </p>
           </div>
         </div>
         <div className="self-stretch grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10">
           {cards.map((card, i) => (
-            <InstructionCard key={card.title + i} {...card} />
-          ))}
-        </div>
-        <div className="self-stretch flex grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10 justify-center">
-          {cards2.map((card, i) => (
             <InstructionCard key={card.title + i} {...card} />
           ))}
         </div>

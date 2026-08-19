@@ -23,18 +23,16 @@ export function HeroSection() {
 
       <div className="relative z-10 space-y-4 md:space-y-5 lg:space-y-6 mb-6 md:mb-7 lg:mb-9 max-w-md md:max-w-[500px] lg:max-w-[660px] mt-16 md:mt-[120px] lg:mt-[160px] px-4">
         <h1 className="text-foreground text-3xl md:text-4xl lg:text-6xl font-bold leading-tight">
-          Tus <span className="text-[#003720]">Pelis Favoritas</span> en Cines
-          De Buenos Aires
+          Tus <span className="text-[#003720]">directores favoritos</span> en cines
         </h1>
         <p className="text-muted-foreground text-base md:text-base lg:text-lg font-medium leading-relaxed max-w-lg mx-auto">
-          Importa tus datos de Letterboxd y recibe notificaciones cuando se
-          proyecten en los cines de BA.
+          Importá tu historial de Letterboxd y enterate cuando se proyectan en Buenos Aires.
         </p>
       </div>
 
-      <Link href="#">
+      <Link href="/login">
         <Button className="relative z-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10 cursor-pointer">
-          Registrarme gratis
+          Empezá ahora
         </Button>
       </Link>
     </section>

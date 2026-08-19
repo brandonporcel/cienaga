@@ -5,9 +5,7 @@ import { FooterSection } from "@/components/footer-section";
 import Header from "@/components/header";
 import { HeroSection } from "@/components/hero-section";
 import InstructionsSection from "@/components/instructions-section";
-import { LargeTestimonial } from "@/components/large-testimonial";
 import PublicScreenings from "@/components/public-screenings";
-import { SocialProof } from "@/components/social-proof";
 
 export default function HomePage() {
   return (
@@ -26,29 +24,15 @@ export default function HomePage() {
       </main>
 
       <AnimatedSection
-        className="relative z-10 max-w-[1320px] mx-auto px-6 mt-[411px] md:mt-[400px]"
-        delay={0.1}
-      >
-        <SocialProof />
-      </AnimatedSection>
-
-      <AnimatedSection
         id="about-section"
-        className="relative z-10 max-w-[1320px] mx-auto mt-16"
+        className="relative z-10 max-w-[1320px] mx-auto px-6 mt-[411px] md:mt-[400px]"
         delay={0.2}
       >
         <InstructionsSection />
       </AnimatedSection>
 
       <AnimatedSection
-        className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16"
-        delay={0.2}
-      >
-        <LargeTestimonial />
-      </AnimatedSection>
-
-      <AnimatedSection
-        id="faq-section"
+        id="cinema-listings-section"
         className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16"
         delay={0.2}
       >

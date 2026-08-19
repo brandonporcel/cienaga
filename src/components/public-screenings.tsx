@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import createClient from "@/lib/supabase/client";
 import Screening from "@/types/screening";
 
 import ScreeningCard from "./screenings/card";
@@ -9,8 +12,14 @@ import ScreeningCard from "./screenings/card";
 export default function PublicScreenings() {
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [error, setError] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }: { data: { user: unknown } }) => {
+      setIsLoggedIn(!!data.user);
+    });
+
     const getScreenings = async () => {
       try {
         const res = await fetch("/api/screenings/featured");
@@ -28,37 +37,40 @@ export default function PublicScreenings() {
   }, []);
 
   return (
-    <>
-      <header className="border-border backdrop-blur-sm sticky top-0 z-50 bg-gradient-to-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-balance">🌊 Ciénaga</h1>
-              <p className="text-muted-foreground text-pretty">
-                Películas de tus directores favoritos en Buenos Aires
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="container mx-auto px-4">
+      <div className="flex flex-col justify-start items-start gap-2 mb-8">
+        <h2 className="text-foreground text-4xl md:text-6xl font-semibold leading-tight md:leading-[66px]">
+          Películas en cartel
+        </h2>
+        <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
+          Lo que otros usuarios de Ciénaga están viendo en Buenos Aires
+        </p>
+      </div>
 
-      <div className="container mx-auto px-4">
-        {error ? (
-          <p className="text-muted-foreground py-8 text-center">
-            No se pudieron cargar las funciones. Intentalo de nuevo mas tarde.
-          </p>
-        ) : screenings.length > 0 ? (
+      {error ? (
+        <p className="text-muted-foreground py-8 text-center">
+          No se pudieron cargar las funciones. Intentalo de nuevo mas tarde.
+        </p>
+      ) : screenings.length > 0 ? (
+        <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {screenings.map((screening) => (
               <ScreeningCard key={screening.id} screening={screening} />
             ))}
           </div>
-        ) : (
-          <p className="text-muted-foreground py-8 text-center">
-            Todavia no hay funciones disponibles.
-          </p>
-        )}
-      </div>
-    </>
+          <div className="flex justify-center mt-8">
+            <Link href={isLoggedIn ? "/dashboard" : "/login"}>
+              <Button variant="outline" className="cursor-pointer">
+                {isLoggedIn ? "Ver todas las funciones" : "Registrate para ver todas"}
+              </Button>
+            </Link>
+          </div>
+        </>
+      ) : (
+        <p className="text-muted-foreground py-8 text-center">
+          Todavia no hay funciones disponibles.
+        </p>
+      )}
+    </div>
   );
 }
