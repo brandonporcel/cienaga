@@ -156,7 +156,7 @@ export function UploadDialog() {
   const buttonDisabled = isSubmitting || !hasFiles;
 
   return (
-    <>
+    <div className="contents">
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
@@ -253,6 +253,6 @@ export function UploadDialog() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
