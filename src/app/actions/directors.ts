@@ -30,7 +30,7 @@ async function getDirectors(): Promise<Director[]> {
   const { data: watchedDirectors, error: wdError } = await supabase
     .from("user_movies")
     .select(
-      "movies!inner(director_id, directors(id, name, url, image_url, created_at))",
+      "movies!inner(director_id, directors(id, name, url, image_url, tmdb_id, created_at))",
     )
     .eq("user_id", user.id)
     .not("movies.director_id", "is", null);

@@ -7,6 +7,7 @@ export interface Director {
   name: string;
   url: string;
   image_url: string;
+  tmdb_id: number | null;
   user_directors?: { user_id: string }[];
   created_at: string;
   source?: DirectorSource;

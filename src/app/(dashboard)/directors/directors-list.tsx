@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowUpRight, Filter, LayoutGrid, List, Search } from "lucide-react";
 
 import { Director, DirectorSource } from "@/types/director";
+import { cn } from "@/lib/utils";
 import DirectorCard from "@/components/directors/card";
 import { DirectorDetailDialog } from "@/components/directors/detail-dialog";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 type ListFilter = "all" | "auto" | "manual" | "muted" | "vistos" | "alpha";
 type ViewMode = "grid" | "table";
@@ -41,7 +41,13 @@ const SOURCE_BADGE_LABELS: Record<DirectorSource, string> = {
   muted: "Silenciado",
 };
 
-export function DirectorsGrid({ directors: initial, toolbar }: { directors: Director[]; toolbar?: React.ReactNode }) {
+export function DirectorsGrid({
+  directors: initial,
+  toolbar,
+}: {
+  directors: Director[];
+  toolbar?: React.ReactNode;
+}) {
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>("auto");
@@ -80,7 +86,8 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
     }
   }, [directors, query, filter]);
 
-  const pendingScraping = directors.filter((d) => !d.image_url && d.url).length;
+  const pendingScraping = directors.filter((d) => !d.tmdb_id && d.url);
+  const pendingNames = pendingScraping.map((d) => d.name).join(", ");
 
   return (
     <>
@@ -156,12 +163,14 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
             </Button>
           </div>
         </div>
-        {toolbar}
+        <div className="">{toolbar}</div>
       </div>
 
-      {pendingScraping > 0 && (
+      {pendingScraping.length > 0 && (
         <div className="mb-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-700 dark:text-blue-300">
-          ℹ️ {pendingScraping} director{pendingScraping !== 1 ? "es" : ""} pendiente{pendingScraping !== 1 ? "s" : ""} de actualizar. El perfil se completa automáticamente.
+          ℹ️ {pendingScraping.length} director
+          {pendingScraping.length !== 1 ? "es" : ""} pendiente
+          {pendingScraping.length !== 1 ? "s" : ""} de procesar: {pendingNames}.
         </div>
       )}
 
@@ -193,7 +202,9 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
               <tr className="border-b bg-muted/50">
                 <th className="text-left px-4 py-3 font-medium">Director</th>
                 <th className="text-left px-4 py-3 font-medium">Estado</th>
-                <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Detectado</th>
+                <th className="text-left px-4 py-3 font-medium hidden md:table-cell">
+                  Detectado
+                </th>
                 <th className="w-10"></th>
               </tr>
             </thead>

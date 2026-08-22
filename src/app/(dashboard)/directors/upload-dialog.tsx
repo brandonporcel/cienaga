@@ -48,7 +48,10 @@ export function UploadDialog() {
 
     // Parsear CSVs inmediatamente para mostrar cantidad detectada
     try {
-      const fileMap: FilesSchemaType = { watched: undefined, ratings: undefined };
+      const fileMap: FilesSchemaType = {
+        watched: undefined,
+        ratings: undefined,
+      };
       Array.from(files).forEach((file) => {
         if (file.name.includes("watched")) fileMap.watched = file;
         if (file.name.includes("ratings")) fileMap.ratings = file;
@@ -128,7 +131,7 @@ export function UploadDialog() {
     <div className="contents">
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
+          <Button variant="default" size="sm">
             <Download className="mr-2 h-4 w-4" />
             Actualizar Datos
           </Button>
@@ -188,10 +191,7 @@ export function UploadDialog() {
                 Cancelar
               </Button>
             </DialogClose>
-            <Button
-              onClick={handleSubmit(onSubmit)}
-              disabled={buttonDisabled}
-            >
+            <Button onClick={handleSubmit(onSubmit)} disabled={buttonDisabled}>
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -208,8 +208,8 @@ export function UploadDialog() {
             <DialogTitle>La importación continúa en segundo plano</DialogTitle>
             <DialogDescription>
               Los datos se están procesando en el servidor y terminan solos
-              aunque cierres esta ventana. Podés esperar a que termine o salir
-              — no se pierde nada.
+              aunque cierres esta ventana. Podés esperar a que termine o salir —
+              no se pierde nada.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
