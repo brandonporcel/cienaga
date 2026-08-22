@@ -10,13 +10,11 @@ import { DirectorDetailDialog } from "@/components/directors/detail-dialog";
 const SOURCE_BADGE_CLASSES: Record<DirectorSource, string> = {
   auto: "bg-emerald-500/90 text-white",
   manual: "bg-sky-500/90 text-white",
-  muted: "bg-zinc-500/90 text-white",
 };
 
 const SOURCE_BADGE_LABELS: Record<DirectorSource, string> = {
   auto: "Seguido",
-  manual: "Favorito",
-  muted: "Silenciado",
+  manual: "Seguido",
 };
 
 export default function Card08({

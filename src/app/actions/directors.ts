@@ -73,7 +73,7 @@ async function getDirectors(): Promise<Director[]> {
 async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {
   const { supabase, user } = await getUserOrThrow();
 
-  // Fuente de la relación (auto / manual / muted)
+  // Fuente de la relación (auto / manual)
   const { data: relation } = await supabase
     .from("user_directors")
     .select("source")
@@ -135,16 +135,14 @@ async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {
 }
 
 /**
- * Acciones del usuario sobre un director. Los overrides sobreviven al
- * recálculo: 'manual' y 'muted' nunca se pisan.
+ * Acciones del usuario sobre un director. Los overrides manuales
+ * sobreviven al recálculo: 'manual' nunca se pisa.
  */
 async function updateDirectorPreference(
   directorId: string,
-  action: "follow" | "silence" | "unsilence" | "unfollow",
+  action: "follow" | "unfollow",
 ): Promise<{ success: boolean }> {
   const { supabase, user } = await getUserOrThrow();
-
-  const base = { user_id: user.id, director_id: directorId };
 
   try {
     if (action === "unfollow") {
@@ -158,12 +156,13 @@ async function updateDirectorPreference(
       return { success: true };
     }
 
-    const source: DirectorSource =
-      action === "silence" ? "muted" : action === "unsilence" ? "auto" : "manual";
-
+    // follow → source "manual"
     const { error } = await supabase
       .from("user_directors")
-      .upsert({ ...base, source }, { onConflict: "user_id,director_id" });
+      .upsert(
+        { user_id: user.id, director_id: directorId, source: "manual" },
+        { onConflict: "user_id,director_id" },
+      );
 
     if (error) throw error;
     return { success: true };

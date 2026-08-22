@@ -19,26 +19,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 
-type ListFilter = "all" | "auto" | "manual" | "muted" | "vistos" | "alpha";
+type ListFilter = "all" | "seguidos" | "vistos" | "alpha";
 type ViewMode = "grid" | "table";
 
 const FILTER_LABELS: Record<Exclude<ListFilter, "all" | "alpha">, string> = {
-  auto: "Seguidos",
-  manual: "Favoritos",
+  seguidos: "Seguidos",
   vistos: "Vistos",
-  muted: "Silenciados",
 };
 
 const SOURCE_BADGE_CLASSES: Record<DirectorSource, string> = {
   auto: "bg-emerald-500/90 text-white",
   manual: "bg-sky-500/90 text-white",
-  muted: "bg-zinc-500/90 text-white",
 };
 
 const SOURCE_BADGE_LABELS: Record<DirectorSource, string> = {
   auto: "Seguido",
-  manual: "Favorito",
-  muted: "Silenciado",
+  manual: "Seguido",
 };
 
 export function DirectorsGrid({
@@ -50,7 +46,7 @@ export function DirectorsGrid({
 }) {
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<ListFilter>("auto");
+  const [filter, setFilter] = useState<ListFilter>("seguidos");
   const [view, setView] = useState<ViewMode>("grid");
   const [detailDirector, setDetailDirector] = useState<Director | null>(null);
 
@@ -73,10 +69,8 @@ export function DirectorsGrid({
       : directors;
 
     switch (filter) {
-      case "auto":
-      case "manual":
-      case "muted":
-        return byQuery.filter((d) => d.source === filter);
+      case "seguidos":
+        return byQuery.filter((d) => d.source === "auto" || d.source === "manual");
       case "vistos":
         return byQuery.filter((d) => !d.source);
       case "alpha":
@@ -125,17 +119,11 @@ export function DirectorsGrid({
               <DropdownMenuItem onClick={() => setFilter("all")}>
                 Todos
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("auto")}>
+              <DropdownMenuItem onClick={() => setFilter("seguidos")}>
                 Seguidos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("manual")}>
-                Favoritos
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilter("vistos")}>
                 Vistos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setFilter("muted")}>
-                Silenciados
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setFilter("alpha")}>

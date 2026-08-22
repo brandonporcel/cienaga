@@ -214,7 +214,7 @@ export default async function Settings() {
               </ul>
             </div>
             <p className="text-xs text-muted-foreground">
-              Podés seguir o silenciar cualquier director manualmente desde su
+              Podés seguir o dejar de seguir cualquier director manualmente desde su
               detalle: eso tiene prioridad sobre los umbrales.
             </p>
             <div>

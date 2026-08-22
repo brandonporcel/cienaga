@@ -46,7 +46,7 @@
 ### `user_directors`
 
 - PK compuesta `(user_id, director_id)`, FKs CASCADE.
-- `source` indica cómo se creó la relación: `auto` (calculado por el algoritmo), `manual` (override del usuario) o `muted` (override: no recibir notificaciones). Los overrides manuales/muted nunca se pisan al recalcular.
+- `source` indica cómo se creó la relación: `auto` (calculado por el algoritmo) o `manual` (override del usuario). Los overrides manuales nunca se pisan al recalcular.
 - Se genera en `POST /api/movies/batch` y `POST /api/directors/recalculate` con el criterio: **≥ 2 películas vistas Y ≥ 50% con rating ≥ 3.5, o ≥ 1 película con rating 5** (ver `src/lib/services/director-preference.ts`).
 - ⚠️ Sin índice sobre `user_id`.
 

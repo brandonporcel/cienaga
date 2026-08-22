@@ -68,7 +68,7 @@ create table public.user_directors (
   user_id     uuid not null references public.users(id) on delete cascade,
   director_id uuid not null references public.directors(id) on delete cascade,
   source      text not null default 'auto'
-              check (source in ('auto', 'manual', 'muted')),
+              check (source in ('auto', 'manual')),
   created_at  timestamptz default now(),
 
   primary key (user_id, director_id)

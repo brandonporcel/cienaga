@@ -9,7 +9,7 @@ import { createClientForServer } from "@/lib/supabase/server";
 /**
  * Recalcula user_directors para todos los usuarios aplicando el criterio de
  * favoritos (fase 1). Respeta los overrides: las relaciones con source
- * 'manual' o 'muted' nunca se modifican.
+ * 'manual' nunca se modifican.
  *
  * Uso: POST /api/directors/recalculate
  * Headers: Authorization: Bearer <CRON_SECRET_KEY>

@@ -1,7 +1,7 @@
 // Lógica única del criterio de "directores favoritos" (fase 1).
 // La usan POST /api/movies/batch y POST /api/directors/recalculate.
 
-export type DirectorSource = "auto" | "manual" | "muted";
+export type DirectorSource = "auto" | "manual";
 
 export interface RatedFilm {
   rating: number | null;

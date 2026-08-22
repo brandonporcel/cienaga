@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Loader2, Star, Volume2, VolumeX, UserMinus } from "lucide-react";
+import { Loader2, Star, Volume2, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -21,9 +21,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const SOURCE_LABEL: Record<DirectorSource, string> = {
-  auto: "Seguido (auto)",
-  manual: "Seguido (manual)",
-  muted: "Silenciado",
+  auto: "Seguido",
+  manual: "Seguido",
 };
 
 function SourceBadge({ source }: { source: DirectorSource | null }) {
@@ -35,8 +34,6 @@ function SourceBadge({ source }: { source: DirectorSource | null }) {
           "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
         source === "manual" &&
           "bg-sky-500/15 text-sky-600 dark:text-sky-400",
-        source === "muted" &&
-          "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400",
       )}
     >
       {source ? SOURCE_LABEL[source] : "No seguido"}
@@ -67,24 +64,40 @@ function Stars({ rating }: { rating: number }) {
     </div>
   );
 }
-
-function justification(detail: DirectorDetail): string {
+function justification(detail: DirectorDetail): { title: string; text: string } {
   const { metrics } = detail;
 
   if (detail.source === "manual") {
-    return "Lo marcaste como favorito manualmente.";
-  }
-  if (detail.source === "muted") {
-    return "Lo silenciaste: no recibís notificaciones de este director.";
+    return {
+      title: "¿Por qué aparece?",
+      text: "Lo marcaste como seguido manualmente.",
+    };
   }
 
+  if (detail.source === "auto") {
+    return {
+      title: "¿Por qué lo seguís?",
+      text: `Cumplís la regla: ≥2 pelis con ≥3.5★ (o 1 con 5★).`,
+    };
+  }
+
+  // source === null → "No seguido"
   if (metrics.ratedFiveStars > 0) {
-    return `Le diste 5★ a ${metrics.ratedFiveStars} película${metrics.ratedFiveStars > 1 ? "s" : ""}.`;
+    return {
+      title: "¿Por qué aparece?",
+      text: `Le diste 5★ a ${metrics.ratedFiveStars} película${metrics.ratedFiveStars > 1 ? "s" : ""}, pero todavía no lo seguís.`,
+    };
   }
   if (metrics.watched > 0) {
-    return `Viste ${metrics.watched} película${metrics.watched > 1 ? "s" : ""}, ${metrics.rated35Plus} con 3.5★ o más (${metrics.pct35Plus}%).`;
+    return {
+      title: "¿Por qué aparece?",
+      text: `Viste ${metrics.watched} película${metrics.watched > 1 ? "s" : ""} de este director.`,
+    };
   }
-  return "Todavía no viste películas de este director.";
+  return {
+    title: "¿Por qué aparece?",
+    text: "Todavía no viste películas de este director.",
+  };
 }
 
 export function DirectorDetailDialog({
@@ -123,9 +136,7 @@ export function DirectorDetailDialog({
     };
   }, [open, director.id]);
 
-  const handleAction = async (
-    action: "follow" | "silence" | "unsilence" | "unfollow",
-  ) => {
+  const handleAction = async (action: "follow" | "unfollow") => {
     setUpdatingAction(action);
     try {
       await updateDirectorPreference(director.id, action);
@@ -168,7 +179,7 @@ export function DirectorDetailDialog({
             <SourceBadge source={source} />
           </DialogTitle>
           <DialogDescription>
-            Por qué aparece entre tus directores favoritos
+            {detail ? justification(detail).title : "Cargando…"}
           </DialogDescription>
         </DialogHeader>
 
@@ -179,7 +190,7 @@ export function DirectorDetailDialog({
         ) : detail ? (
           <>
             <p className="text-sm text-muted-foreground">
-              {justification(detail)}
+              {justification(detail).text}
             </p>
 
             {detail.filmography.length > 0 && (
@@ -215,48 +226,35 @@ export function DirectorDetailDialog({
             )}
 
             <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-              {source !== "muted" ? (
+              {source === null ? (
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   disabled={updatingAction !== null}
-                  onClick={() => handleAction("silence")}
+                  onClick={() => handleAction("follow")}
                 >
-                  {updatingAction === "silence" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <VolumeX className="mr-2 h-4 w-4" />
-                  )}
-                  Silenciar
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={updatingAction !== null}
-                  onClick={() => handleAction("unsilence")}
-                >
-                  {updatingAction === "unsilence" ? (
+                  {updatingAction === "follow" ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Volume2 className="mr-2 h-4 w-4" />
                   )}
-                  Dejar de silenciar
+                  Seguir
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={updatingAction !== null}
+                  onClick={() => handleAction("unfollow")}
+                >
+                  {updatingAction === "unfollow" ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserMinus className="mr-2 h-4 w-4" />
+                  )}
+                  Dejar de seguir
                 </Button>
               )}
-              <Button
-                variant="destructive"
-                size="sm"
-                disabled={updatingAction !== null}
-                onClick={() => handleAction("unfollow")}
-              >
-                {updatingAction === "unfollow" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <UserMinus className="mr-2 h-4 w-4" />
-                )}
-                Dejar de seguir
-              </Button>
             </div>
           </>
         ) : null}
