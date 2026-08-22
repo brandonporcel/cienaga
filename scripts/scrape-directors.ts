@@ -162,9 +162,11 @@ class DirectorScrapingOrchestrator {
     directorData: ScrapedDirectorData,
   ): Promise<void> {
     try {
+      // Limitar a 50 pelis — el endpoint tiene un cap de 100 y no necesitamos la filmografía completa
       const payload: UpdateDirectorPayload = {
         directorId,
         ...directorData,
+        basicMovies: directorData.basicMovies.slice(0, 50),
       };
 
       await axios.post(
