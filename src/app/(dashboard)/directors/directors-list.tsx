@@ -41,7 +41,7 @@ const SOURCE_BADGE_LABELS: Record<DirectorSource, string> = {
   muted: "Silenciado",
 };
 
-export function DirectorsGrid({ directors: initial, toolbar, headerExtra }: { directors: Director[]; toolbar?: React.ReactNode; headerExtra?: React.ReactNode }) {
+export function DirectorsGrid({ directors: initial, toolbar }: { directors: Director[]; toolbar?: React.ReactNode }) {
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>("auto");
@@ -84,16 +84,13 @@ export function DirectorsGrid({ directors: initial, toolbar, headerExtra }: { di
 
   return (
     <>
-      <div className="mb-2 flex items-start gap-2">
-        <div>
-          <h1 className="font-semibold text-2xl">Directores</h1>
-          <p className="text-muted-foreground text-sm">
-            {directors.length === 0
-              ? "Listado de todos los directores detectados desde tu Letterboxd."
-              : `${directors.length} directore${directors.length === 1 ? "r" : "s"} detectado${directors.length === 1 ? "" : "s"} desde tu Letterboxd.`}
-          </p>
-        </div>
-        {headerExtra}
+      <div className="mb-2">
+        <h1 className="font-semibold text-2xl">Directores</h1>
+        <p className="text-muted-foreground text-sm">
+          {directors.length === 0
+            ? "Listado de todos los directores detectados desde tu Letterboxd."
+            : `${directors.length} directore${directors.length === 1 ? "r" : "s"} detectado${directors.length === 1 ? "" : "s"} desde tu Letterboxd.`}
+        </p>
       </div>
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">

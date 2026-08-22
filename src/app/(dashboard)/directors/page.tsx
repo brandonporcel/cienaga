@@ -11,8 +11,12 @@ export default async function DirectorsPage() {
     <div className="w-full">
       <DirectorsGrid
         directors={directors}
-        toolbar={<UploadDialog />}
-        headerExtra={<ScrapingInfo />}
+        toolbar={
+          <>
+            <ScrapingInfo />
+            <UploadDialog />
+          </>
+        }
       />
     </div>
   );
