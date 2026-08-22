@@ -185,15 +185,15 @@ GET  /api/screenings/featured      # Funciones para la home
 
 ## 🎬 Cines monitoreados
 
-| Cine             | URL                                                            | Estado          |
-| ---------------- | -------------------------------------------------------------- | --------------- |
-| **Malba**        | https://malba.org.ar/cine/                                     | ✅              |
-| **Cine York (Lumiton)** | https://lumiton.ar/                                      | ✅              |
-| **Sala Lugones** | https://complejoteatral.gob.ar/cine                            | 🔄 Sin scraper |
-| **CCK**          | https://palaciolibertad.gob.ar/cine/                           | 🔄 Sin scraper |
-| **Gaumont**      | https://www.cinegaumont.ar/                                    | 🔄 Sin scraper |
-| **Cine Lorca**   | https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110 | 🔄 Sin scraper |
-| **Cine Cosmos**  | https://www.cinecosmos.uba.ar/                                 | 🔄 Sin scraper |
+| Cine                    | URL                                                            | Estado         |
+| ----------------------- | -------------------------------------------------------------- | -------------- |
+| **Malba**               | https://malba.org.ar/cine/                                     | ✅             |
+| **Cine York (Lumiton)** | https://lumiton.ar/                                            | ✅             |
+| **Sala Lugones**        | https://complejoteatral.gob.ar/cine                            | 🔄 Sin scraper |
+| **CCK**                 | https://palaciolibertad.gob.ar/cine/                           | 🔄 Sin scraper |
+| **Gaumont**             | https://www.cinegaumont.ar/                                    | 🔄 Sin scraper |
+| **Cine Lorca**          | https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110 | 🔄 Sin scraper |
+| **Cine Cosmos**         | https://www.cinecosmos.uba.ar/                                 | 🔄 Sin scraper |
 
 Los cines sin scraper están deshabilitados en `db/seed.sql` (`enabled = false`) para que el workflow de carteleras no falle.
 
@@ -211,13 +211,11 @@ Además, la **lista de funciones** descubre cines nuevos automáticamente (Cine 
 
 - [ ] Integración con Google Calendar
 - [ ] Códigos QR para funciones
-- [ ] Soporte para más ciudades
 - [ ] Usar funciones lambda
 - [ ] Docker
 - [ ] Terminar scrapers de cines
 - [ ] Tests
 - [ ] Agregar personalizacion para banda temporal para recibir de notificaciones. Screenings dentro de las proximos x horas/dias.
-- [ ] Agregar tablas en listados [https://www.justinmind.com/ui-design/data-table](https://www.justinmind.com/ui-design/data-table)
 - [ ] En vez de scrapear obtener datos de json. https://letterboxd.com/film/when-evil-lurks/json/
 
 ---

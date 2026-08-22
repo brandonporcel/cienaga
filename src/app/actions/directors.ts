@@ -13,26 +13,61 @@ import { getUserOrThrow } from "@/lib/helpers/get-server-user";
 async function getDirectors(): Promise<Director[]> {
   const { supabase, user } = await getUserOrThrow();
 
-  const { data, error } = await supabase
+  // 1. Directores con relación explícita (user_directors)
+  const { data: userDirectors, error: udError } = await supabase
     .from("user_directors")
     .select("directors(*), source")
     .eq("user_id", user.id);
 
-  if (error) {
+  if (udError) {
     return handleServerError({
-      error,
+      error: udError,
       message: MESSAGES.errors.gettingDirectors,
     });
   }
 
-  return (
-    data
-      // Flatten para devolver un array de directores con su fuente
-      ?.map((row) => ({
-        ...(row.directors as unknown as Director),
-        source: row.source as DirectorSource,
-      })) ?? []
-  );
+  // 2. Directores de pelis vistas que todavía no tienen relación
+  const { data: watchedDirectors, error: wdError } = await supabase
+    .from("user_movies")
+    .select(
+      "movies!inner(director_id, directors(id, name, url, image_url, created_at))",
+    )
+    .eq("user_id", user.id)
+    .not("movies.director_id", "is", null);
+
+  if (wdError) {
+    return handleServerError({
+      error: wdError,
+      message: MESSAGES.errors.gettingDirectors,
+    });
+  }
+
+  // Mapa director.id → Director para deduplicar
+  const directorsMap = new Map<string, Director>();
+
+  // Primero los user_directors (tienen source explícito)
+  for (const row of userDirectors ?? []) {
+    const dir = row.directors as unknown as Director;
+    if (dir) {
+      directorsMap.set(dir.id, { ...dir, source: row.source as DirectorSource });
+    }
+  }
+
+  // Después los detectados desde pelis vistas, sin relación aún
+  for (const row of watchedDirectors ?? []) {
+    const movie = row.movies as unknown as {
+      director_id: string;
+      directors: Director | null;
+    };
+    if (movie?.directors && !directorsMap.has(movie.directors.id)) {
+      directorsMap.set(movie.directors.id, {
+        ...movie.directors,
+        source: undefined,
+      });
+    }
+  }
+
+  return Array.from(directorsMap.values());
 }
 
 async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {

@@ -76,21 +76,6 @@ export default function Card08({
           )}
         />
 
-        <div className="absolute top-3 right-3">
-          <span
-            className={cn(
-              "px-2.5 py-1 rounded-lg text-xs font-medium",
-              "bg-white/90 text-zinc-800",
-              "dark:bg-zinc-900/90 dark:text-zinc-200",
-              "backdrop-blur-md",
-              "shadow-xs",
-              "border border-white/20 dark:border-zinc-800/50",
-            )}
-          >
-            Reciente
-          </span>
-        </div>
-
         <div className="absolute bottom-0 left-0 right-0 p-5">
           <div className="flex items-center justify-between gap-3">
             <div className="space-y-1.5">

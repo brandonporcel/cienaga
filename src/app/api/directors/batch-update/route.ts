@@ -147,8 +147,9 @@ async function updateDirectorInfo(
   try {
     const updateData: Record<string, string | number | null> = {};
 
-    // Solo actualizar campos que no sean null/undefined
-    if (directorData.avatarUrl !== undefined) {
+    // Solo actualizar campos que no sean null/undefined.
+    // avatarUrl null = el scraper no pudo extraer la imagen: no pisar la guardada
+    if (directorData.avatarUrl) {
       updateData.image_url = directorData.avatarUrl;
     }
     if (directorData.bio !== undefined) {
