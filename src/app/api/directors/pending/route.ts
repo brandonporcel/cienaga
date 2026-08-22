@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener limit desde query params (default 50)
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = parseInt(searchParams.get("limit") || "200");
 
     const { data: directors, error } = await supabase
       .from("directors")

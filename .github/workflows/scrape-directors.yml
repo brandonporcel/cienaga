@@ -1,7 +1,7 @@
 name: Scrape Directors
 on:
   schedule:
-    - cron: "0 0 */3 * *" # Every 3 days
+    - cron: "0 0 * * *" # Every day
   workflow_dispatch:
 
 env:

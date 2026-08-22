@@ -26,36 +26,6 @@ import { saveMoviesAction } from "@/app/actions/movies";
 
 type SubmitStep = "idle" | "parsing" | "saving" | "done";
 
-function getNextDirectorRun(): string {
-  const now = new Date();
-  // Cron: "0 0 */3 * *" = every 3 days at 00:00 UTC
-  const dayOfMonth = now.getUTCDate();
-  const daysInMonth = new Date(
-    now.getUTCFullYear(),
-    now.getUTCMonth() + 1,
-    0,
-  ).getUTCDate();
-
-  // Find next multiple of 3 that's >= today (1-indexed)
-  let nextDay = Math.ceil(dayOfMonth / 3) * 3;
-  if (nextDay < dayOfMonth) nextDay += 3;
-  if (nextDay > daysInMonth) nextDay = 3; // rollover to next month
-
-  const next = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), nextDay, 0, 0, 0),
-  );
-  if (next <= now) {
-    next.setUTCDate(next.getUTCDate() + 3);
-  }
-
-  return next.toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    timeZone: "America/Argentina/Buenos_Aires",
-  });
-}
-
 export function UploadDialog() {
   const { handleSubmit, setValue, reset, formState, watch } =
     useForm<FilesSchemaType>({
@@ -128,9 +98,8 @@ export function UploadDialog() {
       await saveMoviesAction(movies);
 
       setSubmitStep("done");
-      const nextRun = getNextDirectorRun();
       toast.success(
-        `¡${movies.length} película${movies.length !== 1 ? "s" : ""} importada${movies.length !== 1 ? "s" : ""}! Tus directores favoritos se actualizarán el ${nextRun}.`,
+        `¡${movies.length} película${movies.length !== 1 ? "s" : ""} importada${movies.length !== 1 ? "s" : ""}! Los directores se detectan ahora y los perfiles se actualizan diariamente.`,
       );
       reset();
       setIsOpen(false);

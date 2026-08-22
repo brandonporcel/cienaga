@@ -1,4 +1,5 @@
 import { getDirectors } from "@/app/actions/directors";
+import { ScrapingInfo } from "@/components/directors/scraping-info";
 
 import { DirectorsGrid } from "./directors-list";
 import { UploadDialog } from "./upload-dialog";
@@ -8,7 +9,11 @@ export default async function DirectorsPage() {
 
   return (
     <div className="w-full">
-      <DirectorsGrid directors={directors} toolbar={<UploadDialog />} />
+      <DirectorsGrid
+        directors={directors}
+        toolbar={<UploadDialog />}
+        headerExtra={<ScrapingInfo />}
+      />
     </div>
   );
 }

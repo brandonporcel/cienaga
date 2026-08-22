@@ -19,12 +19,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-type ListFilter = "all" | "auto" | "manual" | "muted" | "alpha";
+type ListFilter = "all" | "auto" | "manual" | "muted" | "vistos" | "alpha";
 type ViewMode = "grid" | "table";
 
 const FILTER_LABELS: Record<Exclude<ListFilter, "all" | "alpha">, string> = {
   auto: "Seguidos",
   manual: "Favoritos",
+  vistos: "Vistos",
   muted: "Silenciados",
 };
 
@@ -40,10 +41,10 @@ const SOURCE_BADGE_LABELS: Record<DirectorSource, string> = {
   muted: "Silenciado",
 };
 
-export function DirectorsGrid({ directors: initial, toolbar }: { directors: Director[]; toolbar?: React.ReactNode }) {
+export function DirectorsGrid({ directors: initial, toolbar, headerExtra }: { directors: Director[]; toolbar?: React.ReactNode; headerExtra?: React.ReactNode }) {
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<ListFilter>("all");
+  const [filter, setFilter] = useState<ListFilter>("auto");
   const [view, setView] = useState<ViewMode>("grid");
   const [detailDirector, setDetailDirector] = useState<Director | null>(null);
 
@@ -70,6 +71,8 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
       case "manual":
       case "muted":
         return byQuery.filter((d) => d.source === filter);
+      case "vistos":
+        return byQuery.filter((d) => !d.source);
       case "alpha":
         return [...byQuery].sort((a, b) => a.name.localeCompare(b.name));
       default:
@@ -77,15 +80,20 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
     }
   }, [directors, query, filter]);
 
+  const pendingScraping = directors.filter((d) => !d.image_url && d.url).length;
+
   return (
     <>
-      <div className="mb-2">
-        <h1 className="font-semibold text-2xl">Directores</h1>
-        <p className="text-muted-foreground text-sm">
-          {directors.length === 0
-            ? "Listado de todos los directores detectados desde tu Letterboxd."
-            : `${directors.length} directore${directors.length === 1 ? "r" : "s"} detectado${directors.length === 1 ? "" : "s"} desde tu Letterboxd.`}
-        </p>
+      <div className="mb-2 flex items-start gap-2">
+        <div>
+          <h1 className="font-semibold text-2xl">Directores</h1>
+          <p className="text-muted-foreground text-sm">
+            {directors.length === 0
+              ? "Listado de todos los directores detectados desde tu Letterboxd."
+              : `${directors.length} directore${directors.length === 1 ? "r" : "s"} detectado${directors.length === 1 ? "" : "s"} desde tu Letterboxd.`}
+          </p>
+        </div>
+        {headerExtra}
       </div>
 
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -119,6 +127,9 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
               <DropdownMenuItem onClick={() => setFilter("manual")}>
                 Favoritos
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setFilter("vistos")}>
+                Vistos
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setFilter("muted")}>
                 Silenciados
               </DropdownMenuItem>
@@ -150,6 +161,12 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
         </div>
         {toolbar}
       </div>
+
+      {pendingScraping > 0 && (
+        <div className="mb-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm text-blue-700 dark:text-blue-300">
+          ℹ️ {pendingScraping} director{pendingScraping !== 1 ? "es" : ""} pendiente{pendingScraping !== 1 ? "s" : ""} de actualizar. El perfil se completa automáticamente.
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         directors.length === 0 ? (
@@ -206,7 +223,7 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    {director.source && (
+                    {director.source ? (
                       <span
                         className={cn(
                           "px-2 py-0.5 rounded-md text-xs font-medium",
@@ -214,6 +231,10 @@ export function DirectorsGrid({ directors: initial, toolbar }: { directors: Dire
                         )}
                       >
                         {SOURCE_BADGE_LABELS[director.source]}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-amber-500/90 text-white">
+                        Visto
                       </span>
                     )}
                   </td>
