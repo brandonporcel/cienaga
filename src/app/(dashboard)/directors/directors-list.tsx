@@ -163,7 +163,7 @@ export function DirectorsGrid({
             </Button>
           </div>
         </div>
-        <div className="">{toolbar}</div>
+        <div className="flex items-center gap-2">{toolbar}</div>
       </div>
 
       {pendingScraping.length > 0 && (
