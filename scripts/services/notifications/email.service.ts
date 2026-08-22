@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import { Resend } from "resend";
 
 import { EmailTemplateBuilder } from "./template.builder";
@@ -14,17 +15,60 @@ interface ScreeningNotificationData {
   totalMatches: number;
 }
 
+type EmailProvider = "resend" | "brevo";
+
+interface SendResult {
+  success: boolean;
+  id?: string;
+  error?: string;
+}
+
 export class EmailService {
-  private resend: Resend;
+  private provider: EmailProvider;
+  private resend: Resend | null = null;
+  private brevoTransport: nodemailer.Transporter | null = null;
   private templateBuilder: EmailTemplateBuilder;
+  private senderEmail: string;
 
   constructor() {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      throw new Error("RESEND_API_KEY environment variable is required");
-    }
-    this.resend = new Resend(apiKey);
     this.templateBuilder = new EmailTemplateBuilder();
+    this.provider = this.resolveProvider();
+
+    if (this.provider === "resend") {
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        throw new Error("RESEND_API_KEY environment variable is required");
+      }
+      this.resend = new Resend(apiKey);
+      this.senderEmail = "onboarding@resend.dev";
+    } else {
+      const smtpKey = process.env.BREVO_SMTP_KEY;
+      const smtpUser = process.env.BREVO_SMTP_USER;
+      const senderEmail = process.env.BREVO_SENDER_EMAIL;
+      if (!smtpKey || !smtpUser || !senderEmail) {
+        throw new Error(
+          "BREVO_SMTP_KEY, BREVO_SMTP_USER and BREVO_SENDER_EMAIL are required",
+        );
+      }
+      this.brevoTransport = nodemailer.createTransport({
+        host: "smtp-relay.brevo.com",
+        port: 587,
+        secure: false, // STARTTLS
+        auth: {
+          user: smtpUser,
+          pass: smtpKey,
+        },
+      });
+      this.senderEmail = senderEmail;
+    }
+
+    console.log(`📧 Email provider: ${this.provider}`);
+  }
+
+  private resolveProvider(): EmailProvider {
+    const raw = (process.env.EMAIL_PROVIDER || "resend").toLowerCase();
+    if (raw === "brevo" || raw === "smtp") return "brevo";
+    return "resend";
   }
 
   async sendNotificationEmail(
@@ -33,7 +77,6 @@ export class EmailService {
     try {
       const { user, screenings, totalMatches } = data;
 
-      // Generar contenido usando el template builder
       const htmlContent = await this.templateBuilder.buildNotificationEmail({
         user,
         screenings,
@@ -50,27 +93,35 @@ export class EmailService {
         totalMatches,
       );
 
-      const emailData = {
-        from: "onboarding@resend.dev",
-        to: [user.email],
-        subject,
-        html: htmlContent,
-        text: textContent,
-      };
-
       console.log(
-        `Sending notification to ${user.email} (${totalMatches} matches)`,
+        `Sending notification to ${user.email} (${totalMatches} matches) via ${this.provider}`,
       );
 
-      const result = await this.resend.emails.send(emailData);
+      let result: SendResult;
 
-      if (result.error) {
-        console.error("Resend error:", result.error);
+      if (this.provider === "resend") {
+        result = await this.sendViaResend({
+          to: user.email,
+          subject,
+          html: htmlContent,
+          text: textContent,
+        });
+      } else {
+        result = await this.sendViaBrevo({
+          to: user.email,
+          subject,
+          html: htmlContent,
+          text: textContent,
+        });
+      }
+
+      if (!result.success) {
+        console.error(`${this.provider} error:`, result.error);
         return false;
       }
 
       console.log(
-        `Email sent successfully to ${user.email}, ID: ${result.data?.id}`,
+        `Email sent successfully to ${user.email}, ID: ${result.id}`,
       );
       return true;
     } catch (error) {
@@ -80,6 +131,44 @@ export class EmailService {
       );
       return false;
     }
+  }
+
+  private async sendViaResend(params: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+  }): Promise<SendResult> {
+    const result = await this.resend!.emails.send({
+      from: this.senderEmail,
+      to: [params.to],
+      subject: params.subject,
+      html: params.html,
+      text: params.text,
+    });
+
+    if (result.error) {
+      return { success: false, error: JSON.stringify(result.error) };
+    }
+
+    return { success: true, id: result.data?.id };
+  }
+
+  private async sendViaBrevo(params: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+  }): Promise<SendResult> {
+    const info = await this.brevoTransport!.sendMail({
+      from: `Ciénaga <${this.senderEmail}>`,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+      text: params.text,
+    });
+
+    return { success: true, id: info.messageId };
   }
 
   private generateSubject(userName: string, matchCount: number): string {
