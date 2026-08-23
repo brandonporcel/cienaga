@@ -73,7 +73,7 @@
 - **`scripts/services/list/list-note-parser.ts`**: parser puro de notas HTML. Maneja formatos argentinos: "Del 13 al 19", "13/8 a las 15:00 hs", "15, 22 y 29 de Agosto a las 18:00 hs", multi-cine por nota, multi-sala, URLs en `<a>`.
 - **`POST /api/list/batch`** (Bearer): endpoint dedicado. Por cada entrada: find/create cinema (nuevos con `enabled: false`), find/create movie por slug, find/create director + link, upsert screening deduplicado por (movie, cinema, screening_time_text), insert screening_time con primer día de la ventana/rango a la primera hora indicada.
 - **Workflow GA** semanal (lunes 6am UTC): `scrape-list.yml` con patrón pnpm.
-- **`pnpm scrape:list`** agregado a package.json.
+- **`pnpm scrape:letterboxd-list`** agregado a package.json.
 - **Decisión de diseño**: ventanas "Del X al Y" generan un screening con `screening_times` = primer día de la ventana a la primera hora; `screening_time_text` = texto crudo de la nota completa. El mail muestra el texto crudo (honesto, sin mentir sobre la fecha).
 - **Decisión de librería**: se descartaron librerías de terceros (todas Python y frágiles) y la API oficial (by-request, OAuth2). Se usó cheerio propio, patrón ya probado en el proyecto.
 

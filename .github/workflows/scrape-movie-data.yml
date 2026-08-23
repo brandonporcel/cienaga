@@ -1,4 +1,4 @@
-name: Scrape Movie Data
+name: Scrape Movie Metadata (TMDB)
 
 on:
   schedule:
@@ -10,7 +10,7 @@ env:
   NODE_VERSION: "24"
 
 jobs:
-  scrape-directors:
+  scrape-metadata:
     runs-on: ubuntu-latest
     timeout-minutes: 12 # Límite de seguridad
 
@@ -62,8 +62,8 @@ jobs:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
         run: |
-          echo "🚀 Starting director scraping process..."
-          pnpm exec tsx scripts/scrape-movie-data.ts
+          echo "🚀 Starting movie metadata scraping..."
+          pnpm scrape:movie-metadata
           echo "✅ Scraping process completed"
 
       - name: Upload execution logs (on failure)

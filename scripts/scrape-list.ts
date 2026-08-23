@@ -10,6 +10,7 @@ interface ListEntry {
   filmTitle: string;
   filmYear: number;
   directorName?: string;
+  directorUrl?: string;
   posterUrl?: string;
   cinemaName: string;
   cinemaAddress?: string;
@@ -21,6 +22,7 @@ interface ListEntry {
 
 interface FilmInfo {
   director?: string;
+  directorUrl?: string;
   posterUrl?: string;
 }
 
@@ -178,6 +180,7 @@ class ListScrapingOrchestrator {
         // Reusar info ya resuelta
         const cached = resolvedSlugs.get(entry.filmSlug)!;
         if (!entry.directorName && cached.director) entry.directorName = cached.director;
+        if (!entry.directorUrl && cached.directorUrl) entry.directorUrl = cached.directorUrl;
         if (!entry.posterUrl && cached.posterUrl) entry.posterUrl = cached.posterUrl;
         continue;
       }
@@ -194,6 +197,9 @@ class ListScrapingOrchestrator {
 
           if (!entry.directorName && filmInfo.director) {
             entry.directorName = filmInfo.director;
+          }
+          if (!entry.directorUrl && filmInfo.directorUrl) {
+            entry.directorUrl = filmInfo.directorUrl;
           }
           if (!entry.posterUrl && filmInfo.posterUrl) {
             entry.posterUrl = filmInfo.posterUrl;
@@ -247,11 +253,22 @@ class ListScrapingOrchestrator {
     const $ = await this.fetchPage(filmUrl);
 
     let director: string | null = null;
+    let directorUrl: string | null = null;
 
-    director = $('meta[name="twitter:data1"]').attr("content") || null;
+    // Intentar extraer director + URL del link
+    const $directorLink = $('a[href*="/director/"]').first();
+    if ($directorLink.length) {
+      director = $directorLink.text().trim() || null;
+      const href = $directorLink.attr("href");
+      if (href) {
+        directorUrl = href.startsWith("http")
+          ? href
+          : `${this.baseUrl}${href}`;
+      }
+    }
 
     if (!director) {
-      director = $('a[href*="/director/"]').first().text().trim() || null;
+      director = $('meta[name="twitter:data1"]').attr("content") || null;
     }
 
     if (!director) {
@@ -274,7 +291,7 @@ class ListScrapingOrchestrator {
     const posterUrl =
       $('meta[property="og:image"]').attr("content") || undefined;
 
-    return { director: director?.trim() || undefined, posterUrl };
+    return { director: director?.trim() || undefined, directorUrl: directorUrl || undefined, posterUrl };
   }
 
   private async sendBatch(

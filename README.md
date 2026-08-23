@@ -143,10 +143,10 @@ psql -f db/seed.sql
 ### Desarrollo
 
 ```bash
-pnpm dev                    # Servidor de desarrollo
-pnpm scrape:directors      # Probar scraping local
-pnpm scrape:list           # Probar scraping de lista Letterboxd
-pnpm type-check            # Verificar TypeScript
+pnpm dev                          # Servidor de desarrollo
+pnpm scrape:director-profiles     # Probar scraping de perfiles
+pnpm scrape:letterboxd-list       # Probar scraping de lista Letterboxd
+pnpm type-check                   # Verificar TypeScript
 ```
 
 ---

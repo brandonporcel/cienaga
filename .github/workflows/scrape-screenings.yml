@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Scrape all cinemas
+      - name: Scrape cinema screenings
         env:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
-        run: pnpm exec tsx scripts/scrape-screenings.ts
+        run: pnpm scrape:cinema-screenings

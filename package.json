@@ -12,11 +12,11 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "scrape:movie-data": "pnpm exec tsx scripts/scrape-movie-data.ts",
-    "scrape:screenings": "pnpm exec tsx scripts/scrape-screenings.ts",
-    "scrape:directors": "pnpm exec tsx scripts/scrape-directors.ts",
+    "scrape:letterboxd-list": "pnpm exec tsx scripts/scrape-list.ts",
+    "scrape:director-profiles": "pnpm exec tsx scripts/scrape-directors.ts",
+    "scrape:movie-metadata": "pnpm exec tsx scripts/scrape-movie-data.ts",
+    "scrape:cinema-screenings": "pnpm exec tsx scripts/scrape-screenings.ts",
     "send:notifications": "pnpm exec tsx scripts/send-notifications.ts",
-    "scrape:list": "pnpm exec tsx scripts/scrape-list.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "dependencies": {

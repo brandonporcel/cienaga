@@ -1,4 +1,4 @@
-name: Scrape Directors
+name: Scrape Director Profiles
 on:
   schedule:
     - cron: "0 0 * * *" # Every day
@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Run script
+      - name: Scrape director profiles from Letterboxd
         env:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
-        run: pnpm exec tsx scripts/scrape-directors.ts
+        run: pnpm scrape:director-profiles

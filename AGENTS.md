@@ -37,11 +37,12 @@ Si una implementación pedida entra en conflicto con esos documentos, actualizá
 ## Comandos útiles
 
 ```bash
-pnpm dev                    # Servidor de desarrollo
-pnpm build                  # Build de producción
-pnpm lint                   # ESLint
-pnpm scrape:directors       # Scraping de perfiles de directores
-pnpm scrape:movie-data      # Scraping de películas (asigna directores)
-pnpm scrape:screenings      # Scraping de carteleras
-pnpm send:notifications     # Envío manual de notificaciones
+pnpm dev                          # Servidor de desarrollo
+pnpm build                        # Build de producción
+pnpm lint                         # ESLint
+pnpm scrape:letterboxd-list       # Lista Letterboxd Buenos Aires → movies, directors, screenings
+pnpm scrape:director-profiles     # Perfiles Letterboxd → tmdb_id, image_url de directores
+pnpm scrape:movie-metadata        # TMDB → poster, director de movies. Crea user_directors
+pnpm scrape:cinema-screenings     # Sitios de cines → screening times
+pnpm send:notifications           # Envío manual de notificaciones
 ```

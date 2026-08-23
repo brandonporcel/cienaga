@@ -10,6 +10,7 @@ const ListEntrySchema = z.object({
   filmTitle: z.string().min(1).max(200),
   filmYear: z.number().int(),
   directorName: z.string().optional(),
+  directorUrl: z.string().url().optional(),
   posterUrl: z.string().url().optional(),
   cinemaName: z.string().min(1),
   cinemaAddress: z.string().optional(),
@@ -122,7 +123,7 @@ async function processEntry(
     }
 
     if (entry.directorName) {
-      const directorId = await findOrCreateDirector(supabase, entry.directorName);
+      const directorId = await findOrCreateDirector(supabase, entry.directorName, entry.directorUrl);
       if (directorId) {
         await linkDirectorToMovie(supabase, movieId, directorId);
       }
@@ -278,6 +279,7 @@ async function findOrCreateMovie(
 async function findOrCreateDirector(
   supabase: SupabaseClient,
   name: string,
+  url?: string,
 ): Promise<string | null> {
   const { data: existing } = await supabase
     .from("directors")
@@ -285,12 +287,22 @@ async function findOrCreateDirector(
     .eq("name", name)
     .maybeSingle();
 
-  if (existing) return existing.id;
+  if (existing) {
+    // Si el director ya existe pero no tiene URL y la tenemos, actualizarla
+    if (url) {
+      await supabase
+        .from("directors")
+        .update({ url })
+        .eq("id", existing.id)
+        .is("url", null);
+    }
+    return existing.id;
+  }
 
   const slug = normalizeText(name).replace(/\s+/g, "-");
   const { data: newDirector, error } = await supabase
     .from("directors")
-    .insert({ name, slug })
+    .insert({ name, slug, url: url || null })
     .select("id")
     .single();
 

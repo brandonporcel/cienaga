@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Scrape Letterboxd list
+      - name: Scrape Letterboxd screenings list
         env:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}
-        run: pnpm exec tsx scripts/scrape-list.ts
+        run: pnpm scrape:letterboxd-list
