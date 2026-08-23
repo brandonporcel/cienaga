@@ -31,47 +31,72 @@ class MovieDataScrapingOrchestrator {
     );
 
     try {
-      // 1. Fetch movies to process
-      const movies = await this.apiService.fetchPendingMovies(
-        CONFIG.BATCH_SIZE,
-      );
+      let totalProcessed = 0;
+      let totalSuccessful = 0;
+      let totalFailed = 0;
 
-      if (movies.length === 0) {
-        console.log("✅ No movies to process. Exiting gracefully.");
-        return;
+      // Loop until no more pending movies or timeout
+      while (true) {
+        // 1. Fetch movies to process
+        const movies = await this.apiService.fetchPendingMovies(
+          CONFIG.BATCH_SIZE,
+        );
+
+        if (movies.length === 0) {
+          console.log("✅ No more movies to process.");
+          break;
+        }
+
+        console.log(
+          `📦 Processing batch: ${movies.length} movies (${totalProcessed} already done)`,
+        );
+
+        // 2. Process movies in batches
+        const batchProcessor = new BatchProcessorService({
+          maxConcurrent: CONFIG.MAX_CONCURRENT,
+          delayBetweenRequests: CONFIG.DELAY_BETWEEN_REQUESTS,
+          timer: this.timer,
+        });
+
+        const movieDirectors = await batchProcessor.processBatch(movies);
+
+        console.log(
+          `🎯 Scraped ${movieDirectors.length}/${movies.length} directors in ${this.timer.getElapsedSeconds()}s`,
+        );
+
+        // 3. Save results if any found
+        if (movieDirectors.length > 0) {
+          const saveResult = await this.apiService.saveDirectors(movieDirectors);
+
+          totalProcessed += movies.length;
+          totalSuccessful += saveResult.successful;
+          totalFailed += saveResult.failed;
+
+          console.log(`💾 Batch results: ${saveResult.successful} ok, ${saveResult.failed} failed`);
+
+          // Show failure details if any
+          this.logFailures(saveResult.results.filter((r) => !r.success));
+        } else {
+          totalProcessed += movies.length;
+          console.log("ℹ️  No directors found in this batch");
+        }
+
+        // Check timeout before next batch
+        if (!this.timer.shouldContinue()) {
+          console.log(
+            `⏱️  Time limit reached (${CONFIG.MAX_EXECUTION_TIME / 60000}min). Processed ${totalProcessed} movies. Re-run to continue.`,
+          );
+          break;
+        }
       }
 
-      // 2. Process movies in batches
-      const batchProcessor = new BatchProcessorService({
-        maxConcurrent: CONFIG.MAX_CONCURRENT,
-        delayBetweenRequests: CONFIG.DELAY_BETWEEN_REQUESTS,
-        timer: this.timer,
-      });
-
-      const movieDirectors = await batchProcessor.processBatch(movies);
-
+      // Final summary
+      console.log(`\n📊 Total summary:`);
+      console.log(`   🎬 Movies processed: ${totalProcessed}`);
+      console.log(`   ✅ Directors saved: ${totalSuccessful}`);
+      console.log(`   ❌ Failed: ${totalFailed}`);
       console.log(
-        `🎯 Successfully scraped ${movieDirectors.length}/${movies.length} directors in ${this.timer.getElapsedSeconds()}s`,
-      );
-
-      // 3. Save results if any found
-      if (movieDirectors.length > 0) {
-        const saveResult = await this.apiService.saveDirectors(movieDirectors);
-
-        // Log detailed results
-        console.log(`💾 Database save summary:`);
-        console.log(`   - Total processed: ${saveResult.processed}`);
-        console.log(`   - Successful: ${saveResult.successful}`);
-        console.log(`   - Failed: ${saveResult.failed}`);
-
-        // Show failure details if any
-        this.logFailures(saveResult.results.filter((r) => !r.success));
-      } else {
-        console.log("ℹ️  No directors found to save");
-      }
-
-      console.log(
-        `✅ Scraping completed! Total execution time: ${this.timer.getElapsedSeconds()}s`,
+        `⏱️  Total execution time: ${this.timer.getElapsedSeconds()}s`,
       );
     } catch (error) {
       const errorMessage =
