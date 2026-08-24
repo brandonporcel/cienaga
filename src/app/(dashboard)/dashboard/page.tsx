@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, Filter, LayoutGrid, List, Search, Star } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Filter, LayoutGrid, List, Search, Star } from "lucide-react";
 
 import Cinema from "@/types/cinema";
 import Screening from "@/types/screening";
@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { getCinemasWithScreenings } from "@/app/actions/cinemas";
 import { getPersonalizedScreenings } from "@/app/actions/screenings";
 
-type DateFilter = "all" | "today" | "week" | "month";
+type DateFilter = "all" | "today" | string;
 
 export default function ScreeningsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,28 +60,36 @@ export default function ScreeningsPage() {
 
     const matchesDate = (() => {
       if (dateFilter === "all") return true;
-      const now = new Date();
+      if (dateFilter === "today") {
+        const now = new Date();
+        const screeningDate = new Date(
+          screening.screening_times?.[0]?.screening_datetime || 0,
+        );
+        return screeningDate.toDateString() === now.toDateString();
+      }
+      // Filtro por fecha específica (YYYY-MM-DD)
       const screeningDate = new Date(
         screening.screening_times?.[0]?.screening_datetime || 0,
       );
-      if (dateFilter === "today") {
-        return screeningDate.toDateString() === now.toDateString();
-      }
-      if (dateFilter === "week") {
-        const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        return screeningDate >= now && screeningDate <= weekFromNow;
-      }
-      if (dateFilter === "month") {
-        const monthFromNow = new Date(
-          now.getTime() + 30 * 24 * 60 * 60 * 1000,
-        );
-        return screeningDate >= now && screeningDate <= monthFromNow;
-      }
-      return true;
+      const screeningDateStr = screeningDate.toISOString().split("T")[0];
+      return screeningDateStr === dateFilter;
     })();
 
     return matchesSearch && matchesCinema && matchesDate;
   });
+
+  // Fechas únicas con funciones, ordenadas
+  const availableDates = useMemo(() => {
+    const dateSet = new Set<string>();
+    for (const screening of screenings) {
+      const dt = screening.screening_times?.[0]?.screening_datetime;
+      if (dt) {
+        const d = new Date(dt);
+        dateSet.add(d.toISOString().split("T")[0]);
+      }
+    }
+    return Array.from(dateSet).sort();
+  }, [screenings]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -170,23 +178,42 @@ export default function ScreeningsPage() {
       </div>
 
       {/* Date Filter */}
-      <div className="flex gap-2 mb-4">
-        {[
-          { value: "all", label: "Todas" },
-          { value: "today", label: "Hoy" },
-          { value: "week", label: "Esta semana" },
-          { value: "month", label: "Este mes" },
-        ].map((option) => (
-          <Button
-            key={option.value}
-            variant={dateFilter === option.value ? "default" : "outline"}
-            size="sm"
-            onClick={() => setDateFilter(option.value as typeof dateFilter)}
-            className="text-xs"
-          >
-            {option.label}
-          </Button>
-        ))}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <Button
+          variant={dateFilter === "all" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDateFilter("all")}
+          className="text-xs"
+        >
+          Todas
+        </Button>
+        <Button
+          variant={dateFilter === "today" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDateFilter("today")}
+          className="text-xs"
+        >
+          Hoy
+        </Button>
+        {availableDates.map((dateStr) => {
+          const d = new Date(dateStr + "T12:00:00");
+          const label = d.toLocaleDateString("es-AR", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+          });
+          return (
+            <Button
+              key={dateStr}
+              variant={dateFilter === dateStr ? "default" : "outline"}
+              size="sm"
+              onClick={() => setDateFilter(dateStr)}
+              className="text-xs"
+            >
+              {label}
+            </Button>
+          );
+        })}
       </div>
 
       {loading ? (

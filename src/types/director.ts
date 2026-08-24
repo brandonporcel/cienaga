@@ -11,6 +11,7 @@ export interface Director {
   user_directors?: { user_id: string }[];
   created_at: string;
   source?: DirectorSource;
+  movies_count?: number;
 }
 
 export interface DirectorDetail {

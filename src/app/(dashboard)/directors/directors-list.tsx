@@ -22,11 +22,6 @@ import { Input } from "@/components/ui/input";
 type ListFilter = "all" | "seguidos" | "vistos" | "alpha";
 type ViewMode = "grid" | "table";
 
-const FILTER_LABELS: Record<Exclude<ListFilter, "all" | "alpha">, string> = {
-  seguidos: "Seguidos",
-  vistos: "Vistos",
-};
-
 const SOURCE_BADGE_CLASSES: Record<DirectorSource, string> = {
   auto: "bg-emerald-500/90 text-white",
   manual: "bg-sky-500/90 text-white",
@@ -90,7 +85,12 @@ export function DirectorsGrid({
         <p className="text-muted-foreground text-sm">
           {directors.length === 0
             ? "Listado de todos los directores detectados desde tu Letterboxd."
-            : `${directors.length} directore${directors.length === 1 ? "r" : "s"} detectado${directors.length === 1 ? "" : "s"} desde tu Letterboxd.`}
+            : (() => {
+                const followed = directors.filter(
+                  (d) => d.source === "auto" || d.source === "manual",
+                ).length;
+                return `${followed} Seguido${followed === 1 ? "" : "s"} · ${directors.length} detectado${directors.length === 1 ? "" : "s"} desde tu Letterboxd.`;
+              })()}
         </p>
       </div>
 
@@ -191,6 +191,9 @@ export function DirectorsGrid({
                 <th className="text-left px-4 py-3 font-medium">Director</th>
                 <th className="text-left px-4 py-3 font-medium">Estado</th>
                 <th className="text-left px-4 py-3 font-medium hidden md:table-cell">
+                  Vistas
+                </th>
+                <th className="text-left px-4 py-3 font-medium hidden md:table-cell">
                   Detectado
                 </th>
                 <th className="w-10"></th>
@@ -233,6 +236,9 @@ export function DirectorsGrid({
                         Visto
                       </span>
                     )}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                    {director.movies_count ?? 0}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                     {new Date(director.created_at).toLocaleDateString("es-AR")}

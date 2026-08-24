@@ -67,6 +67,25 @@ async function getDirectors(): Promise<Director[]> {
     }
   }
 
+  // Contar películas vistas por director
+  const moviesCountByDirector = new Map<string, number>();
+  for (const row of watchedDirectors ?? []) {
+    const movie = row.movies as unknown as {
+      director_id: string;
+    };
+    if (movie?.director_id) {
+      moviesCountByDirector.set(
+        movie.director_id,
+        (moviesCountByDirector.get(movie.director_id) ?? 0) + 1,
+      );
+    }
+  }
+
+  // Agregar movies_count a cada director
+  for (const [id, director] of directorsMap) {
+    director.movies_count = moviesCountByDirector.get(id) ?? 0;
+  }
+
   return Array.from(directorsMap.values());
 }
 

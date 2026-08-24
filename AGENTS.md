@@ -42,7 +42,7 @@ pnpm build                        # Build de producción
 pnpm lint                         # ESLint
 pnpm scrape:letterboxd-list       # Lista Letterboxd Buenos Aires → movies, directors, screenings
 pnpm scrape:director-profiles     # Perfiles Letterboxd → tmdb_id, image_url de directores
-pnpm scrape:movie-metadata        # TMDB → poster, director de movies. Crea user_directors
+pnpm scrape:movie-directors        # TMDB → poster, director de movies. Crea user_directors
 pnpm scrape:cinema-screenings     # Sitios de cines → screening times
 pnpm send:notifications           # Envío manual de notificaciones
 ```

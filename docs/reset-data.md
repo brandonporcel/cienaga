@@ -64,7 +64,7 @@ pnpm scrape:director-profiles
 ### Paso 4: Metadata de películas (TMDB)
 
 ```bash
-pnpm scrape:movie-metadata
+pnpm scrape:movie-directors
 ```
 
 **Qué hace:** raspa TMDB → `poster_url`, `director_id` en movies. **Crea `user_directors`** automáticamente según el criterio de seguimiento.
