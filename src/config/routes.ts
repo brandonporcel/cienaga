@@ -9,7 +9,7 @@ type Route =
   | "directors"
   | "help"
   | "settings"
-  | "billing";
+  | "notifications";
 
 export const ROUTES: Record<Route, RouteObject> = {
   home: { path: "/" },
@@ -18,5 +18,5 @@ export const ROUTES: Record<Route, RouteObject> = {
   directors: { path: "/directors", label: "Directores" },
   help: { path: "/help", label: "Centro de Ayuda" },
   settings: { path: "/settings", label: "Configuración" },
-  billing: { path: "/billing", label: "Facturación" },
+  notifications: { path: "/notifications", label: "Notificaciones" },
 } as const;

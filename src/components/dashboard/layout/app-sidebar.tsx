@@ -5,19 +5,15 @@ import {
   IconBell,
   IconBrandGithub,
   IconBrandLinkedin,
-  IconBrandWhatsapp,
   IconChairDirector,
   IconDashboard,
-  IconSettings,
-  // IconHelpCircle,
   IconMail,
   IconSeedling,
-  // IconSparkles,
+  IconSettings,
 } from "@tabler/icons-react";
 
 import NavItem from "@/types/nav";
 import { ROUTES } from "@/config/routes";
-import { NavDocuments } from "@/components/dashboard/layout/nav-documents";
 import { NavMain } from "@/components/dashboard/layout/nav-main";
 import { NavSecondary } from "@/components/dashboard/layout/nav-secondary";
 import {
@@ -49,43 +45,31 @@ const data: Record<string, NavItem[]> = {
       href: ROUTES.settings.path,
       icon: IconSettings,
     },
+    {
+      title: "Notificaciones",
+      href: ROUTES.notifications.path,
+      icon: IconBell,
+    },
   ],
   navSecondary: [
-    // {
-    //   title: "Ayuda",
-    //   href: ROUTES.help.path,
-    //   icon: IconHelpCircle,
-    // },
     {
-      title: "Novedades",
-      href: "#",
-      icon: IconBell,
+      title: "Contacto",
+      href: "mailto:brandon7.7porcel@gmail.com",
+      icon: IconMail,
       items: [
         {
           icon: IconBrandLinkedin,
-          title: "Seguinos en LinkedIn",
+          title: "LinkedIn",
           href: "https://www.linkedin.com/in/brandonporcel",
           isExternal: true,
         },
         {
           icon: IconBrandGithub,
-          title: "Seguinos en GitHub",
+          title: "GitHub",
           href: "https://github.com/brandonporcel",
           isExternal: true,
         },
       ],
-    },
-  ],
-  tools: [
-    {
-      title: "WhatsApp",
-      href: "#",
-      icon: IconBrandWhatsapp,
-    },
-    {
-      title: "Emails",
-      href: "#",
-      icon: IconMail,
     },
   ],
 };
@@ -110,7 +94,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.tools} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

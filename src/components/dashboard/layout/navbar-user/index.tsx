@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  IconCreditCard,
   IconDotsVertical,
   IconUserCircle,
 } from "@tabler/icons-react";
@@ -36,11 +35,6 @@ const items: NavItem[] = [
     href: ROUTES.settings.path,
     title: "Perfil",
     icon: IconUserCircle,
-  },
-  {
-    href: ROUTES.billing.path,
-    title: "Facturación",
-    icon: IconCreditCard,
   },
 ];
 
