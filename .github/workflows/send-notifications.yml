@@ -22,8 +22,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           EMAIL_PROVIDER: ${{ secrets.EMAIL_PROVIDER }}
-          BREVO_SMTP_HOST: ${{ secrets.BREVO_SMTP_HOST }}
-          BREVO_SMTP_PORT: ${{ secrets.BREVO_SMTP_PORT }}
+          BREVO_SMTP_KEY: ${{ secrets.BREVO_SMTP_KEY }}
           BREVO_SMTP_USER: ${{ secrets.BREVO_SMTP_USER }}
-          BREVO_SMTP_PASSWORD: ${{ secrets.BREVO_SMTP_PASSWORD }}
-          BREVO_SMTP_FROM: ${{ secrets.BREVO_SMTP_FROM }}
+          BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
