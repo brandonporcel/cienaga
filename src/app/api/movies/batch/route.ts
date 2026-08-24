@@ -108,42 +108,70 @@ export async function POST(request: NextRequest) {
             .update({ slug: movieSlug })
             .eq("id", movieId);
 
-        // Buscar si el director ya existe
+        // Buscar director por nombre (como hace scrape:list)
         const { data: existingDirector, error: directorError } = await supabase
           .from("directors")
-          .select("id")
+          .select("id, slug, url")
           .eq("name", director)
-          .eq("slug", directorSlug)
-          .single();
+          .maybeSingle();
 
-        let directorId = existingDirector?.id;
+        let directorId: string | undefined;
 
-        if (directorError && directorError.code === "PGRST116") {
+        if (existingDirector) {
+          directorId = existingDirector.id;
+          // Actualizar slug/url si faltan
+          const updates: Record<string, string> = {};
+          if (!existingDirector.slug && directorSlug) updates.slug = directorSlug;
+          if (!existingDirector.url && directorUrl) updates.url = directorUrl;
+          if (Object.keys(updates).length > 0) {
+            await supabase.from("directors").update(updates).eq("id", directorId);
+          }
+        } else {
           // Director no existe, crearlo
+          const slug =
+            directorSlug ||
+            director
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/\s+/g, "-");
           const { data: newDirector, error: insertError } = await supabase
             .from("directors")
-            .insert({ name: director, url: directorUrl, slug: directorSlug })
+            .insert({ name: director, url: directorUrl || null, slug })
             .select("id")
             .single();
 
           if (insertError) {
-            console.error("Error creating director:", insertError);
-            results.push({
-              movieId,
-              director,
-              success: false,
-              error: "Failed to create director",
-            });
-            continue;
+            // Si slug duplicado, buscar por nombre
+            if (insertError.code === "23505") {
+              const { data: retry } = await supabase
+                .from("directors")
+                .select("id")
+                .eq("name", director)
+                .maybeSingle();
+              directorId = retry?.id;
+            }
+            if (!directorId) {
+              console.error("Error creating director:", insertError);
+              results.push({
+                movieId,
+                director,
+                success: false,
+                error: `Failed to create director: ${insertError.message}`,
+              });
+              continue;
+            }
+          } else {
+            directorId = newDirector.id;
           }
-          directorId = newDirector.id;
-        } else if (directorError) {
-          console.error("Error checking director:", directorError);
+        }
+
+        if (!directorId) {
           results.push({
             movieId,
             director,
             success: false,
-            error: "Database error",
+            error: "Could not resolve director_id",
           });
           continue;
         }

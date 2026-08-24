@@ -25,11 +25,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: users, error: usersError } = await supabase
-      .from("users")
-      .select("id");
+    // Obtener user_ids de user_movies (no tiene RLS) en vez de users (tiene RLS)
+    const { data: userMovieRows, error: usersError } = await supabase
+      .from("user_movies")
+      .select("user_id");
 
     if (usersError) throw usersError;
+
+    const uniqueUserIds = [...new Set(userMovieRows.map((r) => r.user_id))];
+    const users = uniqueUserIds.map((id) => ({ id }));
 
     let added = 0;
     let removed = 0;

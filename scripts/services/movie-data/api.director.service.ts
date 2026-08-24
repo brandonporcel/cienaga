@@ -62,6 +62,27 @@ export class ApiService {
     }
   }
 
+  async recalculateUserDirectors(): Promise<{ added: number; removed: number }> {
+    try {
+      console.log("🔄 Recalculando user_directors...");
+      const response = await axios.post<{ added: number; removed: number }>(
+        `${this.config.baseUrl}/api/directors/recalculate`,
+        {},
+        { headers: this.config.headers },
+      );
+      console.log(
+        `✅ Recalculate: ${response.data.added} added, ${response.data.removed} removed`,
+      );
+      return response.data;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("⚠️  Error recalculando user_directors:", errorMessage);
+      // No lanzar error: el recalculate es best-effort
+      return { added: 0, removed: 0 };
+    }
+  }
+
   async checkPendingCount(): Promise<{ count: number; hasWork: boolean }> {
     try {
       const response = await axios.get(

@@ -119,6 +119,11 @@ class MovieDataScrapingOrchestrator {
       console.log(
         `⏱️  Total execution time: ${this.timer.getElapsedSeconds()}s`,
       );
+
+      // Recalcular user_directors para sincronizar favoritos
+      if (totalSuccessful > 0) {
+        await this.apiService.recalculateUserDirectors();
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
