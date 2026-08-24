@@ -20,9 +20,8 @@ export interface DirectorDetail {
   source: DirectorSource | null;
   metrics: {
     watched: number;
-    rated35Plus: number;
-    ratedFiveStars: number;
-    pct35Plus: number;
+    rated4Plus: number;
+    pct4Plus: number;
   };
   filmography: {
     title: string;

@@ -75,17 +75,23 @@ function justification(detail: DirectorDetail): { title: string; text: string } 
   }
 
   if (detail.source === "auto") {
+    if (metrics.watched >= 4) {
+      return {
+        title: "¿Por qué lo seguís?",
+        text: `Viste ${metrics.watched} películas suyas. El volumen tiene mérito.`,
+      };
+    }
     return {
       title: "¿Por qué lo seguís?",
-      text: `Cumplís la regla: ≥2 pelis con ≥3.5★ (o 1 con 5★).`,
+      text: `Le diste ${metrics.rated4Plus > 1 ? `${metrics.rated4Plus} pelis con` : "una peli con"} ≥4★.`,
     };
   }
 
   // source === null → "No seguido"
-  if (metrics.ratedFiveStars > 0) {
+  if (metrics.rated4Plus > 0) {
     return {
       title: "¿Por qué aparece?",
-      text: `Le diste 5★ a ${metrics.ratedFiveStars} película${metrics.ratedFiveStars > 1 ? "s" : ""}, pero todavía no lo seguís.`,
+      text: `Le diste ≥4★ a ${metrics.rated4Plus} película${metrics.rated4Plus > 1 ? "s" : ""}, pero todavía no lo seguís.`,
     };
   }
   if (metrics.watched > 0) {

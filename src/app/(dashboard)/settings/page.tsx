@@ -5,7 +5,6 @@ import {
   KeyRound,
   Mail,
   Pencil,
-  SlidersHorizontal,
   User,
 } from "lucide-react";
 
@@ -185,42 +184,6 @@ export default async function Settings() {
 
             <div>
               <Button disabled>Guardar cambios</Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <SlidersHorizontal className="w-5 h-5" />
-              Directores favoritos
-            </CardTitle>
-            <CardDescription>
-              Cómo Ciénaga decide a qué directores seguís automáticamente.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-md border bg-muted/40 p-4 text-sm">
-              Seguimos a un director cuando:
-              <ul className="mt-2 list-disc pl-5 space-y-1">
-                <li>
-                  Viste <strong>2 o más</strong> películas suyas y a la{" "}
-                  <strong>mitad o más</strong> les diste <strong>3.5★ o más</strong>,
-                  o
-                </li>
-                <li>
-                  Le diste <strong>5★</strong> a al menos una de sus películas.
-                </li>
-              </ul>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Podés seguir o dejar de seguir cualquier director manualmente desde su
-              detalle: eso tiene prioridad sobre los umbrales.
-            </p>
-            <div>
-              <Button variant="outline" disabled>
-                Ajustar umbrales (próximamente)
-              </Button>
             </div>
           </CardContent>
         </Card>

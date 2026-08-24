@@ -108,13 +108,15 @@ function ScreeningCard({ screening }: { screening: Screening }) {
         )}
 
         <div className="absolute top-3 right-3">
-          <Badge
-            variant="secondary"
-            className="bg-background/80 backdrop-blur-sm"
-          >
-            <Star className="h-3 w-3 mr-1 fill-primary text-primary" />
-            {screening.movies.rating || "N/A"}
-          </Badge>
+          {screening.movies.rating && (
+            <Badge
+              variant="secondary"
+              className="bg-background/80 backdrop-blur-sm"
+            >
+              <Star className="h-3 w-3 mr-1 fill-primary text-primary" />
+              {screening.movies.rating}
+            </Badge>
+          )}
         </div>
         {screening.event_type && (
           <div className="absolute bottom-3 left-3">

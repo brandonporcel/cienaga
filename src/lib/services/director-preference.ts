@@ -1,4 +1,4 @@
-// Lógica única del criterio de "directores favoritos" (fase 1).
+// Lógica única del criterio de "directores favoritos".
 // La usan POST /api/movies/batch y POST /api/directors/recalculate.
 
 export type DirectorSource = "auto" | "manual";
@@ -8,41 +8,35 @@ export interface RatedFilm {
 }
 
 /**
- * Criterio fase 1:
- * - ≥ 2 películas vistas Y ≥ 50% de ellas con rating ≥ 3.5, o
- * - ≥ 1 película con rating 5 (vi una película y la amé).
+ * Criterio de seguimiento automático:
+ * - ≥ 4 películas vistas (el volumen por sí solo indica interés), o
+ * - ≥ 1 película con rating ≥ 4★ (una buena impresión cuenta).
  */
 export function shouldFollowDirector(films: RatedFilm[]): boolean {
   if (films.length === 0) return false;
 
-  const hasFiveStars = films.some(
-    (film) => film.rating !== null && film.rating === 5,
+  // ≥ 4 pelis vistas → seguir (el volumen tiene mérito propio)
+  if (films.length >= 4) return true;
+
+  // 1+ peli con ≥ 4★ → seguir
+  const hasHighRating = films.some(
+    (film) => film.rating !== null && film.rating >= 4,
   );
-  if (hasFiveStars) return true;
+  if (hasHighRating) return true;
 
-  if (films.length < 2) return false;
-
-  const rated35Plus = films.filter(
-    (film) => film.rating !== null && film.rating >= 3.5,
-  ).length;
-
-  return rated35Plus / films.length >= 0.5;
+  return false;
 }
 
 /** Métricas para la justificación que se muestra en la UI. */
 export function getDirectorMetrics(films: RatedFilm[]) {
   const watched = films.length;
-  const rated35Plus = films.filter(
-    (film) => film.rating !== null && film.rating >= 3.5,
-  ).length;
-  const ratedFiveStars = films.filter(
-    (film) => film.rating !== null && film.rating === 5,
+  const rated4Plus = films.filter(
+    (film) => film.rating !== null && film.rating >= 4,
   ).length;
 
   return {
     watched,
-    rated35Plus,
-    ratedFiveStars,
-    pct35Plus: watched > 0 ? Math.round((rated35Plus / watched) * 100) : 0,
+    rated4Plus,
+    pct4Plus: watched > 0 ? Math.round((rated4Plus / watched) * 100) : 0,
   };
 }

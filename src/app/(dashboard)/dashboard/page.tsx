@@ -178,43 +178,45 @@ export default function ScreeningsPage() {
       </div>
 
       {/* Date Filter */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        <Button
-          variant={dateFilter === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setDateFilter("all")}
-          className="text-xs"
-        >
-          Todas
-        </Button>
-        <Button
-          variant={dateFilter === "today" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setDateFilter("today")}
-          className="text-xs"
-        >
-          Hoy
-        </Button>
-        {availableDates.map((dateStr) => {
-          const d = new Date(dateStr + "T12:00:00");
-          const label = d.toLocaleDateString("es-AR", {
-            weekday: "short",
-            day: "numeric",
-            month: "short",
-          });
-          return (
-            <Button
-              key={dateStr}
-              variant={dateFilter === dateStr ? "default" : "outline"}
-              size="sm"
-              onClick={() => setDateFilter(dateStr)}
-              className="text-xs"
-            >
-              {label}
-            </Button>
-          );
-        })}
-      </div>
+      {!loading && (
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <Button
+            variant={dateFilter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDateFilter("all")}
+            className="text-xs"
+          >
+            Todas
+          </Button>
+          <Button
+            variant={dateFilter === "today" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDateFilter("today")}
+            className="text-xs"
+          >
+            Hoy
+          </Button>
+          {availableDates.map((dateStr) => {
+            const d = new Date(dateStr + "T12:00:00");
+            const label = d.toLocaleDateString("es-AR", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+            });
+            return (
+              <Button
+                key={dateStr}
+                variant={dateFilter === dateStr ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDateFilter(dateStr)}
+                className="text-xs"
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      )}
 
       {loading ? (
         /* Loading Skeleton */
