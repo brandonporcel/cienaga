@@ -15,7 +15,7 @@ const ListEntrySchema = z.object({
   cinemaName: z.string().min(1),
   cinemaAddress: z.string().optional(),
   screeningTimeText: z.string().max(500),
-  screeningDatetime: z.iso.datetime(),
+  screeningDatetimes: z.array(z.iso.datetime()).min(1),
   description: z.string().max(2000).optional(),
   originalUrl: z.string().url(),
 });
@@ -157,15 +157,18 @@ async function processEntry(
       return { title: entry.filmTitle, success: false, error: `Screening insert failed: ${screeningError.message}` };
     }
 
+    // Insertar TODOS los horarios (puede haber múltiples fechas por función)
+    const timeEntries = entry.screeningDatetimes.map((dt) => ({
+      screening_id: newScreening.id,
+      screening_datetime: dt,
+    }));
+
     const { error: timeError } = await supabase
       .from("screening_times")
-      .insert({
-        screening_id: newScreening.id,
-        screening_datetime: entry.screeningDatetime,
-      });
+      .insert(timeEntries);
 
     if (timeError) {
-      console.error("Error inserting screening time:", timeError);
+      console.error("Error inserting screening times:", timeError);
     }
 
     return { title: entry.filmTitle, success: true };

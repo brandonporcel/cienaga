@@ -1,5 +1,5 @@
 export interface ParsedSchedule {
-  datetime: string;
+  datetimes: string[];
   timeText: string;
 }
 
@@ -131,8 +131,68 @@ function extractTimesFromLine(line: string): string[] {
   return times;
 }
 
+/**
+ * Extrae TODAS las fechas específicas de una línea usando matchAll.
+ * Para "20/8 a las 21:00 hs · 22/8 a las 16:45 hs · 25/8 a las 15:00 hs"
+ * retorna 3 ISO datetimes en vez de solo 1.
+ */
+function extractAllSpecificDates(line: string, year: number): string[] {
+  const dates: string[] = [];
+  const matches = line.matchAll(SPECIFIC_DATE_PATTERN);
+  for (const m of matches) {
+    const day = parseInt(m[1]);
+    const dateMonth = parseInt(m[2]) - 1;
+    const time = `${m[3].padStart(2, "0")}:${m[4]}`;
+    dates.push(formatDatetime(year, dateMonth, day, time));
+  }
+  return dates;
+}
+
+/**
+ * Extrae todas las fechas de un rango "Del X al Y".
+ * Genera una fecha por cada día del rango, usando la primera hora encontrada.
+ */
+function extractRangeDates(
+  line: string,
+  year: number,
+  month: number,
+): string[] {
+  const m = line.match(RANGE_PATTERN);
+  if (!m) return [];
+  const startDay = parseInt(m[1]);
+  const endDay = parseInt(m[2]);
+  const times = extractTimesFromLine(line);
+  const time = times[0] || "00:00";
+  const dates: string[] = [];
+  for (let d = startDay; d <= endDay; d++) {
+    dates.push(formatDatetime(year, month, d, time));
+  }
+  return dates;
+}
+
+/**
+ * Extrae fechas de un patrón con mes nombrado:
+ * "20 y 21 de agosto a las 21:00 hs"
+ */
+function extractNamedMonthDates(line: string, year: number): string[] {
+  const m = line.match(NAMED_MONTH_PATTERN);
+  if (!m) return [];
+  const monthName = m[4];
+  const monthIndex = MONTH_MAP[monthName.toLowerCase()] ?? 0;
+  const time = `${m[5].padStart(2, "0")}:${m[6]}`;
+  // Capturar todos los días mencionados (m[1] = primero, m[2] = segundo opcional, m[3] = después de "y")
+  const days: number[] = [parseInt(m[1])];
+  if (m[2]) days.push(parseInt(m[2]));
+  if (m[3]) days.push(parseInt(m[3]));
+  return days.map((d) => formatDatetime(year, monthIndex, d, time));
+}
+
+/**
+ * Parsea un bloque de horarios y retorna TODOS los datetimes encontrados.
+ * Soporta múltiples fechas por línea (separadas con "·"), rangos, y meses nombrados.
+ */
 function parseScheduleBlock(scheduleLines: string[]): {
-  datetime: string;
+  datetimes: string[];
   timeText: string;
   fullTimeText: string;
 } | null {
@@ -142,91 +202,34 @@ function parseScheduleBlock(scheduleLines: string[]): {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
 
-  const firstRange = scheduleLines.find((l) => RANGE_PATTERN.test(l));
-  const firstSpecific = scheduleLines.find((l) => SPECIFIC_DATE_PATTERN.test(l));
-  const firstNamedMonth = scheduleLines.find((l) => NAMED_MONTH_PATTERN.test(l));
+  const allDatetimes: string[] = [];
 
-  if (firstRange) {
-    return parseRange(firstRange, scheduleLines, currentYear, currentMonth);
+  for (const line of scheduleLines) {
+    // Si es rango, generar una fecha por cada día del rango
+    if (RANGE_PATTERN.test(line)) {
+      allDatetimes.push(...extractRangeDates(line, currentYear, currentMonth));
+      continue;
+    }
+    // Si tiene mes nombrado ("20 y 21 de agosto a las 21:00 hs")
+    if (NAMED_MONTH_PATTERN.test(line)) {
+      allDatetimes.push(...extractNamedMonthDates(line, currentYear));
+      continue;
+    }
+    // Fecha específica — puede haber varias en la línea separadas por "·"
+    if (SPECIFIC_DATE_PATTERN.test(line)) {
+      allDatetimes.push(...extractAllSpecificDates(line, currentYear));
+    }
   }
-  if (firstSpecific) {
-    return parseSpecificDate(firstSpecific, scheduleLines, currentYear);
-  }
-  if (firstNamedMonth) {
-    return parseNamedMonth(firstNamedMonth, scheduleLines, currentYear);
-  }
+
+  // Deduplicar y ordenar cronológicamente
+  const uniqueDatetimes = [...new Set(allDatetimes)].sort();
 
   const allTimes = scheduleLines.flatMap((l) => extractTimesFromLine(l));
-  const firstTime = allTimes[0] || "00:00";
 
   return {
-    datetime: formatDatetime(currentYear, currentMonth, 1, firstTime),
+    datetimes: uniqueDatetimes,
     timeText: allTimes.length > 0 ? allTimes.join(" y ") + " hs" : "",
     fullTimeText: scheduleLines.join(" · "),
-  };
-}
-
-function parseRange(
-  rangeLine: string,
-  allLines: string[],
-  year: number,
-  month: number,
-): { datetime: string; timeText: string; fullTimeText: string } {
-  const m = rangeLine.match(RANGE_PATTERN)!;
-  const startDay = parseInt(m[1]);
-  const endDay = parseInt(m[2]);
-
-  const allTimes = allLines.flatMap((l) => extractTimesFromLine(l));
-  const firstTime = allTimes[0] || "00:00";
-
-  const rangeText = `Del ${startDay} al ${endDay}`;
-  const timeText =
-    allTimes.length > 0
-      ? `${rangeText} · ${allTimes.join(" y ")} hs`
-      : rangeText;
-
-  return {
-    datetime: formatDatetime(year, month, startDay, firstTime),
-    timeText,
-    fullTimeText: allLines.join(" · "),
-  };
-}
-
-function parseSpecificDate(
-  dateLine: string,
-  allLines: string[],
-  year: number,
-): { datetime: string; timeText: string; fullTimeText: string } {
-  const m = dateLine.match(SPECIFIC_DATE_PATTERN)!;
-  const day = parseInt(m[1]);
-  const dateMonth = parseInt(m[2]) - 1;
-  const time = `${m[3].padStart(2, "0")}:${m[4]}`;
-
-  return {
-    datetime: formatDatetime(year, dateMonth, day, time),
-    timeText: `${day}/${dateMonth + 1} a las ${time} hs`,
-    fullTimeText: allLines.join(" · "),
-  };
-}
-
-function parseNamedMonth(
-  line: string,
-  allLines: string[],
-  year: number,
-): { datetime: string; timeText: string; fullTimeText: string } {
-  const m = line.match(NAMED_MONTH_PATTERN)!;
-  const day = parseInt(m[1]);
-  const monthName = m[4];
-  const time = `${m[5].padStart(2, "0")}:${m[6]}`;
-  const monthIndex = MONTH_MAP[monthName.toLowerCase()] ?? 0;
-
-  const parts = line.split(/\s+a\s+las\s+/i);
-  const dateText = parts[0]?.trim() || line;
-
-  return {
-    datetime: formatDatetime(year, monthIndex, day, time),
-    timeText: `${dateText} a las ${time} hs`,
-    fullTimeText: allLines.join(" · "),
   };
 }
 

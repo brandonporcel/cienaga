@@ -15,7 +15,7 @@ interface ListEntry {
   cinemaName: string;
   cinemaAddress?: string;
   screeningTimeText: string;
-  screeningDatetime: string;
+  screeningDatetimes: string[];
   description?: string;
   originalUrl: string;
 }
@@ -149,7 +149,7 @@ class ListScrapingOrchestrator {
         const originalUrl = `${this.baseUrl}/film/${filmSlug}/`;
 
         for (const note of parsedNotes) {
-          if (!note.cinemaName || !note.schedule) continue;
+          if (!note.cinemaName || !note.schedule || note.schedule.datetimes.length === 0) continue;
 
           entries.push({
             filmSlug,
@@ -158,7 +158,7 @@ class ListScrapingOrchestrator {
             cinemaName: note.cinemaName,
             cinemaAddress: note.cinemaAddress,
             screeningTimeText: note.fullTimeText,
-            screeningDatetime: note.schedule.datetime,
+            screeningDatetimes: note.schedule.datetimes,
             description: note.description,
             originalUrl,
           });
