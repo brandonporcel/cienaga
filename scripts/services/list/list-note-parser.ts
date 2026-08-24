@@ -19,6 +19,22 @@ interface CinemaBlock {
 }
 
 const CINEMA_PATTERN = /^(.+?)\s*\((.+?)\)\s*$/;
+
+/**
+ * Valida si un match de CINEMA_PATTERN es realmente un cine.
+ * Rechaza matches donde la "dirección" contiene URLs o es demasiado larga
+ * (ej: "Entrada gratuita (Panorama en www.festivalescenario.com/...)").
+ */
+function isValidCinemaMatch(name: string, address: string): boolean {
+  // Si la dirección contiene URL, no es un cine
+  if (/https?:\/\//i.test(address)) return false;
+  if (/www\./i.test(address)) return false;
+  // Direcciones reales son cortas (< 60 chars)
+  if (address.length > 60) return false;
+  // Nombre demasiado corto
+  if (name.length < 3) return false;
+  return true;
+}
 const RANGE_PATTERN = /Del\s+(\d{1,2})\s+al\s+(\d{1,2})/i;
 const SPECIFIC_DATE_PATTERN = /(\d{1,2})\/(\d{1,2})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*hs/i;
 const NAMED_MONTH_PATTERN =
@@ -73,7 +89,7 @@ function buildBlocks(lines: string[]): CinemaBlock[] {
 
   for (const line of lines) {
     const match = line.match(CINEMA_PATTERN);
-    if (match) {
+    if (match && isValidCinemaMatch(match[1].trim(), match[2].trim())) {
       if (current) blocks.push(current);
       current = {
         cinemaName: match[1].trim(),

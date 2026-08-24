@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Calendar, Clock, ExternalLink, MapPin, Star } from "lucide-react";
+import { Calendar, Clock, MapPin, Share2, Star } from "lucide-react";
+import { toast } from "sonner";
 
 import Screening, { ScreeningTime } from "@/types/screening";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { movieSlug } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,6 +61,14 @@ function ScreeningCard({ screening }: { screening: Screening }) {
     const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(screening.movies.title)}&dates=${startDate.toISOString().replace(/[-:]/g, "").split(".")[0]}Z/${endDate.toISOString().replace(/[-:]/g, "").split(".")[0]}Z&details=${encodeURIComponent(`Director: ${screening.movies.directors?.name}\nCine: ${screening.cinemas.name}`)}&location=${encodeURIComponent(screening.cinemas.name)}`;
 
     window.open(calendarUrl, "_blank");
+  };
+
+  const shareScreening = (screening: Screening) => {
+    const slug = movieSlug(screening.movies.title, screening.movies.year);
+    const url = `${window.location.origin}/screenings?movie=${slug}#cartelera`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("Link copiado al portapapeles");
+    });
   };
 
   function formatTime(datetime: string) {
@@ -198,11 +208,11 @@ function ScreeningCard({ screening }: { screening: Screening }) {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => window.open(screening.original_url, "_blank")}
+              onClick={() => shareScreening(screening)}
               className="flex-1"
             >
-              <ExternalLink className="h-3 w-3 mr-2" />
-              Ver detalles
+              <Share2 className="h-3 w-3 mr-2" />
+              Compartir
             </Button>
 
             {/* Botón de calendario para el próximo horario */}

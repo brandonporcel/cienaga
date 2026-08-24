@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import createClient from "@/lib/supabase/client";
 import Screening from "@/types/screening";
 
 import ScreeningCard from "./screenings/card";
@@ -12,14 +11,8 @@ import ScreeningCard from "./screenings/card";
 export default function PublicScreenings() {
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [error, setError] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }: { data: { user: unknown } }) => {
-      setIsLoggedIn(!!data.user);
-    });
-
     const getScreenings = async () => {
       try {
         const res = await fetch("/api/screenings/featured");
@@ -59,9 +52,9 @@ export default function PublicScreenings() {
             ))}
           </div>
           <div className="flex justify-center mt-8">
-            <Link href={isLoggedIn ? "/dashboard" : "/login"}>
+            <Link href="/screenings">
               <Button variant="outline" className="cursor-pointer">
-                {isLoggedIn ? "Ver todas las funciones" : "Registrate para ver todas"}
+                Ver todas las funciones
               </Button>
             </Link>
           </div>

@@ -15,3 +15,19 @@ export function normalizeText(text: string): string {
     .replace(/\s+/g, " ") // Normalizar espacios
     .trim();
 }
+
+/**
+ * Genera un slug legible a partir del título y año de una película.
+ * Ej: "Never Look Away" + 2018 → "never-look-away-2018"
+ */
+export function movieSlug(title: string, year?: number): string {
+  const base = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return year ? `${base}-${year}` : base;
+}
