@@ -22,7 +22,7 @@ const cards: InstructionCard[] = [
   },
   {
     title: "Recibí notificaciones",
-    description: "Enterate al toque cuando una de tus pelis esté en cartel.",
+    description: "Te avisamos cuando hay funciones de tus directores favoritos.",
     Component: EmailNotifications,
   },
 ];

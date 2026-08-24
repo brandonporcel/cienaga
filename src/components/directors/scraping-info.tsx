@@ -36,7 +36,7 @@ export function ScrapingInfo() {
             <strong>Estados:</strong>
           </p>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-            <li><strong>Seguido</strong> — ≥2 pelis vistas con rating ≥3.5 (o 1 peli con 5 estrellas).</li>
+            <li><strong>Seguido</strong> — ≥4 pelis vistas (o 1 peli con ≥4★).</li>
             <li><strong>Visto</strong> — aparece en tu historial pero no cumple los criterios de Seguido.</li>
           </ul>
         </TooltipContent>

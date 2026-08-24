@@ -78,12 +78,12 @@ function justification(detail: DirectorDetail): { title: string; text: string } 
     if (metrics.watched >= 4) {
       return {
         title: "¿Por qué lo seguís?",
-        text: `Viste ${metrics.watched} películas suyas. El volumen tiene mérito.`,
+        text: `Viste ${metrics.watched} películas suyas.`,
       };
     }
     return {
       title: "¿Por qué lo seguís?",
-      text: `Le diste ${metrics.rated4Plus > 1 ? `${metrics.rated4Plus} pelis con` : "una peli con"} ≥4★.`,
+      text: `Le diste ${metrics.rated4Plus > 1 ? `${metrics.rated4Plus} pelis con` : "una peli con"} rating alto.`,
     };
   }
 

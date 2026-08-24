@@ -9,13 +9,13 @@ export interface RatedFilm {
 
 /**
  * Criterio de seguimiento automático:
- * - ≥ 4 películas vistas (el volumen por sí solo indica interés), o
- * - ≥ 1 película con rating ≥ 4★ (una buena impresión cuenta).
+ * - ≥ 4 películas vistas, o
+ * - ≥ 1 película con rating ≥ 4★.
  */
 export function shouldFollowDirector(films: RatedFilm[]): boolean {
   if (films.length === 0) return false;
 
-  // ≥ 4 pelis vistas → seguir (el volumen tiene mérito propio)
+  // ≥ 4 pelis vistas → seguir
   if (films.length >= 4) return true;
 
   // 1+ peli con ≥ 4★ → seguir

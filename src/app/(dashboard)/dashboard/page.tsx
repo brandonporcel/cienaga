@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Filter, LayoutGrid, List, Search, Star } from "lucide-react";
+import { Filter, LayoutGrid, List, Search } from "lucide-react";
 
 import Cinema from "@/types/cinema";
 import Screening from "@/types/screening";
@@ -255,7 +255,6 @@ export default function ScreeningsPage() {
                 <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">
                   Próxima función
                 </th>
-                <th className="text-left px-4 py-3 font-medium">Rating</th>
               </tr>
             </thead>
             <tbody>
@@ -312,12 +311,6 @@ export default function ScreeningsPage() {
                           month: "short",
                         })
                       : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge variant="secondary" className="text-xs">
-                      <Star className="h-3 w-3 mr-1 fill-primary text-primary" />
-                      {screening.movies.rating || "N/A"}
-                    </Badge>
                   </td>
                 </tr>
               ))}

@@ -40,10 +40,10 @@ export default function PublicScreenings() {
     <div className="container mx-auto px-4">
       <div className="flex flex-col justify-start items-start gap-2 mb-8">
         <h2 className="text-foreground text-4xl md:text-6xl font-semibold leading-tight md:leading-[66px]">
-          Películas en cartel
+          Cartelera
         </h2>
         <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
-          Lo que otros usuarios de Ciénaga están viendo en Buenos Aires
+          Las funciones que más siguen los usuarios de Ciénaga en Buenos Aires
         </p>
       </div>
 
