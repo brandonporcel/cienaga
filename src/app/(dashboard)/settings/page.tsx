@@ -34,9 +34,9 @@ export default async function Settings() {
 
   return (
     <>
-      <h2 className="text-lg font-semibold text-neutral-500 mb-6">
-        Configuración
-      </h2>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">Configuración</h1>
+      </div>
 
       <div className="space-y-6">
         {/* Correo electrónico */}

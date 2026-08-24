@@ -25,13 +25,6 @@ export function FooterSection() {
         </div>
       </div>
 
-      {/* Center Section */}
-      <div className="flex flex-col justify-start items-center gap-3 p-4 md:p-8">
-        <p className="text-muted-foreground text-sm font-medium leading-5">
-          Hecho con ❤️ en Buenos Aires
-        </p>
-      </div>
-
       {/* Right Section: Links */}
       <div className="flex flex-col justify-start items-start gap-3 p-4 md:p-8">
         <a

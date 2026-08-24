@@ -36,11 +36,6 @@ const faqData = [
       "La cartelera se actualiza constantemente a partir de la información oficial de los cines de Buenos Aires, para que siempre tengas datos precisos sobre funciones, estrenos y reestrenos.",
   },
   {
-    question: "¿Van a expandirse a otras ciudades además de BA?",
-    answer:
-      "Por el momento estamos enfocados en la Ciudad de Buenos Aires, pero planeamos ampliar Ciénaga a otras ciudades de Argentina y la región en próximas versiones.",
-  },
-  {
     question: "¿Van a enviarme spam o correos no deseados?",
     answer:
       "No. Solo recibirás notificaciones y correos relacionados con las películas que marcaste como favoritas o con avisos importantes sobre la app.",
