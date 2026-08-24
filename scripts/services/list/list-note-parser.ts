@@ -138,7 +138,8 @@ function extractTimesFromLine(line: string): string[] {
  */
 function extractAllSpecificDates(line: string, year: number): string[] {
   const dates: string[] = [];
-  const matches = line.matchAll(SPECIFIC_DATE_PATTERN);
+  const re = /(\d{1,2})\/(\d{1,2})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*hs/gi;
+  const matches = line.matchAll(re);
   for (const m of matches) {
     const day = parseInt(m[1]);
     const dateMonth = parseInt(m[2]) - 1;
