@@ -34,6 +34,8 @@ class MovieDataScrapingOrchestrator {
       let totalProcessed = 0;
       let totalSuccessful = 0;
       let totalFailed = 0;
+      const seenMovieIds = new Set<string>();
+      let consecutiveNoProgress = 0;
 
       // Loop until no more pending movies or timeout
       while (true) {
@@ -46,6 +48,25 @@ class MovieDataScrapingOrchestrator {
           console.log("✅ No more movies to process.");
           break;
         }
+
+        // Detect stuck loop: same movies, no progress
+        const currentIds = new Set(movies.map((m) => m.id));
+        const allSeen = movies.every((m) => seenMovieIds.has(m.id));
+        if (allSeen) {
+          consecutiveNoProgress++;
+          if (consecutiveNoProgress >= 2) {
+            console.log(
+              `⚠️  Stuck loop detected: same ${movies.length} movies for ${consecutiveNoProgress} iterations with no progress. Stopping.`,
+            );
+            break;
+          }
+          console.log(
+            `⚠️  Same movies as previous iteration (attempt ${consecutiveNoProgress}/2). Continuing...`,
+          );
+        } else {
+          consecutiveNoProgress = 0;
+        }
+        movies.forEach((m) => seenMovieIds.add(m.id));
 
         console.log(
           `📦 Processing batch: ${movies.length} movies (${totalProcessed} already done)`,

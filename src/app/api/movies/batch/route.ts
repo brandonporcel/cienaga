@@ -55,8 +55,11 @@ export async function POST(request: NextRequest) {
         movieDuration,
       } = movieData;
 
-      // Ignorar cortos
-      if (movieDuration !== undefined && movieDuration <= 40) continue;
+      // Ignorar cortos (solo si la duración es un número válido y <= 40 min)
+      if (typeof movieDuration === "number" && !isNaN(movieDuration) && movieDuration <= 40) {
+        results.push({ movieId, director, success: true, error: "Skipped: short film" });
+        continue;
+      }
 
       try {
         // Actualizar poster de película

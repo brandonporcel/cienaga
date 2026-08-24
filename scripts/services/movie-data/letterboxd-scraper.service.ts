@@ -168,8 +168,39 @@ export class LetterboxdScraperService {
 
   private static extractMovieDuration($: cheerio.CheerioAPI): number | null {
     const $el = $("p.text-link.text-footer");
-    const durationText = $el.text().trim().split(" ")[0];
-    return parseInt(durationText);
+    const durationText = $el.text().trim();
+    return LetterboxdScraperService.parseDuration(durationText);
+  }
+
+  /**
+   * Parsea duraciones de Letterboxd en distintos formatos:
+   *   "105 mins" → 105
+   *   "1h 45m"   → 105
+   *   "2 h 3 min" → 123
+   *   "86"       → 86
+   */
+  private static parseDuration(text: string): number | null {
+    if (!text) return null;
+
+    // Formato con horas: "1h 45m", "2 h 3 min", "1hr 30min"
+    const hourMatch = text.match(/(\d+)\s*h/i);
+    const minMatch = text.match(/(\d+)\s*m/i);
+
+    if (hourMatch || minMatch) {
+      const hours = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+      const minutes = minMatch ? parseInt(minMatch[1], 10) : 0;
+      const total = hours * 60 + minutes;
+      return total > 0 ? total : null;
+    }
+
+    // Formato solo número: "105 mins", "86"
+    const numMatch = text.match(/(\d+)/);
+    if (numMatch) {
+      const num = parseInt(numMatch[1], 10);
+      return num > 0 ? num : null;
+    }
+
+    return null;
   }
 
   private static extractBackgroundMovieImg(
