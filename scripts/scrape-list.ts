@@ -287,9 +287,34 @@ class ListScrapingOrchestrator {
       }
     }
 
-    // Extraer poster del OG image
-    const posterUrl =
-      $('meta[property="og:image"]').attr("content") || undefined;
+    // Extraer poster del JSON-LD (poster real, portrait) — NO usar og:image que es el fondo
+    let posterUrl: string | undefined;
+
+    const jsonLdScript = $('script[type="application/ld+json"]').first().text();
+    if (jsonLdScript) {
+      try {
+        const cleanJson = jsonLdScript.replace(/\/\*.*?\*\//gs, "").trim();
+        const data = JSON.parse(cleanJson);
+        if (data.image && typeof data.image === "string") {
+          posterUrl = data.image;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    // Safety net: si el poster tiene un aspect ratio landscape (>1.2 ancho/alto), descartarlo
+    // porque no es un poster real — es una imagen de fondo
+    if (posterUrl) {
+      const widthMatch = posterUrl.match(/-(\d+)-(\d+)-crop/);
+      if (widthMatch) {
+        const w = parseInt(widthMatch[1]);
+        const h = parseInt(widthMatch[2]);
+        if (w > h * 1.2) {
+          posterUrl = undefined;
+        }
+      }
+    }
 
     return { director: director?.trim() || undefined, directorUrl: directorUrl || undefined, posterUrl };
   }

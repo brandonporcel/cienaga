@@ -135,7 +135,15 @@ export class LetterboxdScraperService {
     if (cleanJson) {
       try {
         const data = JSON.parse(cleanJson);
-        if (data.image) {
+        if (data.image && typeof data.image === "string") {
+          // Safety net: descartar si el aspect ratio es landscape (>1.2 ancho/alto)
+          // porque sería una imagen de fondo, no un poster
+          const dimMatch = data.image.match(/-(\d+)-(\d+)-crop/);
+          if (dimMatch) {
+            const w = parseInt(dimMatch[1]);
+            const h = parseInt(dimMatch[2]);
+            if (w > h * 1.2) return null;
+          }
           return data.image;
         }
       } catch (e) {
