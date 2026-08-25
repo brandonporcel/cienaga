@@ -305,8 +305,9 @@ class ListScrapingOrchestrator {
 
     // Safety net: si el poster tiene un aspect ratio landscape (>1.2 ancho/alto), descartarlo
     // porque no es un poster real — es una imagen de fondo
+    // Formato URL: .../film-poster/{id}-{slug}-{x}-{w}-{y}-{h}-crop.jpg
     if (posterUrl) {
-      const widthMatch = posterUrl.match(/-(\d+)-(\d+)-crop/);
+      const widthMatch = posterUrl.match(/-\d+-(\d+)-\d+-(\d+)-crop/);
       if (widthMatch) {
         const w = parseInt(widthMatch[1]);
         const h = parseInt(widthMatch[2]);

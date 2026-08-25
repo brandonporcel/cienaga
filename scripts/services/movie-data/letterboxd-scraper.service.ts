@@ -138,7 +138,8 @@ export class LetterboxdScraperService {
         if (data.image && typeof data.image === "string") {
           // Safety net: descartar si el aspect ratio es landscape (>1.2 ancho/alto)
           // porque sería una imagen de fondo, no un poster
-          const dimMatch = data.image.match(/-(\d+)-(\d+)-crop/);
+          // Formato URL: .../film-poster/{id}-{slug}-{x}-{w}-{y}-{h}-crop.jpg
+          const dimMatch = data.image.match(/-\d+-(\d+)-\d+-(\d+)-crop/);
           if (dimMatch) {
             const w = parseInt(dimMatch[1]);
             const h = parseInt(dimMatch[2]);
