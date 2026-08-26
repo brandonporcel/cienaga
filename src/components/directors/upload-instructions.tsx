@@ -7,18 +7,19 @@ export default function UploadInstructions() {
           href="https://letterboxd.com/settings/data"
           target="_blank"
           rel="noreferrer"
-          className="text-primary hover:underline"
+          className="text-primary hover:underline font-semibold"
         >
           letterboxd.com/settings/data
         </a>
         .
       </p>
       <p>
-        2. Sube los archivos:{" "}
-        <code className="text-[#94f27f]">watched.csv</code> y/o{" "}
-        <code className="text-[#94f27f]">ratings.csv</code>.
+        2. Subí el <code className="text-green-700 dark:text-[#00ff41] font-semibold">.zip</code> que te
+        descargó, o los archivos{" "}
+        <code className="text-green-700 dark:text-[#00ff41] font-semibold">watched.csv</code> y/o{" "}
+        <code className="text-green-700 dark:text-[#00ff41] font-semibold">ratings.csv</code> individuales.
       </p>
-      <p>3. Procesa y revisa la lista de directores.</p>
+      <p>3. Procesá y revisá la lista de directores.</p>
     </div>
   );
 }

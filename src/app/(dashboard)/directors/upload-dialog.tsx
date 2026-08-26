@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import JSZip from "jszip";
 import { Download, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -40,22 +41,56 @@ export function UploadDialog() {
   const [submitStep, setSubmitStep] = useState<SubmitStep>("idle");
   const isSubmitting = formState.isSubmitting;
 
+  const extractCsvsFromZip = async (
+    zipFile: File,
+  ): Promise<{ watched?: File; ratings?: File }> => {
+    const zip = await JSZip.loadAsync(zipFile);
+    const result: { watched?: File; ratings?: File } = {};
+
+    for (const [path, entry] of Object.entries(zip.files)) {
+      if (entry.dir) continue;
+      const fileName = path.split("/").pop()?.toLowerCase() ?? "";
+      if (fileName === "watched.csv" && !result.watched) {
+        const blob = await entry.async("blob");
+        result.watched = new File([blob], "watched.csv", {
+          type: "text/csv",
+        });
+      }
+      if (fileName === "ratings.csv" && !result.ratings) {
+        const blob = await entry.async("blob");
+        result.ratings = new File([blob], "ratings.csv", {
+          type: "text/csv",
+        });
+      }
+    }
+
+    return result;
+  };
+
   const handleFilesSelected = async (files: FileList) => {
-    Array.from(files).forEach((file) => {
-      if (file.name.includes("watched")) setValue("watched", file);
-      if (file.name.includes("ratings")) setValue("ratings", file);
-    });
+    let watchedFile: File | undefined;
+    let ratingsFile: File | undefined;
+
+    for (const file of Array.from(files)) {
+      if (file.name.endsWith(".zip")) {
+        const extracted = await extractCsvsFromZip(file);
+        if (extracted.watched) watchedFile = extracted.watched;
+        if (extracted.ratings) ratingsFile = extracted.ratings;
+      } else {
+        if (file.name.includes("watched")) watchedFile = file;
+        if (file.name.includes("ratings")) ratingsFile = file;
+      }
+    }
+
+    if (watchedFile) setValue("watched", watchedFile);
+    if (ratingsFile) setValue("ratings", ratingsFile);
 
     // Parsear CSVs inmediatamente para mostrar cantidad detectada
     try {
       const fileMap: FilesSchemaType = {
-        watched: undefined,
-        ratings: undefined,
+        watched: watchedFile,
+        ratings: ratingsFile,
       };
-      Array.from(files).forEach((file) => {
-        if (file.name.includes("watched")) fileMap.watched = file;
-        if (file.name.includes("ratings")) fileMap.ratings = file;
-      });
 
       const movies = await LetterboxdService.getMovies(fileMap);
       setDetectedCount(movies.length);
@@ -151,10 +186,10 @@ export function UploadDialog() {
 
           <FileUploadArea
             onFilesSelected={handleFilesSelected}
-            accept=".csv"
+            accept=".csv,.zip"
             multiple
-            maxSize={10}
-            allowedTypes={["csv"]}
+            maxSize={50}
+            allowedTypes={["csv", "zip"]}
           />
 
           <div className="space-y-1">

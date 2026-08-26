@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Upload } from "lucide-react";
 
 interface FileUploadAreaProps {
@@ -25,6 +25,7 @@ export function FileUploadArea({
   maxSize,
   allowedTypes,
 }: FileUploadAreaProps) {
+  const inputId = useId();
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,7 +93,7 @@ export function FileUploadArea({
 
   const handleClick = () => {
     if (disabled) return;
-    document.getElementById("file-upload-input")?.click();
+    document.getElementById(inputId)?.click();
     setError(null);
   };
 
@@ -117,7 +118,7 @@ export function FileUploadArea({
           {placeholder}
         </p>
         <input
-          id="file-upload-input"
+          id={inputId}
           type="file"
           accept={accept}
           multiple={multiple}

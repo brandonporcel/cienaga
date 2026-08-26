@@ -7,6 +7,6 @@ export const FilesSchema = z
   })
   .refine((data) => data.watched || data.ratings, {
     path: ["_global"],
-    message: "Necesitas subir al menos un archivo (watched.csv o ratings.csv)",
+    message: "Necesitás subir al menos un archivo (watched.csv, ratings.csv o el .zip de Letterboxd)",
   });
 export type FilesSchemaType = z.infer<typeof FilesSchema>;
