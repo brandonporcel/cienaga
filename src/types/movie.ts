@@ -7,5 +7,7 @@ export default interface Movie {
   rating: number | null;
   year?: number;
   poster_url?: string | null;
+  background_img_url?: string | null;
+  duration?: number | null;
   directors?: Director;
 }

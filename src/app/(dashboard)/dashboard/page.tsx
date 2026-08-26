@@ -5,7 +5,7 @@ import { Filter, LayoutGrid, List, Search } from "lucide-react";
 
 import Cinema from "@/types/cinema";
 import Screening from "@/types/screening";
-import ScreeningCard from "@/components/screenings/card";
+import ScreeningCard, { ScreeningDetailModal } from "@/components/screenings/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,7 @@ export default function ScreeningsPage() {
   const [loading, setLoading] = useState(true);
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [screenings, setScreenings] = useState<Screening[]>([]);
+  const [selectedScreening, setSelectedScreening] = useState<Screening | null>(null);
 
   const toggleCinema = (name: string) => {
     setSelectedCinemas((prev) => {
@@ -263,7 +264,7 @@ export default function ScreeningsPage() {
                   key={screening.id}
                   className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
                   onClick={() =>
-                    window.open(screening.original_url, "_blank")
+                    setSelectedScreening(screening)
                   }
                 >
                   <td className="px-4 py-3">
@@ -321,9 +322,18 @@ export default function ScreeningsPage() {
         /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredScreenings.map((screening) => (
-            <ScreeningCard key={screening.id} screening={screening} />
+            <ScreeningCard key={screening.id} screening={screening} onOpenDetail={setSelectedScreening} />
           ))}
         </div>
+      )}
+
+      {/* Modal de detalle */}
+      {selectedScreening && (
+        <ScreeningDetailModal
+          screening={selectedScreening}
+          open={!!selectedScreening}
+          onClose={() => setSelectedScreening(null)}
+        />
       )}
     </>
   );

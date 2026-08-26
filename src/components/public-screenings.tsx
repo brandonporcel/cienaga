@@ -6,10 +6,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Screening from "@/types/screening";
 
-import ScreeningCard from "./screenings/card";
+import ScreeningCard, {
+  ScreeningDetailModal,
+} from "./screenings/card";
 
 export default function PublicScreenings() {
   const [screenings, setScreenings] = useState<Screening[]>([]);
+  const [selectedScreening, setSelectedScreening] =
+    useState<Screening | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -46,9 +50,13 @@ export default function PublicScreenings() {
         </p>
       ) : screenings.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {screenings.map((screening) => (
-              <ScreeningCard key={screening.id} screening={screening} />
+              <ScreeningCard
+                key={screening.id}
+                screening={screening}
+                onOpenDetail={setSelectedScreening}
+              />
             ))}
           </div>
           <div className="flex justify-center mt-8">
@@ -63,6 +71,15 @@ export default function PublicScreenings() {
         <p className="text-muted-foreground py-8 text-center">
           Todavia no hay funciones disponibles.
         </p>
+      )}
+
+      {/* Modal de detalle */}
+      {selectedScreening && (
+        <ScreeningDetailModal
+          screening={selectedScreening}
+          open={!!selectedScreening}
+          onClose={() => setSelectedScreening(null)}
+        />
       )}
     </div>
   );

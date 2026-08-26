@@ -9,13 +9,10 @@ import { ArrowLeft } from "lucide-react";
 import Screening from "@/types/screening";
 import { movieSlug } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import ScreeningCard from "@/components/screenings/card";
+import ScreeningCard, {
+  ScreeningDetailModal,
+} from "@/components/screenings/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export default function ScreeningsPageContent() {
   const [screenings, setScreenings] = useState<Screening[]>([]);
@@ -44,13 +41,22 @@ export default function ScreeningsPageContent() {
     fetchScreenings();
   }, []);
 
-  // Scroll al elemento destacado cuando la página carga
+  // Scroll + auto-open para deep linking
   useEffect(() => {
-    if (highlightSlug && highlightedRef.current) {
-      highlightedRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    if (highlightSlug && screenings.length > 0) {
+      const match = screenings.find(
+        (s) => highlightSlug === movieSlug(s.movies.title, s.movies.year),
+      );
+      if (match) {
+        setSelectedScreening(match);
+        // Scroll después de un tick para que el DOM renderice
+        requestAnimationFrame(() => {
+          highlightedRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        });
+      }
     }
   }, [highlightSlug, screenings]);
 
@@ -76,21 +82,19 @@ export default function ScreeningsPageContent() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-4 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
-            {Array.from({ length: isMobile ? 12 : 6 }).map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-lg border bg-card overflow-hidden"
+                className="flex gap-4 rounded-2xl border bg-card p-3 animate-pulse"
               >
-                <div
-                  className={`bg-muted animate-pulse ${isMobile ? "aspect-[2/3]" : "h-64"}`}
-                />
-                {!isMobile && (
-                  <div className="p-4 space-y-3">
-                    <div className="h-5 bg-muted animate-pulse rounded w-3/4" />
-                    <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
-                  </div>
-                )}
+                <div className="w-[120px] aspect-[2/3] bg-muted rounded-xl" />
+                <div className="flex-1 py-1 space-y-2">
+                  <div className="h-5 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="h-4 bg-muted rounded w-2/3" />
+                  <div className="h-7 bg-muted rounded w-24 mt-2" />
+                </div>
               </div>
             ))}
           </div>
@@ -98,83 +102,42 @@ export default function ScreeningsPageContent() {
           <p className="text-muted-foreground text-center py-12">
             No hay funciones programadas por el momento.
           </p>
-        ) : isMobile ? (
-          /* Mobile: grilla de posters */
+        ) : (
           <>
+            {/* Grilla de cards horizontales */}
             <div
               id="cartelera"
-              className="grid grid-cols-4 gap-2"
+              className="grid grid-cols-1 md:grid-cols-2 gap-3"
             >
               {screenings.map((screening) => (
                 <div
                   key={screening.id}
                   ref={isHighlighted(screening) ? highlightedRef : undefined}
+                  className={
+                    isHighlighted(screening)
+                      ? "ring-2 ring-primary rounded-2xl"
+                      : undefined
+                  }
                 >
-                  <button
-                    onClick={() => setSelectedScreening(screening)}
-                    className={`relative aspect-[2/3] w-full rounded-lg overflow-hidden bg-zinc-800 active:scale-95 transition-transform ${
-                      isHighlighted(screening)
-                        ? "ring-2 ring-primary"
-                        : ""
-                    }`}
-                  >
-                    {screening.movies?.poster_url ? (
-                      <Image
-                        src={screening.movies.poster_url}
-                        alt={screening.movies.title}
-                        fill
-                        className="object-cover"
-                        sizes="25vw"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-500 text-xs text-center p-1">
-                        {screening.movies.title}
-                      </div>
-                    )}
-                  </button>
+                  <ScreeningCard
+                    screening={screening}
+                    onOpenDetail={setSelectedScreening}
+                  />
                 </div>
               ))}
             </div>
-
-            {/* Modal con detalles */}
-            <Dialog
-              open={!!selectedScreening}
-              onOpenChange={(open) => !open && setSelectedScreening(null)}
-            >
-              <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-                {selectedScreening && (
-                  <>
-                    <DialogTitle className="sr-only">
-                      {selectedScreening.movies.title}
-                    </DialogTitle>
-                    <ScreeningCard screening={selectedScreening} />
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
           </>
-        ) : (
-          /* Desktop: cards completas */
-          <div
-            id="cartelera"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {screenings.map((screening) => (
-              <div
-                key={screening.id}
-                ref={isHighlighted(screening) ? highlightedRef : undefined}
-                className={
-                  isHighlighted(screening)
-                    ? "ring-2 ring-primary rounded-lg"
-                    : undefined
-                }
-              >
-                <ScreeningCard screening={screening} />
-              </div>
-            ))}
-          </div>
         )}
       </div>
+
+      {/* Modal de detalle */}
+      {selectedScreening && (
+        <ScreeningDetailModal
+          screening={selectedScreening}
+          open={!!selectedScreening}
+          onClose={() => setSelectedScreening(null)}
+        />
+      )}
     </div>
   );
 }
