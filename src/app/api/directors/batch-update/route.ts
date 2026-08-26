@@ -242,7 +242,15 @@ async function processMovie(
       };
     }
 
-    // Película no existe, crearla
+    // Película no existe — solo crear si tiene poster
+    if (!movie.thumbnailUrl) {
+      return {
+        movieUrl: movie.url,
+        success: true,
+        action: "skipped",
+      };
+    }
+
     const { error: insertError } = await supabase.from("movies").insert({
       title: movie.title,
       national_title: movie.title,
