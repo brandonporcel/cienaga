@@ -38,8 +38,7 @@ class ScreeningScrapingOrchestrator {
         );
 
         if (!scraper) {
-          results.failed += 1;
-          results.errors.push(`No scraper available for ${cinema.name}`);
+          console.log(`⏭️  ${cinema.name}: no scraper disponible, skip`);
           continue;
         }
 

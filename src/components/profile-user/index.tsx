@@ -71,13 +71,13 @@ function UserDropdown({ children }: { children: React.ReactNode }) {
           <DropdownMenuItem asChild>
             <Link href={"/settings"}>
               <User className="mr-2 h-4 w-4" />
-              <span>Perfil</span>
+              <span>Mi perfil</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={"/dashboard"}>
               <Settings className="mr-2 h-4 w-4" />
-              <span>Dashboard</span>
+              <span>Cartelera personalizada</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
