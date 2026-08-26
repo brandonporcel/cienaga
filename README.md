@@ -209,14 +209,11 @@ Además, la **lista de funciones** descubre cines nuevos automáticamente (Cine 
 
 ## 📋 To-Do
 
-- [ ] Integración con Google Calendar
-- [ ] Códigos QR para funciones
 - [ ] Usar funciones lambda
 - [ ] Docker
 - [ ] Terminar scrapers de cines
 - [ ] Tests
 - [ ] Agregar personalizacion para banda temporal para recibir de notificaciones. Screenings dentro de las proximos x horas/dias.
-- [ ] En vez de scrapear obtener datos de json. https://letterboxd.com/film/when-evil-lurks/json/
 
 ---
 
