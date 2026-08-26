@@ -1,7 +1,10 @@
 import axios, { AxiosResponse } from "axios";
 import * as cheerio from "cheerio";
 
+import { getBatchFilmStats } from "./services/movie-data/letterboxd-stats.service";
 import { validateEnvironmentVariables } from "./utils/validation.util";
+
+const MIN_WATCHES = 800;
 
 interface BasicMovie {
   title: string;
@@ -145,6 +148,32 @@ class DirectorScrapingOrchestrator {
         basicMovies: this.extractBasicMovies($),
         TMDBId: this.extractTMDBId($),
       };
+
+      // Fetch watch counts and filter by MIN_WATCHES
+      if (data.basicMovies.length > 0) {
+        console.log(
+          `   📊 Fetching watch counts for ${data.basicMovies.length} movies...`,
+        );
+        const stats = await getBatchFilmStats(
+          data.basicMovies.map((m) => ({ slug: m.slug, title: m.title })),
+          300,
+        );
+
+        const before = data.basicMovies.length;
+        data.basicMovies = data.basicMovies.filter((movie) => {
+          const filmStats = stats.get(movie.slug);
+          if (!filmStats) {
+            // Sin stats: conservar (puede ser rate limit o error temporal)
+            console.log(`   ⚠️  Sin stats, conservando: ${movie.title}`);
+            return true;
+          }
+          return filmStats.watches >= MIN_WATCHES;
+        });
+
+        console.log(
+          `   📊 Filtered: ${before} → ${data.basicMovies.length} movies (>= ${MIN_WATCHES} watches)`,
+        );
+      }
 
       console.log(
         `   📊 Extracted: ${data.basicMovies.length} movies, bio: ${data.bio ? "yes" : "no"}, avatar: ${data.avatarUrl ? "yes" : "no"}`,

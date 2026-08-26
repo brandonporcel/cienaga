@@ -7,6 +7,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 // Schemas de validación con Zod
 const BasicMovieSchema = z.object({
   title: z.string().min(1).max(200),
+  slug: z.string().max(200).optional(),
   url: z.url(),
   year: z
     .number()
@@ -254,6 +255,7 @@ async function processMovie(
     const { error: insertError } = await supabase.from("movies").insert({
       title: movie.title,
       national_title: movie.title,
+      slug: movie.slug ?? null,
       url: movie.url,
       year: movie.year,
       director_id: directorId,
