@@ -1,11 +1,21 @@
 import { Calendar, Mail, Pencil, User } from "lucide-react";
 
 import { createClientForServer } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationToggle } from "@/components/notification-toggle";
 
 export default async function Settings() {
   const supabase = await createClientForServer();
   const { data } = await supabase.auth.getUser();
+
+  // Fetch unsubscribed status from users table (RLS blocks anon key)
+  const serviceSupabase = createServiceClient();
+  const { data: userData } = await serviceSupabase
+    .from("users")
+    .select("unsubscribed")
+    .eq("id", data.user?.id ?? "")
+    .single();
 
   return (
     <>
@@ -89,6 +99,25 @@ export default async function Settings() {
                   })
                 : "—"}
             </p>
+          </div>
+        </div>
+
+        {/* Notificaciones */}
+        <div className="rounded-lg border text-card-foreground shadow-sm relative overflow-hidden">
+          <div className="flex flex-col space-y-1.5 p-6">
+            <h3 className="text-base font-semibold tracking-tight">
+              Notificaciones
+            </h3>
+            <div className="text-sm text-muted-foreground">
+              Configurá si querés recibir correos cuando haya películas de tus
+              directores favoritos.
+            </div>
+          </div>
+          <div className="p-6 pt-0">
+            <NotificationToggle
+              userId={data.user?.id ?? ""}
+              initialSubscribed={!userData?.unsubscribed}
+            />
           </div>
         </div>
       </div>

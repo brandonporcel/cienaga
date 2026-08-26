@@ -26,7 +26,8 @@ Ciénaga cruza el historial de Letterboxd de un usuario con la cartelera de cine
 
 ## Autenticación y rutas protegidas
 
-- `src/middleware.ts` protege `/dashboard` y `/directors` (redirige al home sin sesión). `/settings` queda público.
+- `src/middleware.ts` protege `/dashboard`, `/directors` y `/settings` (redirige al home sin sesión).
+- `/unsubscribe` es pública (accesible desde emails sin sesión).
 - Server actions validan sesión con `getUserOrThrow()` (`src/lib/helpers/get-server-user.ts`).
 - Los endpoints consumidos por scripts validan `Authorization: Bearer <CRON_SECRET_KEY>` (comparación de strings). Excepciones públicas: `GET /api/cinemas`, `GET /api/screenings/featured`, `GET /api/movies/count-pending`.
 

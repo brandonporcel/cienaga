@@ -6,6 +6,7 @@ interface User {
   id: string;
   email: string;
   full_name?: string;
+  unsubscribed?: boolean;
 }
 
 interface ProcessedMatches {
@@ -66,7 +67,16 @@ export class NotificationService {
     }
 
     // Obtener datos completos de usuarios
-    const users = await this.fetchUsers(userIds);
+    const allUsers = await this.fetchUsers(userIds);
+
+    // Filtrar usuarios desuscriptos
+    const unsubscribedCount = allUsers.filter((u) => u.unsubscribed).length;
+    if (unsubscribedCount > 0) {
+      console.log(
+        `   🚫 Skipping ${unsubscribedCount} unsubscribed user(s)`,
+      );
+    }
+    const users = allUsers.filter((u) => !u.unsubscribed);
 
     // Agrupar screenings por usuario
     const userGroups = this.groupScreeningsByUser(matches, users, notifiedKeys);
