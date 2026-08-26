@@ -1,37 +1,47 @@
 # Reset y Reimportación de Datos
 
-Procedimiento para borrar tus datos de usuario y volver a importar desde cero.
+Procedimiento para borrar datos y volver a importar desde cero.
 
 ## Concepto importante
 
-Hay dos tipos de tablas:
-
-| Tablas compartidas (de la app) | Tablas per-usuario |
+| Tablas que se borran en reset | Tablas que se conservan |
 |---|---|
-| `movies` — catálogo de películas | `user_movies` — qué pelis viste y tu rating |
-| `directors` — catálogo de directores | `user_directors` — qué directores seguís |
-| `cinemas` — cines de Buenos Aires | `screenings` — funciones por cine |
-| | `screening_times` — horarios |
-| | `notifications` — emails enviados |
+| `movies` — catálogo de películas | `cinemas` — cines (seed data) |
+| `directors` — catálogo de directores | `users` — auth de Google |
+| `user_movies` — qué pelis viste y tu rating | |
+| `user_directors` — qué directores seguís | |
+| `screenings` — funciones por cine | |
+| `screening_times` — horarios | |
+| `notifications` — emails enviados | |
 
-**No borres tablas compartidas** — son de todos los usuarios.
+`cinemas` se conserva porque viene del seed (`db/seed.sql`) y los scrapers la necesitan.
+`users` se conserva porque tiene la auth de Google.
 
-## 1. Borrar tablas per-usuario
+## 1. Borrar todo (reset completo)
 
 ```sql
--- Primero las dependencias
+-- Orden: primero las dependencias (FKs)
 DELETE FROM screening_times;
 DELETE FROM screenings;
 DELETE FROM notifications;
-
--- Luego las relaciones usuario-dato
 DELETE FROM user_directors;
 DELETE FROM user_movies;
+DELETE FROM movies;
+DELETE FROM directors;
 ```
 
 ## 2. Reimportar datos (en orden)
 
-### Paso 1: Subir CSVs de Letterboxd
+### Paso 1: Scraping de la lista de Buenos Aires
+
+```bash
+pnpm scrape:letterboxd-list
+```
+
+**Qué crea:** `movies`, `directors` (con URL de Letterboxd), `screenings`, `screening_times`.
+**Frecuencia:** lunes 6am UTC (GitHub Actions).
+
+### Paso 2: Subir CSVs de Letterboxd (tu historial personal)
 
 Desde la UI en `/directors` → botón **"Actualizar Datos"**.
 
@@ -39,56 +49,45 @@ Desde la UI en `/directors` → botón **"Actualizar Datos"**.
 pnpm dev  # y subir watched.csv + ratings.csv por la UI
 ```
 
-**Qué crea:** `movies` (si no existen) + `user_movies` (con ratings).
+**Qué crea:** `user_movies` (con ratings). Actualiza `movies` si hay nuevas.
+**Nota:** sin `user_movies`, no se pueden calcular directores favoritos.
 
-### Paso 2: Scraping de la lista de Buenos Aires
-
-```bash
-pnpm scrape:letterboxd-list
-```
-
-**Qué crea:** `movies` (faltantes), `directors` (con URL de Letterboxd), `cinemas`, `screenings`, `screening_times`.
-
-**Frecuencia:** lunes 6am UTC (GitHub Actions).
-
-### Paso 3: Perfiles de directores
-
-```bash
-pnpm scrape:director-profiles
-```
-
-**Qué actualiza:** `directors` → agrega `tmdb_id`, `image_url`, `bio`.
-
-**Frecuencia:** diario (GitHub Actions).
-
-### Paso 4: Metadata de películas (TMDB)
+### Paso 3: Metadata de películas (TMDB)
 
 ```bash
 pnpm scrape:movie-directors
 ```
 
-**Qué hace:** raspa TMDB → `poster_url`, `director_id` en movies. **Crea `user_directors`** automáticamente según el criterio de seguimiento.
-
+**Qué hace:** raspa TMDB → `poster_url`, `director_id`, `duration`, `background_img_url` en movies.
+**Crea `user_directors`** automáticamente según el criterio de seguimiento (≥ 2 pelis vistas, ≥ 50% con ≥ 3.5★, o ≥ 1 con 5★).
 **Frecuencia:** diario 6am UTC (GitHub Actions).
+
+### Paso 4: Perfiles de directores
+
+```bash
+pnpm scrape:director-profiles
+```
+
+**Qué hace:** raspa Letterboxd → `image_url`, `bio`, `tmdb_id` en directors. Filmografía filtrada por ≥ 800 vistas.
+**Frecuencia:** cada 3 días (GitHub Actions).
 
 ## Flujo de datos
 
 ```
-CSVs Letterboxd ──→ movies, user_movies
-                         │
-letterboxd-list ──→ movies (faltantes), directors (con URL),
-                    cinemas, screenings, screening_times
-                         │
-director-profiles ─→ directors (tmdb_id, image_url)
-                         │
-movie-metadata ───→ movies (poster, director_id)
+letterboxd-list ──→ movies, directors, screenings, screening_times
+                          │
+CSVs Letterboxd ──→ user_movies (ratings)
+                          │
+movie-directors ──→ movies (poster, director_id, duration)
                     user_directors (auto-follow)
+                          │
+director-profiles ─→ directors (image_url, bio, filmografía)
 ```
 
 ## ¿Qué pasa si corro los scripts en cualquier orden?
 
 - **`scrape:director-profiles`** sin directors: encuentra 0, no pasa nada.
-- **`scrape:movie-metadata`** sin movies pendientes: no hace nada.
+- **`scrape:movie-directors`** sin movies pendientes: no hace nada.
 - **`scrape:letterboxd-list`** sin user_movies: crea movies + screenings pero no crea user_directors.
 
-**El único paso obligatorio en orden:** CSVs primero (para tener `user_movies`), después `movie-metadata` (para crear `user_directors`).
+**El único paso obligatorio en orden:** letterboxd-list primero (para tener movies + directors), después movie-directors (para crear user_directors). Los CSVs pueden ir en cualquier momento después del paso 1.
