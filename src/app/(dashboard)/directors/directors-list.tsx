@@ -203,21 +203,26 @@ export function DirectorsGrid({
               {filtered.map((director) => (
                 <tr
                   key={director.id}
-                  className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() => setDetailDirector(director)}
+                  className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <Image
-                        src={
-                          director.image_url ||
-                          "https://www.themoviedb.org/assets/2/v4/glyphicons/basic/glyphicons-basic-4-user-grey-d8fe957375e70239d6abdd549fd7568c89281b2179b5f4470e2e12895792dfa5.svg"
-                        }
-                        alt={director.name}
-                        width={32}
-                        height={32}
-                        className="rounded-full object-cover w-8 h-8"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setDetailDirector(director)}
+                        className="cursor-pointer"
+                      >
+                        <Image
+                          src={
+                            director.image_url ||
+                            "https://www.themoviedb.org/assets/2/v4/glyphicons/basic/glyphicons-basic-4-user-grey-d8fe957375e70239d6abdd549fd7568c89281b2179b5f4470e2e12895792dfa5.svg"
+                          }
+                          alt={director.name}
+                          width={32}
+                          height={32}
+                          className="rounded-full object-cover w-8 h-8 hover:ring-2 hover:ring-primary transition-all"
+                        />
+                      </button>
                       <span className="font-medium">{director.name}</span>
                     </div>
                   </td>
@@ -244,15 +249,24 @@ export function DirectorsGrid({
                     {new Date(director.created_at).toLocaleDateString("es-AR")}
                   </td>
                   <td className="px-4 py-3">
-                    <a
-                      href={director.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="p-1 rounded-md hover:bg-muted transition-colors inline-flex"
-                    >
-                      <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                    </a>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setDetailDirector(director)}
+                        className="p-1 rounded-md hover:bg-muted transition-colors text-xs text-muted-foreground cursor-pointer"
+                      >
+                        Ver filmo
+                      </button>
+                      <a
+                        href={director.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 rounded-md hover:bg-muted transition-colors inline-flex"
+                      >
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))}

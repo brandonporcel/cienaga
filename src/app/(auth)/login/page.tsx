@@ -56,6 +56,9 @@ function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
                 <Button type="submit" className="w-full" disabled>
                   Iniciar sesión
                 </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Solo funciona el login con Google
+                </p>
               </div>
               <div className="text-center text-sm">
                 ¿No tenés una cuenta?{" "}

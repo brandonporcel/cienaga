@@ -14,7 +14,6 @@ import {
 
 import NavItem from "@/types/nav";
 import { ROUTES } from "@/config/routes";
-import { useClientUser } from "@/hooks/useClientUser";
 import { NavMain } from "@/components/dashboard/layout/nav-main";
 import { NavSecondary } from "@/components/dashboard/layout/nav-secondary";
 import {
@@ -76,8 +75,6 @@ const data: Record<string, NavItem[]> = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useClientUser();
-
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -87,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href={user ? ROUTES.dashboard.path : ROUTES.home.path}>
+              <a href={ROUTES.home.path}>
                 <IconSeedling className="!size-5" />
                 <span className="text-base font-semibold">Cienaga</span>
               </a>

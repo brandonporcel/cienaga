@@ -189,14 +189,6 @@ export default function ScreeningsPage() {
           >
             Todas
           </Button>
-          <Button
-            variant={dateFilter === "today" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setDateFilter("today")}
-            className="text-xs"
-          >
-            Hoy
-          </Button>
           {availableDates.map((dateStr) => {
             const d = new Date(dateStr + "T12:00:00");
             const label = d.toLocaleDateString("es-AR", {
@@ -221,17 +213,18 @@ export default function ScreeningsPage() {
 
       {loading ? (
         /* Loading Skeleton */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-lg border bg-card p-0 overflow-hidden"
+              className="flex gap-4 rounded-2xl border bg-card p-3 animate-pulse"
             >
-              <div className="h-64 bg-muted animate-pulse" />
-              <div className="p-4 space-y-3">
-                <div className="h-5 bg-muted animate-pulse rounded w-3/4" />
-                <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
-                <div className="h-4 bg-muted animate-pulse rounded w-full" />
+              <div className="w-[120px] aspect-[2/3] bg-muted rounded-xl flex-shrink-0" />
+              <div className="flex-1 py-1 space-y-2">
+                <div className="h-5 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+                <div className="h-4 bg-muted rounded w-2/3" />
+                <div className="h-7 bg-muted rounded w-24 mt-2" />
               </div>
             </div>
           ))}
@@ -320,7 +313,7 @@ export default function ScreeningsPage() {
         </div>
       ) : (
         /* Grid View */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredScreenings.map((screening) => (
             <ScreeningCard key={screening.id} screening={screening} onOpenDetail={setSelectedScreening} />
           ))}
