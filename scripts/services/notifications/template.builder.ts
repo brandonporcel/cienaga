@@ -304,8 +304,6 @@ export class EmailTemplateBuilder {
       <span style="color: #d97706; font-size: 12px;">{{director_name}}</span>
       <span style="color: #666; font-size: 12px; margin-left: 4px;">•</span>
       <span style="color: #999; font-size: 12px; margin-left: 4px;">{{formatted_date}}</span>
-      <br>
-      <a href="{{original_url}}" style="color: #d97706; font-size: 12px; text-decoration: none; margin-top: 6px; display: inline-block;">Reservar →</a>
     </td>
   </tr>
 </table>`;

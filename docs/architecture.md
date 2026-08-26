@@ -59,7 +59,9 @@ scrape-movie-data.ts
 scrape-directors.ts
   → GET /api/directors/pending       (Bearer; directores sin tmdb_id)
   → scraper de perfil                (avatar, bio, filmografía, tmdb_id)
-  → POST /api/directors/batch-update (Bearer)
+  → CSI endpoint por película        (curl → watch count desde Letterboxd)
+  → filtra películas con < 800 vistas
+  → POST /api/directors/batch-update (Bearer; incluye slug)
 ```
 
 ⚠️ **Bug conocido**: `processMovie` inserta películas sin `national_title` (NOT NULL) → falla. Ver `docs/roadmap.md`.

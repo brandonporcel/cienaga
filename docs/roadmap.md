@@ -109,3 +109,9 @@ Brainstorming con el usuario; quedan definidas estas decisiones y direcciones:
 ### 2026-08-16 — Descartado el refactor del scraper al JSON de Letterboxd
 - Se intentó reemplazar el parseo HTML por el endpoint `/film/<slug>/json/`. Resultado: **403 de Cloudflare** para axios y fetch de Node ("Just a moment..."); curl y el HTML público pasan (200). La protección es selectiva por TLS fingerprint sobre la ruta `/json/`.
 - Se revirtió el cambio completo; el scraper HTML actual (cheerio) sigue siendo la vía correcta para el pipeline Node de GitHub Actions.
+
+### 2026-08-26 — Filtrado de películas por vistas + slug + rediseño mail
+- **Filtro de vistas**: `scrape-directors.ts` ahora obtiene watch count de cada película vía el CSI endpoint de Letterboxd (`/csi/film/{slug}/stats/`) y filtra las que tengan < 800 vistas. Usa curl vía child_process (Cloudflare bloquea TLS fingerprint de Node.js — axios y fetch devuelven 403).
+- **Slug en filmografía**: `batch-update` ahora guarda el slug al crear películas desde la filmografía (antes se perdía).
+- **Rediseño de mail**: eliminados links de Instagram, Twitter, Facebook y "Powered by Ciénaga" del footer; eliminado botón "Reservar →" de las cards de películas; actualizado ©2025 a ©2026.
+- **RLS en Supabase**: Supabase envía warning sobre RLS deshabilitado. Es una **decisión consciente** — proyecto personal, la anon key tiene acceso total. No activar RLS salvo que cambie el modelo de datos.
