@@ -24,6 +24,8 @@ const CINEMA_PATTERN = /^(.+?)\s*\((.+?)\)\s*$/;
  * Valida si un match de CINEMA_PATTERN es realmente un cine.
  * Rechaza matches donde la "dirección" contiene URLs o es demasiado larga
  * (ej: "Entrada gratuita (Panorama en www.festivalescenario.com/...)").
+ * También rechaza nombres que en realidad son horarios/fechas
+ * (ej: "17:00 hs (Sala 2)").
  */
 function isValidCinemaMatch(name: string, address: string): boolean {
   // Si la dirección contiene URL, no es un cine
@@ -33,6 +35,16 @@ function isValidCinemaMatch(name: string, address: string): boolean {
   if (address.length > 60) return false;
   // Nombre demasiado corto
   if (name.length < 3) return false;
+  // El "nombre" no debe parecer un horario o fecha
+  //   ej: "17:00 hs", "20/8", "20:30", "SÁB 29 ago"
+  if (
+    /:\d{2}/.test(name) ||
+    /\d{1,2}:\d{2}/.test(name) ||
+    /\bhs\b/i.test(name) ||
+    /^\d{1,2}\/\d{1,2}/.test(name) ||
+    /^(lun|mar|mié|mie|jue|vie|sáb|sab|dom)\b/i.test(name.trim())
+  )
+    return false;
   return true;
 }
 const RANGE_PATTERN = /Del\s+(\d{1,2})\s+al\s+(\d{1,2})/i;
@@ -83,6 +95,8 @@ function normalizeLines(html: string): string[] {
     .filter((line) => line.length > 0);
 }
 
+const UNKNOWN_CINEMA = "Unknown";
+
 function buildBlocks(lines: string[]): CinemaBlock[] {
   const blocks: CinemaBlock[] = [];
   let current: CinemaBlock | null = null;
@@ -90,6 +104,14 @@ function buildBlocks(lines: string[]): CinemaBlock[] {
   for (const line of lines) {
     const match = line.match(CINEMA_PATTERN);
     if (match && isValidCinemaMatch(match[1].trim(), match[2].trim())) {
+      // El bloque actual es un placeholder "Unknown" sin cine real que
+      // solo contiene horarios/descripciones pendientes. Esas líneas
+      // pertenecen a ESTE cine: reasignamos el nombre en vez de partir.
+      if (current && current.cinemaName === UNKNOWN_CINEMA) {
+        current.cinemaName = match[1].trim();
+        current.cinemaAddress = match[2].trim();
+        continue;
+      }
       if (current) blocks.push(current);
       current = {
         cinemaName: match[1].trim(),
@@ -102,7 +124,7 @@ function buildBlocks(lines: string[]): CinemaBlock[] {
 
     if (!current) {
       current = {
-        cinemaName: "Unknown",
+        cinemaName: UNKNOWN_CINEMA,
         scheduleLines: [],
         descriptionLines: [],
       };
