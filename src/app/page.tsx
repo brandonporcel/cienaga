@@ -48,7 +48,7 @@ export default function HomePage() {
       </AnimatedSection>
 
       <AnimatedSection
-        className="relative z-10 mx-auto mt-8 md:mt-16 bg-neutral-50"
+        className="relative z-10 mx-auto mt-8 md:mt-10 bg-neutral-50"
         delay={0.2}
       >
         <FooterSection />

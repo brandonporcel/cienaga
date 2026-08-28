@@ -39,7 +39,7 @@ pnpm scrape:letterboxd-list
 ```
 
 **Qué crea:** `movies`, `directors` (con URL de Letterboxd), `screenings`, `screening_times`.
-**Frecuencia:** lunes 6am UTC (GitHub Actions).
+**Frecuencia:** lunes (GitHub Actions).
 
 ### Paso 2: Subir CSVs de Letterboxd (tu historial personal)
 
@@ -60,7 +60,7 @@ pnpm scrape:movie-directors
 
 **Qué hace:** raspa TMDB → `poster_url`, `director_id`, `duration`, `background_img_url` en movies.
 **Crea `user_directors`** automáticamente según el criterio de seguimiento (≥ 2 pelis vistas, ≥ 50% con ≥ 3.5★, o ≥ 1 con 5★).
-**Frecuencia:** diario 6am UTC (GitHub Actions).
+**Frecuencia:** cada 12 horas (GitHub Actions).
 
 ### Paso 4: Perfiles de directores
 
@@ -69,7 +69,7 @@ pnpm scrape:director-profiles
 ```
 
 **Qué hace:** raspa Letterboxd → `image_url`, `bio`, `tmdb_id` en directors. Filmografía filtrada por ≥ 800 vistas.
-**Frecuencia:** cada 3 días (GitHub Actions).
+**Frecuencia:** diario (GitHub Actions).
 
 ## Flujo de datos
 

@@ -42,7 +42,7 @@ Ciénaga cruza el historial de Letterboxd de un usuario con la cartelera de cine
 
 ⚠️ **Bug conocido**: el insert no incluye `national_title` (NOT NULL) → todas las inserciones fallan silenciosamente. Ver `docs/roadmap.md`.
 
-## Flujo 2 — Scraping de datos de películas (GitHub Actions, diario)
+## Flujo 2 — Scraping de datos de películas (GitHub Actions, cada 12 horas)
 
 ```
 scrape-movie-data.ts
@@ -54,7 +54,7 @@ scrape-movie-data.ts
 
 ⚠️ **Hallazgo (2026-08-16)**: el endpoint JSON de Letterboxd (`/film/<slug>/json/`) responde **403 a clientes Node** (axios y fetch — fingerprint TLS bloqueado por Cloudflare); solo responde a curl/browsers. No usar ese endpoint desde los scripts. Ver `docs/roadmap.md`.
 
-## Flujo 3 — Scraping de perfiles de directores (GitHub Actions, cada 3 días)
+## Flujo 3 — Scraping de perfiles de directores (GitHub Actions, diario)
 
 ```
 scrape-directors.ts

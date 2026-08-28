@@ -2,7 +2,7 @@ name: Scrape Movie Directors
 
 on:
   schedule:
-    - cron: "0 10 * * 1"  # Lunes 10:00 UTC
+    - cron: "0 */12 * * *"  # Cada 12 horas
   workflow_dispatch:
 
 jobs:
