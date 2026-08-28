@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import axios, { AxiosResponse } from "axios";
 import * as cheerio from "cheerio";
 import { execSync } from "child_process";
@@ -250,7 +252,7 @@ class ListScrapingOrchestrator {
 
     // Scrapear film page para director + poster
     const filmUrl = `${this.baseUrl}/film/${filmSlug}/`;
-    const $ = await this.fetchPage(filmUrl);
+    const $ = await this.fetchFilmPage(filmUrl);
 
     let director: string | null = null;
     let directorUrl: string | null = null;
@@ -356,52 +358,104 @@ class ListScrapingOrchestrator {
     }
   }
 
+  /**
+   * Obtiene una página de la LISTA de Letterboxd a través de Firecrawl.
+   *
+   * Cloudflare protege las páginas de lista con un challenge ("Just a
+   * moment...", cf-mitigated: challenge) que bloquea a TODO cliente HTTP
+   * no-navegador (axios Y curl) desde IPs de datacenter (GitHub Actions).
+   * Firecrawl atraviesa el challenge y devuelve el HTML crudo con la misma
+   * estructura (div.listitem.js-listitem, data-item-slug, notas) que nuestro
+   * parser ya sabe leer. Requiere FIRECRAWL_API_KEY en el entorno.
+   */
   private async fetchPage(url: string): Promise<cheerio.CheerioAPI> {
-    // Cloudflare protege la página de la lista con el challenge "Just a
-    // moment..." para TODO cliente HTTP no-navegador (axios Y curl). La única
-    // combinación verificada que pasa es curl desde una IP residencial (local).
-    // En el runner de GitHub (IP de datacenter) el challenge es sistemático.
-    // Por eso usamos curl y reintentamos con backoff: local pasa al primer
-    // intento; en el runner es poco probable pero no cuesta reintentar.
-    const MAX_ATTEMPTS = 5;
-    const BASE_DELAY_MS = 3000;
-
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      try {
-        const html = execSync(
-          `curl -s -L --max-time 20 -A "${this.userAgent}" -H "Referer: https://letterboxd.com/" "${url}"`,
-          { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 },
-        );
-        const loaded = cheerio.load(html);
-
-        // Contenido real (no el challenge de Cloudflare)
-        const hasContent =
-          html.includes("js-listitem") ||
-          html.includes("js-list-detailed-entry") ||
-          html.includes("/director/") ||
-          html.includes("application/ld+json");
-
-        if (hasContent) return loaded;
-
-        if (attempt < MAX_ATTEMPTS) {
-          const wait = BASE_DELAY_MS * attempt;
-          console.warn(
-            `   ⚠️  Intento ${attempt}/${MAX_ATTEMPTS}: challenge de Cloudflare. Reintentando en ${wait / 1000}s...`,
-          );
-          await this.delay(wait);
-        }
-      } catch (error) {
-        if (attempt < MAX_ATTEMPTS) {
-          console.warn(
-            `   ⚠️  Intento ${attempt}/${MAX_ATTEMPTS}: error curl. Reintentando...`,
-          );
-          await this.delay(BASE_DELAY_MS * attempt);
-        }
-      }
+    const apiKey = process.env.FIRECRAWL_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "FIRECRAWL_API_KEY no está definida. Configurala en .env para scrapear la lista de Letterboxd.",
+      );
     }
 
-    console.warn(`   ❌  Fallaron ${MAX_ATTEMPTS} intentos para ${url}.`);
+    // Intentar por Firecrawl primero (atraviesa el challenge de Cloudflare)
+    try {
+      const response = await axios.post(
+        "https://api.firecrawl.dev/v2/scrape",
+        { url, formats: ["html"] },
+        { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 45000 },
+      );
+
+      const html: string = response.data?.data?.html;
+      if (!html || typeof html !== "string") {
+        throw new Error("Firecrawl no devolvió HTML");
+      }
+
+      const loaded = cheerio.load(html);
+      const hasContent =
+        html.includes("js-listitem") ||
+        html.includes("js-list-detailed-entry") ||
+        html.includes("/director/") ||
+        html.includes("application/ld+json");
+
+      if (hasContent) return loaded;
+
+      console.warn(
+        `   ⚠️  Firecrawl no devolvió contenido de la lista para ${url}.`,
+      );
+    } catch (error) {
+      console.warn(
+        `   ⚠️  Firecrawl falló para ${url}: ${(error as Error).message}`,
+      );
+    }
+
+    // Fallback: curl local (IP residencial). No sirve en el runner pero es útil local.
+    try {
+      const localHtml = execSync(
+        `curl -s -L --max-time 20 -A "${this.userAgent}" -H "Referer: https://letterboxd.com/" "${url}"`,
+        { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 },
+      );
+      const loaded = cheerio.load(localHtml);
+      const hasContent =
+        localHtml.includes("js-listitem") ||
+        localHtml.includes("js-list-detailed-entry") ||
+        localHtml.includes("/director/") ||
+        localHtml.includes("application/ld+json");
+      if (hasContent) return loaded;
+    } catch {
+      // ignore, devolvemos vacío
+    }
+
     return cheerio.load("");
+  }
+
+  /**
+   * Obtiene una página de FILM individual de Letterboxd por axios.
+   * Las páginas de film individuales no tienen el challenge de Cloudflare
+   * (se verificó con director-profiles: 245/254 OK por axios en el runner),
+   * así que no gastamos créditos de Firecrawl en ellas.
+   */
+  private async fetchFilmPage(url: string): Promise<cheerio.CheerioAPI> {
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout")), 12000);
+      });
+      const scrapePromise = axios.get(url, {
+        headers: {
+          "User-Agent": this.userAgent,
+          Referer: "https://letterboxd.com/",
+        },
+        timeout: 10000,
+      });
+      const response: AxiosResponse = await Promise.race([
+        scrapePromise,
+        timeoutPromise,
+      ]);
+      return cheerio.load(response.data);
+    } catch (error) {
+      console.warn(
+        `   ⚠️  falló fetch film page ${url}: ${(error as Error).message}`,
+      );
+      return cheerio.load("");
+    }
   }
 
   private delay(ms: number): Promise<void> {

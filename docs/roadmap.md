@@ -110,6 +110,17 @@ Brainstorming con el usuario; quedan definidas estas decisiones y direcciones:
 - Se intentó reemplazar el parseo HTML por el endpoint `/film/<slug>/json/`. Resultado: **403 de Cloudflare** para axios y fetch de Node ("Just a moment..."); curl y el HTML público pasan (200). La protección es selectiva por TLS fingerprint sobre la ruta `/json/`.
 - Se revirtió el cambio completo; el scraper HTML actual (cheerio) sigue siendo la vía correcta para el pipeline Node de GitHub Actions.
 
+### 2026-08-28 — Lista de Letterboxd bloqueada por challenge de Cloudflare → Firecrawl
+- **Síntoma**: `scrape:letterboxd-list` devolvía "Found 0 valid entries" en el runner de GitHub Actions. La lista `/list/funciones-en-buenos-aires/detail/` empezó a devolver el challenge de Cloudflare ("Just a moment...", `cf-mitigated: challenge`, HTTP 403) para clientes HTTP no-navegador.
+- **Diagnóstico (verificado empíricamente)**:
+  - En IPs de datacenter (GitHub Actions) el challenge es **sistemático** para la página de lista, sin importar método (axios o curl) ni User-Agent.
+  - Desde IP residencial, **curl local pasa** (200 + contenido); axios local NO (403 challenge). La protección combina reputación de IP + TLS fingerprint.
+  - Las páginas de film/prefil individuales (`/film/x/`, `/director/x/`) **no** reciben challenge (director-profiles procesó 245/254 por axios en el runner).
+- **Solución implementada**: `scrape-list.ts` ahora fetcha las páginas de la **lista** vía **Firecrawl** (`POST /v2/scrape` con `formats: ["html"]`), que atraviesa el challenge y devuelve el HTML crudo con la misma estructura (`div.listitem.js-listitem`, `data-item-slug`, notas). Las **film pages** siguen por axios (`fetchFilmPage`, no gastan créditos).
+- **Config**: requiere `FIRECRAWL_API_KEY` (`.env` local + secret `FIRECRAWL_API_KEY` en GitHub Actions). Plan gratis: 1.000 créditos/mes recurrentes (~4 páginas de lista por corrida semanal → ~16/mes; sobra de sobra).
+- **Fix extra**: `scrape-list.ts` no cargaba `dotenv` en local → agregado `import "dotenv/config"` (ya lo hacían send-notifications y cleanup-orphans).
+- **Fallback**: si Firecrawl falla, `fetchPage` intenta curl local (solo útil con IP residencial local).
+
 ### 2026-08-26 — Filtrado de películas por vistas + slug + rediseño mail
 - **Filtro de vistas**: `scrape-directors.ts` ahora obtiene watch count de cada película vía el CSI endpoint de Letterboxd (`/csi/film/{slug}/stats/`) y filtra las que tengan < 800 vistas. Usa curl vía child_process (Cloudflare bloquea TLS fingerprint de Node.js — axios y fetch devuelven 403).
 - **Slug en filmografía**: `batch-update` ahora guarda el slug al crear películas desde la filmografía (antes se perdía).
