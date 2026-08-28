@@ -379,9 +379,18 @@ class ListScrapingOrchestrator {
 
       if (hasContent) return loaded;
 
-      console.warn(`   ⚠️  Posible bloqueo de Cloudflare en ${url}. Intentando reintento.`);
+      // Debug: mostrar qué recibimos para diagnosticar el bloqueo
+      const statusMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+      const title = statusMatch ? statusMatch[1].trim() : "(sin título)";
+      console.warn(
+        `   ⚠️  Posible bloqueo. Título: "${title}" | bytes: ${html.length}`,
+      );
+      console.warn(
+        `   ⚠️  Snippet: ${html.slice(0, 300).replace(/\s+/g, " ")}`,
+      );
     } catch (error) {
       // Fallar con curl: reintentar una vez
+      console.warn(`   ⚠️  Error curl: ${(error as Error).message}`);
     }
 
     // Reintentar con curl una vez más
