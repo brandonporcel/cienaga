@@ -18,11 +18,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "50");
 
-    // Obtener películas sin director asignado O sin poster_url
+    // Obtener películas sin director asignado O sin poster_url,
+    // excluyendo cortometrajes ya procesados (is_short = true)
     const { data: movies, error } = await supabase
       .from("movies")
       .select("id, title, url, year")
       .or("director_id.is.null,poster_url.is.null")
+      .eq("is_short", false)
       .not("url", "is", null)
       .limit(limit)
       .order("created_at", { ascending: true }); // Procesar las más viejas primero

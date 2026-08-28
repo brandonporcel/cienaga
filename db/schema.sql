@@ -84,6 +84,7 @@ create table public.movies (
   url                text,
   year               int,
   duration           int,
+  is_short           boolean default false,
   country            text,
   genre              text,
   slug               text unique,

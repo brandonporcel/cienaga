@@ -187,9 +187,20 @@ export class LetterboxdScraperService {
    *   "1h 45m"   → 105
    *   "2 h 3 min" → 123
    *   "86"       → 86
+   *   "PT12M" (ISO 8601 del JSON-LD) → 12
+   *   "PT1H30M" → 90
    */
   private static parseDuration(text: string): number | null {
     if (!text) return null;
+
+    // Formato ISO 8601: "PT1H45M", "PT12M", "PT2H"
+    const isoMatch = text.match(/^PT(?:(\d+)H)?(?:(\d+)M)?$/i);
+    if (isoMatch && (isoMatch[1] || isoMatch[2])) {
+      const hours = isoMatch[1] ? parseInt(isoMatch[1], 10) : 0;
+      const minutes = isoMatch[2] ? parseInt(isoMatch[2], 10) : 0;
+      const total = hours * 60 + minutes;
+      return total > 0 ? total : null;
+    }
 
     // Formato con horas: "1h 45m", "2 h 3 min", "1hr 30min"
     const hourMatch = text.match(/(\d+)\s*h/i);

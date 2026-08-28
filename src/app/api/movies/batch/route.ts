@@ -49,12 +49,19 @@ async function processMovie(
     movieDuration,
   } = movieData;
 
-  // Ignorar cortos (solo si la duración es un número válido y <= 40 min)
+  // Ignorar cortometrajes (solo si la duración es un número válido y <= 40 min)
   if (
     typeof movieDuration === "number" &&
     !isNaN(movieDuration) &&
     movieDuration <= 40
   ) {
+    // Marcarlo como corto para excluirlo del pipeline de pending.
+    // Sin esto, volvería a aparecer en cada corrida → stuck loop infinito.
+    await supabase
+      .from("movies")
+      .update({ is_short: true, duration: movieDuration })
+      .eq("id", movieId);
+
     return {
       movieId,
       director,
