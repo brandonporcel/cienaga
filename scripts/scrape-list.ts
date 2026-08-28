@@ -357,37 +357,39 @@ class ListScrapingOrchestrator {
   }
 
   private async fetchPage(url: string): Promise<cheerio.CheerioAPI> {
-    try {
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error("Timeout")), 15000);
-      });
-
-      const scrapePromise = axios.get(url, {
-        headers: { "User-Agent": this.userAgent },
-        timeout: 10000,
-      });
-
-      const response: AxiosResponse = await Promise.race([
-        scrapePromise,
-        timeoutPromise,
-      ]);
-      return cheerio.load(response.data);
-    } catch {
-      // Siempre intentar curl como fallback
-      return this.fetchPageWithCurl(url);
-    }
-  }
-
-  private fetchPageWithCurl(url: string): cheerio.CheerioAPI {
+    // Usar curl directamente: Cloudflare bloquea TLS fingerprints de Node.js
+    // (axios/fetch devuelven 403 o HTML de CAPTCHA). En GitHub Actions esto
+    // pasa siempre; curl es el único que atraviesa el bloqueo. Ver
+    // letterboxd-stats.service.ts y docs/roadmap.md.
     try {
       const html = execSync(
-        `curl -s -L --max-time 15 -H "User-Agent: ${this.userAgent}" "${url}"`,
+        `curl -s -L --max-time 15 -H "User-Agent: ${this.userAgent}" -H "Referer: https://letterboxd.com/" "${url}"`,
         { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 },
       );
-      return cheerio.load(html);
+
+      const loaded = cheerio.load(html);
+
+      // Verificar que sea contenido real (con listitems o contenido de film),
+      // no un CAPTCHA/bloqueo de Cloudflare.
+      const hasContent =
+        html.includes("js-listitem") ||
+        html.includes("js-list-detailed-entry") ||
+        html.includes("/director/") ||
+        html.includes("application/ld+json");
+
+      if (hasContent) return loaded;
+
+      console.warn(`   ⚠️  Posible bloqueo de Cloudflare en ${url}. Intentando reintento.`);
     } catch (error) {
-      throw new Error(`curl fallback failed for ${url}: ${error}`);
+      // Fallar con curl: reintentar una vez
     }
+
+    // Reintentar con curl una vez más
+    const html = execSync(
+      `curl -s -L --max-time 20 -A "${this.userAgent}" "${url}"`,
+      { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 },
+    );
+    return cheerio.load(html);
   }
 
   private delay(ms: number): Promise<void> {
