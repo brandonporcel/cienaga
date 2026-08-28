@@ -357,48 +357,51 @@ class ListScrapingOrchestrator {
   }
 
   private async fetchPage(url: string): Promise<cheerio.CheerioAPI> {
-    // Usar curl directamente: Cloudflare bloquea TLS fingerprints de Node.js
-    // (axios/fetch devuelven 403 o HTML de CAPTCHA). En GitHub Actions esto
-    // pasa siempre; curl es el único que atraviesa el bloqueo. Ver
-    // letterboxd-stats.service.ts y docs/roadmap.md.
-    try {
-      const html = execSync(
-        `curl -s -L --max-time 15 -H "User-Agent: ${this.userAgent}" -H "Referer: https://letterboxd.com/" "${url}"`,
-        { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 },
-      );
+    // Cloudflare protege la página de la lista con el challenge "Just a
+    // moment..." para TODO cliente HTTP no-navegador (axios Y curl). La única
+    // combinación verificada que pasa es curl desde una IP residencial (local).
+    // En el runner de GitHub (IP de datacenter) el challenge es sistemático.
+    // Por eso usamos curl y reintentamos con backoff: local pasa al primer
+    // intento; en el runner es poco probable pero no cuesta reintentar.
+    const MAX_ATTEMPTS = 5;
+    const BASE_DELAY_MS = 3000;
 
-      const loaded = cheerio.load(html);
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const html = execSync(
+          `curl -s -L --max-time 20 -A "${this.userAgent}" -H "Referer: https://letterboxd.com/" "${url}"`,
+          { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 },
+        );
+        const loaded = cheerio.load(html);
 
-      // Verificar que sea contenido real (con listitems o contenido de film),
-      // no un CAPTCHA/bloqueo de Cloudflare.
-      const hasContent =
-        html.includes("js-listitem") ||
-        html.includes("js-list-detailed-entry") ||
-        html.includes("/director/") ||
-        html.includes("application/ld+json");
+        // Contenido real (no el challenge de Cloudflare)
+        const hasContent =
+          html.includes("js-listitem") ||
+          html.includes("js-list-detailed-entry") ||
+          html.includes("/director/") ||
+          html.includes("application/ld+json");
 
-      if (hasContent) return loaded;
+        if (hasContent) return loaded;
 
-      // Debug: mostrar qué recibimos para diagnosticar el bloqueo
-      const statusMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-      const title = statusMatch ? statusMatch[1].trim() : "(sin título)";
-      console.warn(
-        `   ⚠️  Posible bloqueo. Título: "${title}" | bytes: ${html.length}`,
-      );
-      console.warn(
-        `   ⚠️  Snippet: ${html.slice(0, 300).replace(/\s+/g, " ")}`,
-      );
-    } catch (error) {
-      // Fallar con curl: reintentar una vez
-      console.warn(`   ⚠️  Error curl: ${(error as Error).message}`);
+        if (attempt < MAX_ATTEMPTS) {
+          const wait = BASE_DELAY_MS * attempt;
+          console.warn(
+            `   ⚠️  Intento ${attempt}/${MAX_ATTEMPTS}: challenge de Cloudflare. Reintentando en ${wait / 1000}s...`,
+          );
+          await this.delay(wait);
+        }
+      } catch (error) {
+        if (attempt < MAX_ATTEMPTS) {
+          console.warn(
+            `   ⚠️  Intento ${attempt}/${MAX_ATTEMPTS}: error curl. Reintentando...`,
+          );
+          await this.delay(BASE_DELAY_MS * attempt);
+        }
+      }
     }
 
-    // Reintentar con curl una vez más
-    const html = execSync(
-      `curl -s -L --max-time 20 -A "${this.userAgent}" "${url}"`,
-      { encoding: "utf-8", maxBuffer: 10 * 1024 * 1024 },
-    );
-    return cheerio.load(html);
+    console.warn(`   ❌  Fallaron ${MAX_ATTEMPTS} intentos para ${url}.`);
+    return cheerio.load("");
   }
 
   private delay(ms: number): Promise<void> {
