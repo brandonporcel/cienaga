@@ -1,6 +1,6 @@
 # Roadmap
 
-> Bugs conocidos y pendientes. Última actualización: 2026-08-16.
+> Bugs conocidos y pendientes. Última actualización: 2026-08-29.
 
 ## Bugs conocidos (priorizados)
 
@@ -60,6 +60,13 @@
 - En vez de scrapear, obtener datos del JSON de Letterboxd (`https://letterboxd.com/film/<slug>/json/`). ⚠️ **Probado y descartado el 2026-08-16**: Cloudflare responde 403 al fingerprint TLS de Node (axios y fetch); solo curl/browsers pasan. Si se retoma, requeriría browser real (Playwright) o proxy — ver "Cambios recientes".
 
 ## Cambios recientes
+
+### 2026-08-29 — Filtro de pelis de nicho en el pipeline de movie-directors
+
+- Nueva columna `movies.watches` (miembros que vieron la peli en Letterboxd, desde el CSI endpoint).
+- `scrape:movie-directors` ahora obtiene `watches` de cada peli y el endpoint `/api/movies/batch` la persiste; si `watches < 800` la marca como procesada sin trackear director → sale de la cola (evita el stuck loop de pelis sin poster en Letterboxd, ej. "Fugs").
+- `/api/movies/pending` excluye `watches < MIN_WATCHES` (800), pero sigue incluyendo las pelis sin `watches` aún (NULL) para poder scrapearlas la primera vez.
+- **Pendiente en prod**: correr `alter table public.movies add column watches int;`
 
 ### 2026-08-16 — Modal refinado: estrellas, buscador funcional y listado reactivo
 

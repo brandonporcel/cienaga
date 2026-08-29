@@ -89,6 +89,7 @@ create table public.movies (
   slug               text unique,
   rating             numeric(3, 1),
   director_id        uuid references public.directors(id) on delete set null,
+  watches            int, -- membres que vieron la peli en Letterboxd (filtro de nicho)
   created_at         timestamptz default now()
 );
 

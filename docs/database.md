@@ -63,6 +63,7 @@
 | slug | text UNIQUE | nullable |
 | rating | numeric(3,1) | |
 | director_id | uuid FK → directors ON DELETE SET NULL | ⚠️ sin índice (filtrado frecuente) |
+| watches | int | Miembros que vieron la peli en Letterboxd. Filtro de pelis de nicho: el pipeline `movie-directors` excluye `watches < MIN_WATCHES` (800) para no atascar la cola con pelis sin poster. |
 
 ### `user_movies`
 

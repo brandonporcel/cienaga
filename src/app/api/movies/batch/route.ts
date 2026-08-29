@@ -17,6 +17,7 @@ interface MovieDataData {
   movieSlug?: string;
   movieNationalName?: string;
   movieDuration?: number;
+  watches?: number | null;
 }
 
 interface MovieResult {
@@ -26,6 +27,12 @@ interface MovieResult {
   success: boolean;
   error?: string;
 }
+
+// Umbral de "vistas globales en Letterboxd" para considerar una peli
+// "mainstream" y poder trackearla. Peli con menos watchers (de nicho, a
+// menudo sin poster en Letterboxd) se excluye del pipeline para no atascar
+// la cola de pending con pelis que nunca se van a completar (ej: "Fugs").
+const MIN_WATCHES = 800;
 
 /**
  * Procesa una sola película: actualiza posters/duraciones, resuelve/crea el
@@ -47,6 +54,7 @@ async function processMovie(
     movieNationalName,
     movieSlug,
     movieDuration,
+    watches,
   } = movieData;
 
   // Ignorar cortometrajes (solo si la duración es un número válido y <= 40 min)
@@ -67,6 +75,34 @@ async function processMovie(
       director,
       success: true,
       error: "Skipped: short film",
+    };
+  }
+
+  // Guardar los "watches" (miembros que vieron la peli en Letterboxd).
+  // El endpoint pending filtra por este campo, así que persistirlo permite
+  // que las pelis de pocas vistas salgan de la cola aunque no tengan
+  // director/poster resolubles.
+  if (typeof watches === "number" && !isNaN(watches)) {
+    await supabase
+      .from("movies")
+      .update({ watches })
+      .eq("id", movieId);
+  }
+
+  // Filtrar pelis de nicho (pocas vistas globales): no trackear el director
+  // ni crear user_directors. El pending (que ya filtra por watches >= 800)
+  // las deja de devolver al tener el campo persistido → se evita el stuck
+  // loop de pelis sin poster en Letterboxd.
+  if (
+    typeof watches === "number" &&
+    !isNaN(watches) &&
+    watches < MIN_WATCHES
+  ) {
+    return {
+      movieId,
+      director,
+      success: true,
+      error: "Skipped: low watches",
     };
   }
 

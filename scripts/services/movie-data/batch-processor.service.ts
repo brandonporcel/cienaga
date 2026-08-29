@@ -3,6 +3,7 @@ import Movie from "@/types/movie";
 import { ScrapedMovieData } from "../../types/movie.types";
 import { delay, ExecutionTimer } from "../../utils/delay.util";
 import { LetterboxdScraperService } from "./letterboxd-scraper.service";
+import { getFilmStats } from "./letterboxd-stats.service";
 
 export interface BatchConfig {
   maxConcurrent: number;
@@ -43,20 +44,25 @@ export class BatchProcessorService {
 
       const promises = batch.map(
         async (movie): Promise<ScrapedMovieData | null> => {
-          if (movie.url) {
-            const scrapedData = await LetterboxdScraperService.scrapeMovieData(
-              movie.url,
-            );
-            await delay(delayBetweenRequests / maxConcurrent);
+          if (!movie.url) return null;
 
-            if (scrapedData.director) {
-              return {
-                movieId: movie.id,
-                ...scrapedData,
-              };
-            }
-          }
-          return null;
+          const scrapedData = await LetterboxdScraperService.scrapeMovieData(
+            movie.url,
+          );
+          await delay(delayBetweenRequests / maxConcurrent);
+
+          if (!scrapedData.director) return null;
+
+          // Obtener los "watches" (miembros que vieron la peli) desde el
+          // CSI endpoint para filtrar pelis de nicho en el backend.
+          const slug = extractFilmSlug(movie.url);
+          const stats = slug ? await getFilmStats(slug) : null;
+
+          return {
+            movieId: movie.id,
+            ...scrapedData,
+            watches: stats?.watches ?? null,
+          };
         },
       );
 
@@ -73,4 +79,13 @@ export class BatchProcessorService {
 
     return results;
   }
+}
+
+/**
+ * Extrae el slug de la URL de Letterboxd: "https://letterboxd.com/film/fugs-film/"
+ * → "fugs-film". Se usa para pedir los "watches" al CSI endpoint.
+ */
+function extractFilmSlug(url: string): string | null {
+  const m = url.match(/\/film\/([^/?#]+)\/?/);
+  return m ? m[1] : null;
 }

@@ -10,6 +10,9 @@ export interface ScrapedMovieData {
   movieRating?: number | null;
   year?: number | null;
   movieNationalName?: string | null;
+  // Membres que vieron la peli en Letterboxd (CSI). Usado para filtrar
+  // pelis de nicho que rompen el pipeline (sin poster en Letterboxd).
+  watches?: number | null;
 }
 
 export interface ProcessingResult {
