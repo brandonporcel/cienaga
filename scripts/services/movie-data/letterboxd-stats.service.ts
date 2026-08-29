@@ -4,10 +4,13 @@
  * Endpoint: https://letterboxd.com/csi/film/{slug}/stats/
  * Devuelve HTML con aria-label="Watched by X members", "Liked by X members", etc.
  *
- * Usa curl via child_process porque Cloudflare bloquea TLS fingerprints de Node.js.
- * Solo se ejecuta en scripts locales / GitHub Actions, nunca en Vercel serverless.
+ * Cloudflare bloquea el CSI desde IPs de datacenter (GitHub Actions), así que
+ * el accesso principal va por Firecrawl (que atraviesa el challenge), con
+ * fallback a curl para IPs residenciales (útil local). Requiere
+ * FIRECRAWL_API_KEY para el primer camino.
  */
 
+import axios from "axios";
 import { execFile } from "child_process";
 import * as cheerio from "cheerio";
 import { promisify } from "util";
@@ -30,10 +33,18 @@ export interface FilmStats {
  * @returns FilmStats o null si no se pudieron obtener
  */
 export async function getFilmStats(slug: string): Promise<FilmStats | null> {
-  try {
-    const url = `${LETTERBOXD_CSI_BASE}/${slug}/stats/`;
-    const referer = `https://letterboxd.com/film/${slug}/`;
+  const url = `${LETTERBOXD_CSI_BASE}/${slug}/stats/`;
+  const referer = `https://letterboxd.com/film/${slug}/`;
 
+  // Camino principal: Firecrawl (atraviesa Cloudflare, sirve en el runner).
+  const firecrawlHtml = await fetchByFirecrawl(url);
+  if (firecrawlHtml) {
+    const stats = parseStats(firecrawlHtml);
+    if (stats) return stats;
+  }
+
+  // Fallback: curl local (IP residencial). No sirve en el runner pero es útil local.
+  try {
     const { stdout } = await execFileAsync(
       "curl",
       [
@@ -48,25 +59,54 @@ export async function getFilmStats(slug: string): Promise<FilmStats | null> {
       ],
       { timeout: 15000 },
     );
+    const stats = parseStats(stdout);
+    if (stats) return stats;
+  } catch {
+    // ignora
+  }
 
-    const $ = cheerio.load(stdout);
+  return null;
+}
 
-    const watches = parseCount(
-      $(".production-statistic.-watches").attr("aria-label"),
+/**
+ * Pide el HTML del CSI vía Firecrawl. Devuelve null si no hay API key o falla.
+ */
+async function fetchByFirecrawl(url: string): Promise<string | null> {
+  const apiKey = process.env.FIRECRAWL_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const response = await axios.post(
+      "https://api.firecrawl.dev/v2/scrape",
+      { url, formats: ["html"] },
+      { headers: { Authorization: `Bearer ${apiKey}` }, timeout: 45000 },
     );
-    const likes = parseCount(
-      $(".production-statistic.-likes").attr("aria-label"),
-    );
-    const lists = parseCount(
-      $(".production-statistic.-lists").attr("aria-label"),
-    );
-
-    if (watches === null) return null;
-
-    return { watches: watches ?? 0, likes: likes ?? 0, lists: lists ?? 0 };
+    const html: string = response.data?.data?.html;
+    return html && typeof html === "string" ? html : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Parsea el HTML del CSI y extrae watches/likes/lists. Devuelve null si no
+ * se pudo parsear el número de "watches".
+ */
+function parseStats(html: string): FilmStats | null {
+  const $ = cheerio.load(html);
+  const watches = parseCount(
+    $(".production-statistic.-watches").attr("aria-label"),
+  );
+  const likes = parseCount(
+    $(".production-statistic.-likes").attr("aria-label"),
+  );
+  const lists = parseCount(
+    $(".production-statistic.-lists").attr("aria-label"),
+  );
+
+  if (watches === null) return null;
+
+  return { watches: watches ?? 0, likes: likes ?? 0, lists: lists ?? 0 };
 }
 
 /**
