@@ -226,7 +226,41 @@ export class LetterboxdScraperService {
   private static extractBackgroundMovieImg(
     $: cheerio.CheerioAPI,
   ): string | null {
-    return $('meta[property="og:image"]').attr("content") || null;
+    // El fondo de Letterboxd es la imagen landscape (backdrop) alojada en
+    // /resized/sm/upload/... con sufijo -<W>-<H>-crop-000000. Ya NO se puede
+    // usar meta[og:image]: Letterboxd dejó de emitirlo en las film pages
+    // vigentes (2026).
+    const html = $.html();
+
+    // Todas las imágenes sm/upload presentes en la página (backdrops).
+    const images =
+      html.match(
+        /https:\/\/[a-z0-9.]*ltrbxd\.com\/resized\/sm\/upload\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)/gi,
+      ) ?? [];
+
+    if (images.length === 0) return null;
+
+    // Elegir el backdrop landscape de mayor resolución. Formato de la URL:
+    // ...-<W>-<W>-<H>-<H>-crop-000000.jpg (W = ancho, H = alto del recorte).
+    // Ej: -1920-1920-1080-1080-crop-000000.jpg. Preferimos W grande (1920→1200→960).
+    const crop = /-(\d+)-(\d+)-(\d+)-(\d+)-crop-000000\.(?:jpg|jpeg|png|webp)/;
+
+    const landscape =
+      images
+        .map((url) => {
+          const m = url.match(crop);
+          return { url, w: m ? parseInt(m[1], 10) : 0 };
+        })
+        .filter((x) => x.w > 0 && x.w >= 1280) // solo backdrops de alta resolución
+        .sort((a, b) => b.w - a.w)[0]?.url ??
+      // Fallback: cualquier imagen crop landscape (W > H)
+      images.find((u) => {
+        const m = u.match(/-(\d+)-(\d+)-(\d+)-(\d+)-crop-000000/);
+        return m && parseInt(m[1], 10) > parseInt(m[3], 10);
+      }) ??
+      null;
+
+    return landscape;
   }
 
   private static extractYear($: cheerio.CheerioAPI): number | null {
