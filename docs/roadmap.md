@@ -30,6 +30,7 @@
 - `email.service.ts` parsea `screening.screening_time_text` con `new Date()` → "Invalid Date" en el texto plano; `notification.service.ts` ordena por `screening.screening_time` (propiedad inexistente).
 - ~~Workflows de scrape hacen `npm install` suelto (axios, cheerio...)~~ → arreglado 2026-08-16: los 3 workflows usan `pnpm install` con lockfile + `pnpm/action-setup@v4`.
 - ~~`rating: isNaN(...) ? undefined : undefined` en `letterboxd.ts`~~ → arreglado 2026-08-16: el rating del CSV se persiste en `user_movies` (el upsert actualiza ratings al re-subir).
+- **Pendiente en prod**: drop de `users.has_upload_csv` (columna eliminada del schema y del código 2026-08-29, pero aún existe en la base). SQL: `alter table public.users drop column has_upload_csv;`
 
 ## Infraestructura
 

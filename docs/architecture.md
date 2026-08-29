@@ -38,7 +38,6 @@ Ciénaga cruza el historial de Letterboxd de un usuario con la cartelera de cine
 3. `saveMoviesAction` (`src/app/actions/movies.ts`) — server action:
    - Busca cada película por `title + year + url`; si no existe, la inserta.
    - Hace upsert de las relaciones en `user_movies` (`onConflict: user_id,movie_id`).
-   - Marca `users.has_upload_csv = true`.
 
 ⚠️ **Bug conocido**: el insert no incluye `national_title` (NOT NULL) → todas las inserciones fallan silenciosamente. Ver `docs/roadmap.md`.
 

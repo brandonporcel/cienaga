@@ -15,7 +15,6 @@
 | --- | --- | --- |
 | id | uuid PK | FK → `auth.users(id)` ON DELETE CASCADE |
 | full_name / email / avatar_url | text | Se llenan desde `raw_user_meta_data` en el trigger |
-| has_upload_csv | boolean | default false |
 | created_at | timestamptz | default now() |
 
 - **Única tabla con RLS habilitado** (sin policies → denegado a anon/authenticated; el trigger `handle_new_user` es `security definer`).

@@ -4,7 +4,6 @@ create table public.users (
   full_name text,
   email text,
   avatar_url text,
-  has_upload_csv boolean default false,
   created_at timestamptz default now(),
   primary key (id)
 );
