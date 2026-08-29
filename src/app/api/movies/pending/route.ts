@@ -31,13 +31,18 @@ export async function GET(request: NextRequest) {
     // y obtener el valor por primera vez.
     const { data: movies, error } = await supabase
       .from("movies")
-      .select("id, title, url, year")
+      .select("id, title, url, year, watches")
       .or("director_id.is.null,poster_url.is.null")
       .eq("is_short", false)
       .not("url", "is", null)
       .or(`watches.is.null,watches.gte.${MIN_WATCHES}`)
       .limit(limit)
       .order("created_at", { ascending: true }); // Procesar las más viejas primero
+
+    console.log(
+      `   🔎 [DEBUG] pending devolvio ${movies?.length ?? 0} con watches:`,
+      movies?.map((m) => `${m.title} (${m.watches})`),
+    );
 
     if (error) {
       console.error("Error fetching movies:", error);
