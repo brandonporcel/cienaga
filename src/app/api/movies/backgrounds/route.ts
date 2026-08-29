@@ -31,54 +31,38 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching screenings:", errScreenings);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
-    const screeningIds = [...new Set((screeningRows ?? []).map((s) => s.movie_id))];
+    const screeningSet = new Set(
+      (screeningRows ?? []).map((s) => s.movie_id),
+    );
 
-    // Query 1: pelis SIN procesar (background_scraped = false) QUE tienen
-    // función (screenings). Usamos `.in` (tolera listas largas, a diferencia
-    // de `.not().in()`).
-    const { data: withScreenings, error: errS } = await supabase
+    // Una sola query simple, sin `.in`/`.not().in()` masivos (que rompen el
+    // parser de PostgREST con UUIDs). Traigo de sobra y priorizo por función
+    // en memoria.
+    const { data: movies, error } = await supabase
       .from("movies")
       .select("id, title, url, year, watches")
       .is("background_img_url", null)
       .eq("background_scraped", false)
       .eq("is_short", false)
       .not("url", "is", null)
-      .in("id", screeningIds)
-      .limit(limit)
+      .limit(limit * 3)
       .order("created_at", { ascending: true });
 
-    if (errS) {
-      console.error("Error fetching movies sin procesar (con funciones):", errS);
+    if (error) {
+      console.error("Error fetching movies sin procesar:", error);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
-    const withIds = new Set((withScreenings ?? []).map((m) => m.id));
-    const movies = [...(withScreenings ?? [])];
-
-    // Query 2: relleno con pelis SIN procesar que NO tienen función,
-    // excluyendo solo los IDs ya devueltos (set acotado → `.not().in` chico).
-    if (movies.length < limit) {
-      const { data: withoutScreenings, error: errW } = await supabase
-        .from("movies")
-        .select("id, title, url, year, watches")
-        .is("background_img_url", null)
-        .eq("background_scraped", false)
-        .eq("is_short", false)
-        .not("url", "is", null)
-        .limit(limit - movies.length)
-        .not("id", "in", [...withIds])
-        .order("created_at", { ascending: true });
-
-      if (errW) {
-        console.error("Error fetching movies sin procesar:", errW);
-        return NextResponse.json({ error: "Database error" }, { status: 500 });
-      }
-      movies.push(...(withoutScreenings ?? []));
-    }
+    // Priorizar pelis con función al frente (las de cartelera son las que
+    // más importan para la UI).
+    const prioritized = [...(movies ?? [])].sort(
+      (a, b) =>
+        Number(screeningSet.has(b.id)) - Number(screeningSet.has(a.id)),
+    );
 
     return NextResponse.json({
-      movies,
-      count: movies.length,
+      movies: prioritized.slice(0, limit),
+      count: Math.min(prioritized.length, limit),
     });
   } catch (error) {
     console.error("API error:", error);
