@@ -98,7 +98,9 @@ class BackgroundScrapingOrchestrator {
 
   private async processMovie(movie: Movie): Promise<void> {
     if (!movie.url) {
-      console.log(`   ⏭️  ${movie.title} sin URL, se salta`);
+      // Marcar como scraped para no reintentar pelis sin URL.
+      await this.saveBackground(movie.id, null, true).catch(() => {});
+      console.log(`   ⏭️  ${movie.title} sin URL, se marca como procesado`);
       return;
     }
 
@@ -109,13 +111,17 @@ class BackgroundScrapingOrchestrator {
     const background = data.backgroundMovieImg;
 
     if (!background) {
+      // No encontró fondo en Letterboxd. Se marca como scraped para que el
+      // endpoint deje de devolverla (no reintentar en cada corrida).
       console.log(
-        `   ⏭️  No se encontró fondo en Letterboxd para "${movie.title}". Se marcará para no reintentar.`,
+        `   ⏭️  Sin fondo en Letterboxd para "${movie.title}". Se marca como procesado.`,
       );
+      const ok = await this.saveBackground(movie.id, null, true);
+      if (!ok) console.log(`   ❌ No se pudo marcar ${movie.title}`);
       return;
     }
 
-    const ok = await this.saveBackground(movie.id, background);
+    const ok = await this.saveBackground(movie.id, background, true);
     if (ok) {
       console.log(`   ✅ ${movie.title} → fondo actualizado`);
     } else {
@@ -125,12 +131,13 @@ class BackgroundScrapingOrchestrator {
 
   private async saveBackground(
     movieId: string,
-    backgroundMovieImg: string,
+    backgroundMovieImg: string | null,
+    markScraped = true,
   ): Promise<boolean> {
     try {
       const response = await axios.post<{ success: boolean }>(
         `${this.config.baseUrl}/api/movies/backgrounds`,
-        { movieId, backgroundMovieImg },
+        { movieId, backgroundMovieImg, markScraped },
         { headers: this.config.headers },
       );
       return response.data.success === true;

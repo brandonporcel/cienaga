@@ -90,6 +90,7 @@ create table public.movies (
   rating             numeric(3, 1),
   director_id        uuid references public.directors(id) on delete set null,
   watches            int, -- membres que vieron la peli en Letterboxd (filtro de nicho)
+  background_scraped boolean default false, -- true si ya se intentó scrapear el fondo (con o sin resultado)
   created_at         timestamptz default now()
 );
 

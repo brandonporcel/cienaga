@@ -64,6 +64,7 @@
 | rating | numeric(3,1) | |
 | director_id | uuid FK → directors ON DELETE SET NULL | ⚠️ sin índice (filtrado frecuente) |
 | watches | int | Miembros que vieron la peli en Letterboxd. Filtro de pelis de nicho: el pipeline `movie-directors` excluye `watches < MIN_WATCHES` (800) para no atascar la cola con pelis sin poster. |
+| background_scraped | boolean DEFAULT false | true si ya se intentó scrapear el fondo (con o sin resultado). El backfill `/api/movies/backgrounds` solo trae pelis con `background_scraped = false` para no reintentar las que no tienen fanart en Letterboxd. |
 
 ### `user_movies`
 
