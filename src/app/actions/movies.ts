@@ -4,6 +4,7 @@ import { LetterboxdMovie } from "@/types/letterboxd";
 import { MESSAGES } from "@/lib/constants/messages";
 import handleServerError from "@/lib/errors/server";
 import { createClientForServer } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 
 async function saveMoviesAction(movies: LetterboxdMovie[]) {
   try {
@@ -95,7 +96,10 @@ async function saveMoviesAction(movies: LetterboxdMovie[]) {
     }
 
     // 3. Marcar que el usuario subió su CSV
-    const { error: updateError } = await supabase
+    // Usa service client (service_role): la tabla `users` tiene RLS sin
+    // policies, el UPDATE con la anon key no da error pero afecta 0 filas.
+    const serviceSupabase = createServiceClient();
+    const { error: updateError } = await serviceSupabase
       .from("users")
       .update({ has_upload_csv: true })
       .eq("id", userId);
