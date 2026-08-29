@@ -209,9 +209,7 @@ Además, la **lista de funciones** descubre cines nuevos automáticamente (Cine 
 
 ## 📋 To-Do
 
-- [ ] Usar funciones lambda
 - [ ] Docker
-- [ ] Terminar scrapers de cines
 - [ ] Tests
 - [ ] Agregar personalizacion para banda temporal para recibir de notificaciones. Screenings dentro de las proximos x horas/dias.
 
