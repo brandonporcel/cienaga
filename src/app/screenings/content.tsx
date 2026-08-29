@@ -86,13 +86,6 @@ export default function ScreeningsPageContent() {
 
     const matchesDate = (() => {
       if (dateFilter === "all") return true;
-      if (dateFilter === "today") {
-        const now = new Date();
-        const screeningDate = new Date(
-          screening.screening_times?.[0]?.screening_datetime || 0,
-        );
-        return screeningDate.toDateString() === now.toDateString();
-      }
       // Filtro por fecha específica (YYYY-MM-DD)
       const screeningDate = new Date(
         screening.screening_times?.[0]?.screening_datetime || 0,
@@ -236,14 +229,6 @@ export default function ScreeningsPageContent() {
               className="text-xs"
             >
               Todas
-            </Button>
-            <Button
-              variant={dateFilter === "today" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setDateFilter("today")}
-              className="text-xs"
-            >
-              Hoy
             </Button>
             {availableDates.map((dateStr) => {
               const d = new Date(dateStr + "T12:00:00");
