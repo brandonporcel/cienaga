@@ -57,9 +57,6 @@ export class BatchProcessorService {
           // CSI endpoint para filtrar pelis de nicho en el backend.
           const slug = extractFilmSlug(movie.url);
           const stats = slug ? await getFilmStats(slug) : null;
-          console.log(
-            `   🔎 [DEBUG] slug=${slug} getFilmStats=${JSON.stringify(stats)}`,
-          );
 
           return {
             movieId: movie.id,

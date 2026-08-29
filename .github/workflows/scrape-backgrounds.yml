@@ -1,9 +1,11 @@
-name: Scrape Cinema Screenings
+name: Scrape Background Images (backfill)
+
+# Manual: se corre con workflow_dispatch cuando se quiera llenar el
+# background_img_url de las pelis que quedaron sin fondo (el pipeline de
+# movie-directors solo procesa pelis pending y deja el fondo null para
+# siempre una vez que tienen director+poster).
 
 on:
-  # El cron está desactivado: se corre manualmente con workflow_dispatch.
-  # schedule:
-  #   - cron: "0 8 * * *"  # Todos los días 08:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -17,7 +19,7 @@ jobs:
           node-version: "24"
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm scrape:cinema-screenings
+      - run: pnpm scrape:backgrounds
         env:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET_KEY: ${{ secrets.CRON_SECRET_KEY }}

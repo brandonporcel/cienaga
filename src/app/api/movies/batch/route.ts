@@ -83,17 +83,10 @@ async function processMovie(
   // que las pelis de pocas vistas salgan de la cola aunque no tengan
   // director/poster resolubles.
   if (typeof watches === "number" && !isNaN(watches)) {
-    const { error: wErr } = await supabase
+    await supabase
       .from("movies")
       .update({ watches })
       .eq("id", movieId);
-    console.log(
-      `   🔎 [DEBUG] movieId=${movieId} recibio watches=${watches} updateErr=${wErr?.message ?? "none"}`,
-    );
-  } else {
-    console.log(
-      `   🔎 [DEBUG] movieId=${movieId} watches recibido=${watches} (no es numero, NO se persiste)`,
-    );
   }
 
   // Filtrar pelis de nicho (pocas vistas globales): no trackear el director

@@ -15,6 +15,7 @@
     "scrape:letterboxd-list": "pnpm exec tsx scripts/scrape-list.ts",
     "scrape:director-profiles": "pnpm exec tsx scripts/scrape-directors.ts",
     "scrape:movie-directors": "pnpm exec tsx scripts/scrape-movie-data.ts",
+    "scrape:backgrounds": "pnpm exec tsx scripts/scrape-backgrounds.ts",
     "scrape:directors": "pnpm scrape:movie-directors && pnpm scrape:director-profiles",
     "scrape:cinema-screenings": "pnpm exec tsx scripts/scrape-screenings.ts",
     "send:notifications": "pnpm exec tsx scripts/send-notifications.ts",

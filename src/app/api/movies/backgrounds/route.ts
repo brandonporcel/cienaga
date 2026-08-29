@@ -1,0 +1,95 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { createClientForServer } from "@/lib/supabase/server";
+
+// Endpoint para el backfill de background_img_url: permite listar pelis que
+// aún no tienen fondo y persistir el fondo scrapeado, sin tocar el pipeline
+// principal de movie-directors (que solo procesa pelis "pending" por director
+// o poster y, una vez completadas, deja el fondo null para siempre).
+
+export async function GET(request: NextRequest) {
+  const supabase = await createClientForServer();
+
+  try {
+    // Verificar clave de acceso
+    const authHeader = request.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET_KEY;
+
+    if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get("limit") || "25");
+
+    // Pelis sin fondo, excluyendo cortos y sin url scrapeable.
+    const { data: movies, error } = await supabase
+      .from("movies")
+      .select("id, title, url, year")
+      .is("background_img_url", null)
+      .eq("is_short", false)
+      .not("url", "is", null)
+      .limit(limit)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching movies sin fondo:", error);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      movies: movies || [],
+      count: movies?.length || 0,
+    });
+  } catch (error) {
+    console.error("API error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClientForServer();
+
+  try {
+    const authHeader = request.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET_KEY;
+
+    if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { movieId, backgroundMovieImg } = body as {
+      movieId?: string;
+      backgroundMovieImg?: string | null;
+    };
+
+    if (!movieId || typeof backgroundMovieImg !== "string") {
+      return NextResponse.json(
+        { error: "movieId y backgroundMovieImg (string) son requeridos" },
+        { status: 400 },
+      );
+    }
+
+    const { error } = await supabase
+      .from("movies")
+      .update({ background_img_url: backgroundMovieImg })
+      .eq("id", movieId);
+
+    if (error) {
+      console.error("Error actualizando background_img_url:", error);
+      return NextResponse.json({ error: "Database error" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("API error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}

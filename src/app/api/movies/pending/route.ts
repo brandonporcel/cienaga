@@ -39,11 +39,6 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .order("created_at", { ascending: true }); // Procesar las más viejas primero
 
-    console.log(
-      `   🔎 [DEBUG] pending devolvio ${movies?.length ?? 0} con watches:`,
-      movies?.map((m) => `${m.title} (${m.watches})`),
-    );
-
     if (error) {
       console.error("Error fetching movies:", error);
       return NextResponse.json({ error: "Database error" }, { status: 500 });
