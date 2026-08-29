@@ -5,7 +5,9 @@ import { Filter, LayoutGrid, List, Search } from "lucide-react";
 
 import Cinema from "@/types/cinema";
 import Screening from "@/types/screening";
-import ScreeningCard, { ScreeningDetailModal } from "@/components/screenings/card";
+import ScreeningCard, {
+  ScreeningDetailModal,
+} from "@/components/screenings/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +34,9 @@ export default function ScreeningsPage() {
   const [loading, setLoading] = useState(true);
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [screenings, setScreenings] = useState<Screening[]>([]);
-  const [selectedScreening, setSelectedScreening] = useState<Screening | null>(null);
+  const [selectedScreening, setSelectedScreening] = useState<Screening | null>(
+    null,
+  );
 
   const toggleCinema = (name: string) => {
     setSelectedCinemas((prev) => {
@@ -56,8 +60,7 @@ export default function ScreeningsPage() {
         .includes(searchQuery.toLowerCase());
 
     const matchesCinema =
-      selectedCinemas.size === 0 ||
-      selectedCinemas.has(screening.cinemas.name);
+      selectedCinemas.size === 0 || selectedCinemas.has(screening.cinemas.name);
 
     const matchesDate = (() => {
       if (dateFilter === "all") return true;
@@ -135,7 +138,10 @@ export default function ScreeningsPage() {
                 <Filter className="h-4 w-4 mr-1" />
                 Cines
                 {selectedCinemas.size > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="ml-1 h-5 px-1.5 text-xs"
+                  >
                     {selectedCinemas.size}
                   </Badge>
                 )}
@@ -214,7 +220,7 @@ export default function ScreeningsPage() {
       {loading ? (
         /* Loading Skeleton */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <div
               key={i}
               className="flex gap-4 rounded-2xl border bg-card p-3 animate-pulse"
@@ -256,13 +262,12 @@ export default function ScreeningsPage() {
                 <tr
                   key={screening.id}
                   className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() =>
-                    setSelectedScreening(screening)
-                  }
+                  onClick={() => setSelectedScreening(screening)}
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      {screening.thumbnail_url || screening.movies?.poster_url ? (
+                      {screening.thumbnail_url ||
+                      screening.movies?.poster_url ? (
                         <img
                           src={
                             screening.thumbnail_url ||
@@ -315,7 +320,11 @@ export default function ScreeningsPage() {
         /* Grid View */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredScreenings.map((screening) => (
-            <ScreeningCard key={screening.id} screening={screening} onOpenDetail={setSelectedScreening} />
+            <ScreeningCard
+              key={screening.id}
+              screening={screening}
+              onOpenDetail={setSelectedScreening}
+            />
           ))}
         </div>
       )}
