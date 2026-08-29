@@ -27,6 +27,15 @@ import { getCinemasWithScreenings } from "@/app/actions/cinemas";
 
 type DateFilter = "all" | "today" | string;
 
+// Fecha local (YYYY-MM-DD) en la zona horaria del cliente, para no desfasar
+// las fechas al usar toISOString() (que convierte a UTC).
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export default function ScreeningsPageContent() {
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
@@ -90,8 +99,7 @@ export default function ScreeningsPageContent() {
       const screeningDate = new Date(
         screening.screening_times?.[0]?.screening_datetime || 0,
       );
-      const screeningDateStr = screeningDate.toISOString().split("T")[0];
-      return screeningDateStr === dateFilter;
+      return toLocalDateStr(screeningDate) === dateFilter;
     })();
 
     return matchesSearch && matchesCinema && matchesDate;
@@ -103,8 +111,7 @@ export default function ScreeningsPageContent() {
     for (const screening of screenings) {
       const dt = screening.screening_times?.[0]?.screening_datetime;
       if (dt) {
-        const d = new Date(dt);
-        dateSet.add(d.toISOString().split("T")[0]);
+        dateSet.add(toLocalDateStr(new Date(dt)));
       }
     }
     return Array.from(dateSet).sort();
