@@ -45,10 +45,17 @@ function isValidCinemaMatch(name: string, address: string): boolean {
     /^(lun|mar|mié|mie|jue|vie|sáb|sab|dom)\b/i.test(name.trim())
   )
     return false;
+  // Rango de fechas "Del 27/8 al 2/9 (excepto el martes)": no es un cine,
+  // el paréntesis es el día excluido, no una dirección.
+  if (RANGE_PATTERN.test(name)) return false;
+  if (/^\d{1,2}\/\d{1,2}\s+a\s+las\b/i.test(name)) return false;
   return true;
 }
-const RANGE_PATTERN = /Del\s+(\d{1,2})\s+al\s+(\d{1,2})/i;
-const SPECIFIC_DATE_PATTERN = /(\d{1,2})\/(\d{1,2})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*hs/i;
+const RANGE_PATTERN =
+  /Del\s+(\d{1,2})(?:\/(\d{1,2}))?\s+al\s+(\d{1,2})(?:\/(\d{1,2}))?/i;
+// Fecha con una o más horas: "27/8 a las 17:00 y 19:00 hs"
+const SPECIFIC_DATE_PATTERN =
+  /(\d{1,2})\/(\d{1,2})\s+a\s+las\s+((?:\d{1,2}:\d{2}\s*(?:y\s*)*)+)hs/i;
 const NAMED_MONTH_PATTERN =
   /(\d{1,2})(?:,?\s*(\d{1,2}))*\s*y\s+(\d{1,2})\s+de\s+(\w+)\s+a\s+las\s+(\d{1,2}):(\d{2})\s*hs/i;
 const TIME_PATTERN = /(\d{1,2}):(\d{2})\s*hs/i;
@@ -176,13 +183,20 @@ function extractTimesFromLine(line: string): string[] {
  */
 function extractAllSpecificDates(line: string, year: number): string[] {
   const dates: string[] = [];
-  const re = /(\d{1,2})\/(\d{1,2})\s+a\s+las\s+(\d{1,2}):(\d{2})\s*hs/gi;
+  // Cada match es "día/mes a las <horas> hs" y puede incluir varias horas
+  // separadas por "y" (ej "27/8 a las 17:00 y 19:00 hs").
+  const re =
+    /(\d{1,2})\/(\d{1,2})\s+a\s+las\s+((?:\d{1,2}:\d{2}\s*(?:y\s*)*)+)hs/gi;
   const matches = line.matchAll(re);
   for (const m of matches) {
     const day = parseInt(m[1]);
     const dateMonth = parseInt(m[2]) - 1;
-    const time = `${m[3].padStart(2, "0")}:${m[4]}`;
-    dates.push(formatDatetime(year, dateMonth, day, time));
+    // Extraer cada hora del grupo (posiciones "17:00", "19:00", ...)
+    const timeRe = /(\d{1,2}):(\d{2})/g;
+    for (const t of m[3].matchAll(timeRe)) {
+      const time = `${t[1].padStart(2, "0")}:${t[2]}`;
+      dates.push(formatDatetime(year, dateMonth, day, time));
+    }
   }
   return dates;
 }
@@ -195,18 +209,88 @@ function extractRangeDates(
   line: string,
   year: number,
   month: number,
+  allLines: string[] = [],
 ): string[] {
   const m = line.match(RANGE_PATTERN);
   if (!m) return [];
   const startDay = parseInt(m[1]);
-  const endDay = parseInt(m[2]);
-  const times = extractTimesFromLine(line);
+  const endDay = parseInt(m[3]);
+
+  // Meses explícitos en la línea (ej "Del 27/8 al 2/9"). Si no vienen,
+  // usar el mes del sistema.
+  let mon = month;
+  let yr = year;
+  if (m[2]) {
+    mon = parseInt(m[2]) - 1;
+    yr = year;
+  }
+
+  // La hora suele estar en una línea aparte ("Del 27/8 al 2/9" / "15:00 hs").
+  // Buscarla en la línea del rango y, si no está, en el resto del bloque.
+  const lines = [line, ...allLines.filter((l) => l !== line)];
+  const times = lines.flatMap((l) => extractTimesFromLine(l));
   const time = times[0] || "00:00";
+
   const dates: string[] = [];
-  for (let d = startDay; d <= endDay; d++) {
-    dates.push(formatDatetime(year, month, d, time));
+  let d = startDay;
+  // Días de la semana excluidos: "Del 27/8 al 2/9 (excepto el martes)".
+  // Los omitimos para no notificar un día en que el cine no proyecta.
+  const excluded = extractExcludedDays(line);
+  // Recorrer el rango día a día; al llegar a fin de mes, pasar a la siguiente.
+  while (true) {
+    if (!excluded.has(dayName(yr, mon, d))) {
+      dates.push(formatDatetime(yr, mon, d, time));
+    }
+    if (d === endDay) break;
+    d++;
+    const dim = daysInMonth(yr, mon);
+    if (d > dim) {
+      d = 1;
+      mon = mon + 1 > 11 ? 0 : mon + 1;
+      yr = mon === 0 ? yr + 1 : yr;
+    }
   }
   return dates;
+}
+
+/**
+ * Extrae los días de la semana excluidos de un rango con el patrón
+ * "(excepto el lunes)" / "(excepto los martes y jueves)". Devuelve un Set
+ * con los nombres de día en minúscula (sin tildes). Si no hay exclusiones,
+ * el Set queda vacío.
+ */
+function extractExcludedDays(line: string): Set<string> {
+  const map: Record<string, string> = {
+    lunes: "lunes",
+    martes: "martes",
+    miercoles: "miercoles",
+    miércoles: "miercoles",
+    jueves: "jueves",
+    viernes: "viernes",
+    sabado: "sabado",
+    sábado: "sabado",
+    domingo: "domingo",
+  };
+  const m = line.match(/excepto\s+el\s+([a-záéíóú]+)/i);
+  const set = new Set<string>();
+  if (m && map[m[1].toLowerCase()]) set.add(map[m[1].toLowerCase()]);
+  return set;
+}
+
+/**
+ * Devuelve el nombre del día de la semana (minúscula, sin tildes) para una
+ * fecha dada, para compararlo contra los días excluidos de "excepto el X".
+ */
+function dayName(year: number, month: number, day: number): string {
+  return new Date(year, month, day)
+    .toLocaleDateString("es-AR", { weekday: "long" })
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
 }
 
 /**
@@ -246,7 +330,9 @@ function parseScheduleBlock(scheduleLines: string[]): {
   for (const line of scheduleLines) {
     // Si es rango, generar una fecha por cada día del rango
     if (RANGE_PATTERN.test(line)) {
-      allDatetimes.push(...extractRangeDates(line, currentYear, currentMonth));
+      allDatetimes.push(
+        ...extractRangeDates(line, currentYear, currentMonth, scheduleLines),
+      );
       continue;
     }
     // Si tiene mes nombrado ("20 y 21 de agosto a las 21:00 hs")
