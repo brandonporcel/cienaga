@@ -241,21 +241,38 @@ async function findOrCreateMovie(
   url: string,
   posterUrl?: string,
 ): Promise<string | null> {
-  const { data: existing } = await supabase
+  // 1) Buscar por slug (canónico). Las pelis importadas pré-scraping tenían
+  //    slug null, así que esto solo matchea las que ya tienen slug.
+  const { data: bySlug } = await supabase
     .from("movies")
     .select("id, poster_url")
     .eq("slug", slug)
     .maybeSingle();
+  if (bySlug) {
+    return maybeUpdatePoster(supabase, bySlug.id, bySlug.poster_url, posterUrl);
+  }
 
-  if (existing) {
-    // Actualizar poster si no lo tiene
-    if (!existing.poster_url && posterUrl) {
-      await supabase
-        .from("movies")
-        .update({ poster_url: posterUrl })
-        .eq("id", existing.id);
-    }
-    return existing.id;
+  // 2) Buscar por URL exacta (fallback para evitar duplicados al re-procesar
+  //    una peli cuya URL ya está registrada).
+  const { data: byUrl } = await supabase
+    .from("movies")
+    .select("id, poster_url")
+    .eq("url", url)
+    .maybeSingle();
+  if (byUrl) {
+    return maybeUpdatePoster(supabase, byUrl.id, byUrl.poster_url, posterUrl);
+  }
+
+  // 3) Buscar por título + año (case-insensitive). Catch-all para pelis con
+  //    slug null venidas de `boxd.it` que ya existen: así no se duplican.
+  const { data: byTitle } = await supabase
+    .from("movies")
+    .select("id, poster_url")
+    .ilike("title", title)
+    .eq("year", year)
+    .maybeSingle();
+  if (byTitle) {
+    return maybeUpdatePoster(supabase, byTitle.id, byTitle.poster_url, posterUrl);
   }
 
   const { data: newMovie, error } = await supabase
@@ -272,11 +289,36 @@ async function findOrCreateMovie(
     .single();
 
   if (error) {
+    // Si falló por slug duplicado (23505), reintentar por slug.
+    if (error.code === "23505") {
+      const { data: retry } = await supabase
+        .from("movies")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      return retry?.id || null;
+    }
     console.error("Error creating movie:", error);
     return null;
   }
 
   return newMovie.id;
+}
+
+async function maybeUpdatePoster(
+  supabase: SupabaseClient,
+  movieId: string,
+  currentPoster: string | null,
+  posterUrl?: string,
+): Promise<string> {
+  // Actualizar poster si la peli no lo tiene y llegó uno.
+  if (!currentPoster && posterUrl) {
+    await supabase
+      .from("movies")
+      .update({ poster_url: posterUrl })
+      .eq("id", movieId);
+  }
+  return movieId;
 }
 
 async function findOrCreateDirector(
