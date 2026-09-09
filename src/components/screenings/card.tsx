@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
@@ -75,6 +75,31 @@ function fmtRating(r: number) {
 function shareUrl(title: string, year?: number) {
   const slug = movieSlug(title, year);
   return `${window.location.origin}/screenings?movie=${slug}#cartelera`;
+}
+
+// Detecta URLs dentro de texto (https://... o www....) para renderizarlas
+// como links clickeables. Ej: "Entradas: www.cinegaumont.ar/pelicula?filmid=947".
+// El test de URL es sin flag "g" (stateless) para evitar bugs de lastIndex.
+const URL_RE = /(https?:\/\/[^\s<>"]+|www\.[^\s<>"]+)/g;
+
+function linkify(text: string): ReactNode[] {
+  return text.split(URL_RE).map((part, i) => {
+    if (/^(https?:\/\/[^\s<>"]+|www\.[^\s<>"]+)$/.test(part)) {
+      const href = part.startsWith("www.") ? `https://${part}` : part;
+      return (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline break-all"
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
 }
 
 /* ─── component ─── */
@@ -325,6 +350,11 @@ export function ScreeningDetailModal({
             {screening.screening_time_text && (
               <p className="text-xs text-muted-foreground mt-1.5 italic pl-4">
                 {screening.screening_time_text}
+              </p>
+            )}
+            {screening.description && (
+              <p className="text-xs text-muted-foreground mt-2 pl-4 whitespace-pre-line leading-relaxed">
+                {linkify(screening.description)}
               </p>
             )}
           </div>

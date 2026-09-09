@@ -389,7 +389,9 @@ export function parseListNote(html: string): ParsedCinemaNote[] {
       ...block.descriptionLines.filter((l) => !URL_PATTERN.test(l)),
       ...urls,
     ]
-      .join(" ")
+      // Joinear con \n para respetar el formato multi-línea original de la
+      // lista (la card lo muestra con whitespace-pre-line).
+      .join("\n")
       .trim() || undefined;
 
     const schedule = parseScheduleBlock(block.scheduleLines);
