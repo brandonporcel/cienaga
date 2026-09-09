@@ -5,13 +5,14 @@ import { DirectorsGrid } from "./directors-list";
 import { UploadDialog } from "./upload-dialog";
 
 export default async function DirectorsPage() {
-  const { directors, pendingMovies } = await getDirectors();
+  const { directors, pendingMovies, recentImports } = await getDirectors();
 
   return (
     <div className="w-full">
       <DirectorsGrid
         directors={directors}
         pendingMovies={pendingMovies}
+        recentImports={recentImports}
         toolbar={
           <>
             <UploadDialog />

@@ -13,16 +13,45 @@ import { getUserOrThrow } from "@/lib/helpers/get-server-user";
 async function getDirectors(): Promise<{
   directors: Director[];
   pendingMovies: number;
+  recentImports: RecentImport[];
 }> {
   const { supabase, user } = await getUserOrThrow();
 
   // Películas del usuario sin director detectado aún (el cron las procesa
-  // en las próximas horas). Sirve para mostrar el banner de "estamos detectando".
+  // en las próximas corridas). Sirve para mostrar el banner de "estamos detectando".
   const { count: pendingMovies } = await supabase
     .from("user_movies")
     .select("id, movies!inner(id)", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("movies.director_id", null);
+
+  // Últimas películas importadas (72h = ventana de una corrida del cron).
+  // Sirve para confirmar al usuario que su subida se registró, listando
+  // las pelis con su estado de detección (✅/⏳).
+  const { data: recentMovies } = await supabase
+    .from("user_movies")
+    .select(
+      "created_at, movies!inner(id, title, year, director_id)",
+    )
+    .eq("user_id", user.id)
+    .gte("created_at", importsWindowStart())
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const recentImports: RecentImport[] = (recentMovies ?? []).map((row) => {
+    const movie = row.movies as unknown as {
+      id: string;
+      title: string;
+      year: number | null;
+      director_id: string | null;
+    };
+    return {
+      id: movie.id,
+      title: movie.title,
+      year: movie.year,
+      hasDirector: !!movie.director_id,
+    };
+  });
 
   // 1. Directores con relación explícita (user_directors)
   const { data: userDirectors, error: udError } = await supabase
@@ -100,7 +129,22 @@ async function getDirectors(): Promise<{
   return {
     directors: Array.from(directorsMap.values()),
     pendingMovies: pendingMovies ?? 0,
+    recentImports,
   };
+}
+
+export interface RecentImport {
+  id: string;
+  title: string;
+  year: number | null;
+  hasDirector: boolean;
+}
+
+/** Inicio de la ventana de imports recientes (72h). */
+function importsWindowStart(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 3);
+  return d.toISOString();
 }
 
 async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {

@@ -1,5 +1,6 @@
 // Lógica única del criterio de "directores favoritos".
-// La usan POST /api/movies/batch y POST /api/directors/recalculate.
+// La usan POST /api/movies/batch, POST /api/directors/recalculate
+// y saveMoviesAction (auto-follow al importar CSV).
 
 export type DirectorSource = "auto" | "manual";
 

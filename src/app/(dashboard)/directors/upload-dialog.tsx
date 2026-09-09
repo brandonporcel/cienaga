@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import JSZip from "jszip";
 import { Download, Loader2 } from "lucide-react";
@@ -31,6 +32,7 @@ type Progress = { done: number; total: number; currentTitle: string } | null;
 const CHUNK_SIZE = 20;
 
 export function UploadDialog() {
+  const router = useRouter();
   const { handleSubmit, setValue, reset, formState, watch } =
     useForm<FilesSchemaType>({
       resolver: zodResolver(FilesSchema),
@@ -142,11 +144,13 @@ export function UploadDialog() {
       setProgress({ done: 0, total: movies.length, currentTitle: movies[0]?.title ?? "" });
 
       let processedCount = 0;
+      let autoFollowed = 0;
       for (let i = 0; i < movies.length; i += CHUNK_SIZE) {
         const chunk = movies.slice(i, i + CHUNK_SIZE);
         try {
           const result = await saveMoviesAction(chunk);
           if (result?.processedCount) processedCount += result.processedCount;
+          if (result?.autoFollowed) autoFollowed += result.autoFollowed;
         } catch {
           // Chunk falló — skip y seguir con el siguiente
         }
@@ -159,9 +163,16 @@ export function UploadDialog() {
       }
 
       setSubmitStep("done");
+      const pendingCopy =
+        processedCount > autoFollowed
+          ? ". Los directores de películas aún no procesadas se detectan en las próximas corridas del cron."
+          : "";
       toast.success(
-        `${processedCount} película${processedCount !== 1 ? "s" : ""} importada${processedCount !== 1 ? "s" : ""}. En las próximas horas detectaremos tus directores.`,
+        `${processedCount} película${processedCount !== 1 ? "s" : ""} importada${processedCount !== 1 ? "s" : ""} (${autoFollowed} director${autoFollowed !== 1 ? "es" : ""} seguido${autoFollowed !== 1 ? "s" : ""} automáticamente)${pendingCopy}`,
       );
+      // Refrescar la ruta para que la grilla refleje los directores nuevos
+      // sin necesidad de recargar con F5.
+      router.refresh();
       reset();
       setIsOpen(false);
       setDetectedCount(null);

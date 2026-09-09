@@ -1,6 +1,6 @@
 # Roadmap
 
-> Bugs conocidos y pendientes. Última actualización: 2026-08-29.
+> Bugs conocidos y pendientes. Última actualización: 2026-09-09.
 
 ## Bugs conocidos (priorizados)
 
@@ -60,6 +60,14 @@
 - En vez de scrapear, obtener datos del JSON de Letterboxd (`https://letterboxd.com/film/<slug>/json/`). ⚠️ **Probado y descartado el 2026-08-16**: Cloudflare responde 403 al fingerprint TLS de Node (axios y fetch); solo curl/browsers pasan. Si se retoma, requeriría browser real (Playwright) o proxy — ver "Cambios recientes".
 
 ## Cambios recientes
+
+### 2026-09-09 — Auto-follow al importar CSV + feedback post-import en /directors
+
+- **`saveMoviesAction` ahora evalúa el auto-follow al subir**: para las pelis del CSV que ya tienen `director_id` en `movies`, agrupa por director, evalúa `shouldFollowDirector` con TODAS las user_movies del usuario (no solo el lote) y crea `user_directors` con `source: auto` al instante, respetando overrides manuales (no pisa `source: manual`). Lógica nueva `syncAutoFollows` en `src/app/actions/movies.ts`, DRY con `director-preference.ts`.
+- **Criterio actualizado** (`src/lib/services/director-preference.ts`): **≥ 4 pelis vistas O ≥ 1 peli con rating ≥ 4★** (antes: ≥ 2 vistas Y ≥ 50% con ≥ 3.5★, o ≥ 1 con 5★). `getDirectorMetrics` sigue para la justificación UI.
+- **Feedback post-import**: `getDirectors()` devuelve `recentImports` (últimas 10 pelis subidas, ventana 72h) con `hasDirector` por peli; el banner en `/directors` lista ✅/⏳ ("📥 Subiste N película(s)"). empty state contextual al filtro activo (Seguidos con vistos disponibles → sugiere cambiar filtro).
+- **Toast de import**: muestra "N películas importadas (M directores seguidos automáticamente)".
+- **Pendiente de diseño**: el auto-follow en la subida cubre solo pelis con director ya en DB; las pelis nuevas siguen esperando al cron `scrape:movie-directors` (cada 3 días) — decisión consciente (Firecrawl solo en cron).
 
 ### 2026-08-29 — Filtro de pelis de nicho en el pipeline de movie-directors
 

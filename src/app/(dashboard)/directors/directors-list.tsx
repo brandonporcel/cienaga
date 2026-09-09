@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ArrowUpRight, Filter, LayoutGrid, List, Search } from "lucide-react";
 
 import { Director, DirectorSource } from "@/types/director";
 import { cn } from "@/lib/utils";
+import { RecentImport } from "@/app/actions/directors";
 import DirectorCard from "@/components/directors/card";
 import { DirectorDetailDialog } from "@/components/directors/detail-dialog";
 import { Button } from "@/components/ui/button";
@@ -36,16 +37,29 @@ export function DirectorsGrid({
   directors: initial,
   toolbar,
   pendingMovies = 0,
+  recentImports = [],
 }: {
   directors: Director[];
   toolbar?: React.ReactNode;
   pendingMovies?: number;
+  recentImports?: RecentImport[];
 }) {
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>("seguidos");
   const [view, setView] = useState<ViewMode>("grid");
   const [detailDirector, setDetailDirector] = useState<Director | null>(null);
+
+  // Sincronizar con las props nuevas (router.refresh() tras importar):
+  // reemplaza el estado local solo si el set de directores cambió.
+  useEffect(() => {
+    setDirectors((prev) => {
+      const sameIds =
+        prev.length === initial.length &&
+        prev.every((d) => initial.some((i) => i.id === d.id));
+      return sameIds ? prev : initial;
+    });
+  }, [initial]);
 
   const handlePreferenceChanged = (
     directorId: string,
@@ -79,6 +93,9 @@ export function DirectorsGrid({
 
   const pendingScraping = directors.filter((d) => !d.tmdb_id && d.url);
   const pendingNames = pendingScraping.map((d) => d.name).join(", ");
+
+  // Pelis subidas recientemente que aún no tienen director detectado
+  const pendingImports = recentImports.filter((m) => !m.hasDirector);
 
   return (
     <>
@@ -164,11 +181,36 @@ export function DirectorsGrid({
         </div>
       )}
 
-      {pendingMovies > 0 && (
+      {pendingImports.length > 0 && (
+        <div className="mb-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+            📥 Subiste {recentImports.length}{" "}
+            {recentImports.length === 1 ? "película" : "películas"}:{" "}
+            {pendingImports.length} en proceso de detección de directores.
+          </p>
+          <ul className="mt-2 space-y-1 text-sm text-amber-700 dark:text-amber-300">
+            {pendingImports.map((movie) => (
+              <li key={movie.id} className="flex items-center gap-2">
+                <span aria-hidden>⏳</span>
+                <span>
+                  {movie.title}
+                  {movie.year ? ` (${movie.year})` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-amber-700/80 dark:text-amber-300/80">
+            En las próximas corridas del cron detectamos los directores de
+            las películas pendientes y aparecen acá automáticamente.
+          </p>
+        </div>
+      )}
+
+      {pendingMovies > 0 && pendingImports.length === 0 && (
         <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-700 dark:text-amber-300">
           📥 {pendingMovies} película{pendingMovies !== 1 ? "s" : ""} en
-          proceso de detección de directores. En las próximas horas los vas a
-          ver aparecer acá automáticamente.
+          proceso de detección de directores. En las próximas corridas del
+          cron los vas a ver aparecer acá automáticamente.
         </div>
       )}
 
@@ -177,8 +219,8 @@ export function DirectorsGrid({
           pendingMovies > 0 ? (
             <p className="text-sm text-muted-foreground">
               Tus {pendingMovies} película{pendingMovies !== 1 ? "s" : ""} se
-              están procesando. En las próximas horas aparecerán tus
-              directores detectados acá. 🎬
+              están procesando. En las próximas corridas del cron aparecerán
+              tus directores detectados acá. 🎬
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">
@@ -186,6 +228,13 @@ export function DirectorsGrid({
               <strong>Actualizar Datos</strong> para comenzar. 🎬
             </p>
           )
+        ) : filter === "seguidos" &&
+          directors.some((d) => !d.source) ? (
+          <p className="text-sm text-muted-foreground">
+            Todavía no seguís directores. Los detectados desde tus películas
+            aparecen al filtrar por <strong>Vistos</strong> o{" "}
+            <strong>Todos</strong>.
+          </p>
         ) : (
           <p className="text-sm text-muted-foreground">
             No se encontraron directores para esa búsqueda o filtro.
