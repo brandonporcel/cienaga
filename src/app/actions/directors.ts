@@ -10,8 +10,19 @@ import { MESSAGES } from "@/lib/constants/messages";
 import handleServerError from "@/lib/errors/server";
 import { getUserOrThrow } from "@/lib/helpers/get-server-user";
 
-async function getDirectors(): Promise<Director[]> {
+async function getDirectors(): Promise<{
+  directors: Director[];
+  pendingMovies: number;
+}> {
   const { supabase, user } = await getUserOrThrow();
+
+  // Películas del usuario sin director detectado aún (el cron las procesa
+  // en las próximas horas). Sirve para mostrar el banner de "estamos detectando".
+  const { count: pendingMovies } = await supabase
+    .from("user_movies")
+    .select("id, movies!inner(id)", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("movies.director_id", null);
 
   // 1. Directores con relación explícita (user_directors)
   const { data: userDirectors, error: udError } = await supabase
@@ -86,7 +97,10 @@ async function getDirectors(): Promise<Director[]> {
     director.movies_count = moviesCountByDirector.get(id) ?? 0;
   }
 
-  return Array.from(directorsMap.values());
+  return {
+    directors: Array.from(directorsMap.values()),
+    pendingMovies: pendingMovies ?? 0,
+  };
 }
 
 async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {

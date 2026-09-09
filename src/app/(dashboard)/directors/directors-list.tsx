@@ -35,9 +35,11 @@ const SOURCE_BADGE_LABELS: Record<DirectorSource, string> = {
 export function DirectorsGrid({
   directors: initial,
   toolbar,
+  pendingMovies = 0,
 }: {
   directors: Director[];
   toolbar?: React.ReactNode;
+  pendingMovies?: number;
 }) {
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
@@ -162,12 +164,28 @@ export function DirectorsGrid({
         </div>
       )}
 
+      {pendingMovies > 0 && (
+        <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-700 dark:text-amber-300">
+          📥 {pendingMovies} película{pendingMovies !== 1 ? "s" : ""} en
+          proceso de detección de directores. En las próximas horas los vas a
+          ver aparecer acá automáticamente.
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         directors.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No hay directores importados aún. Usa el botón{" "}
-            <strong>Actualizar Datos</strong> para comenzar. 🎬
-          </p>
+          pendingMovies > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Tus {pendingMovies} película{pendingMovies !== 1 ? "s" : ""} se
+              están procesando. En las próximas horas aparecerán tus
+              directores detectados acá. 🎬
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No hay directores importados aún. Usa el botón{" "}
+              <strong>Actualizar Datos</strong> para comenzar. 🎬
+            </p>
+          )
         ) : (
           <p className="text-sm text-muted-foreground">
             No se encontraron directores para esa búsqueda o filtro.

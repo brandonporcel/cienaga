@@ -26,6 +26,9 @@ import {
 import { saveMoviesAction } from "@/app/actions/movies";
 
 type SubmitStep = "idle" | "parsing" | "saving" | "done";
+type Progress = { done: number; total: number; currentTitle: string } | null;
+
+const CHUNK_SIZE = 20;
 
 export function UploadDialog() {
   const { handleSubmit, setValue, reset, formState, watch } =
@@ -39,6 +42,7 @@ export function UploadDialog() {
   const [confirmAbort, setConfirmAbort] = useState(false);
   const [detectedCount, setDetectedCount] = useState<number | null>(null);
   const [submitStep, setSubmitStep] = useState<SubmitStep>("idle");
+  const [progress, setProgress] = useState<Progress>(null);
   const isSubmitting = formState.isSubmitting;
 
   const extractCsvsFromZip = async (
@@ -109,6 +113,7 @@ export function UploadDialog() {
       reset();
       setDetectedCount(null);
       setSubmitStep("idle");
+      setProgress(null);
     }
   };
 
@@ -125,6 +130,7 @@ export function UploadDialog() {
     setIsOpen(false);
     setDetectedCount(null);
     setSubmitStep("idle");
+    setProgress(null);
   };
 
   const onSubmit = async (values: FilesSchemaType) => {
@@ -133,20 +139,39 @@ export function UploadDialog() {
       const movies = await LetterboxdService.getMovies(values);
 
       setSubmitStep("saving");
-      await saveMoviesAction(movies);
+      setProgress({ done: 0, total: movies.length, currentTitle: movies[0]?.title ?? "" });
+
+      let processedCount = 0;
+      for (let i = 0; i < movies.length; i += CHUNK_SIZE) {
+        const chunk = movies.slice(i, i + CHUNK_SIZE);
+        try {
+          const result = await saveMoviesAction(chunk);
+          if (result?.processedCount) processedCount += result.processedCount;
+        } catch {
+          // Chunk falló — skip y seguir con el siguiente
+        }
+        const done = Math.min(i + CHUNK_SIZE, movies.length);
+        setProgress({
+          done,
+          total: movies.length,
+          currentTitle: chunk[chunk.length - 1]?.title ?? "",
+        });
+      }
 
       setSubmitStep("done");
       toast.success(
-        `¡${movies.length} película${movies.length !== 1 ? "s" : ""} importada${movies.length !== 1 ? "s" : ""}! Los directores se detectan ahora y los perfiles se actualizan diariamente.`,
+        `${processedCount} película${processedCount !== 1 ? "s" : ""} importada${processedCount !== 1 ? "s" : ""}. En las próximas horas detectaremos tus directores.`,
       );
       reset();
       setIsOpen(false);
       setDetectedCount(null);
       setSubmitStep("idle");
+      setProgress(null);
     } catch (error) {
       showCatchErrorToast(error);
     } finally {
       setSubmitStep("idle");
+      setProgress(null);
     }
   };
 
@@ -209,6 +234,31 @@ export function UploadDialog() {
               </p>
             )}
           </div>
+
+          {progress && submitStep === "saving" && (
+            <div className="space-y-1.5 mt-2">
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.round((progress.done / progress.total) * 100)}%`,
+                  }}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {progress.done} / {progress.total} películas procesadas
+                {progress.currentTitle && (
+                  <>
+                    {" "}
+                    — Ahora:{" "}
+                    <span className="font-medium text-foreground">
+                      {progress.currentTitle}
+                    </span>
+                  </>
+                )}
+              </p>
+            </div>
+          )}
 
           <UploadInstructions />
 
