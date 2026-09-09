@@ -6,36 +6,27 @@ import Screening from "@/types/screening";
 export async function GET() {
   const supabase = await createClientForServer();
 
-  // Traer funciones próximas con info de director y cine
-  // NOTA: no usar .order() en nested selects de Supabase (PostgREST no lo soporta bien)
+  // Traer funciones próximas con info de director y cine.
+  // NOTA: no usar .order() en nested selects de Supabase (PostgREST no lo soporta bien).
+  // El filtro sobre `screening_times` con !inner hace inner join: solo screenings
+  // con al menos un horario futuro, y los screening_times vienen ya filtrados.
+  const now = new Date();
   const { data: screenings, error } = await supabase
     .from("screenings")
     .select(
-      "*, screening_times(*), movies(*, directors(id, name)), cinemas(*)",
+      "*, screening_times!inner(*), movies(*, directors(id, name)), cinemas(*)",
     )
-    .limit(100) as { data: Screening[] | null; error: unknown };
+    .gte("screening_times.screening_datetime", now.toISOString())
+    .limit(1000) as { data: Screening[] | null; error: unknown };
 
   if (error || !screenings || screenings.length === 0) {
     return NextResponse.json({ data: [] });
   }
 
-  // Filtrar funciones con al menos una fecha futura
-  const now = new Date();
-  const upcoming = screenings.filter((s) => {
-    const times = s.screening_times ?? [];
-    return times.some((t) => new Date(t.screening_datetime) >= now);
-  });
-
-  // Si no hay funciones próximas, devolver 6 random como fallback
-  if (upcoming.length === 0) {
-    const shuffled = [...screenings].sort(() => Math.random() - 0.5);
-    return NextResponse.json({ data: shuffled.slice(0, 6) });
-  }
-
   // Contar seguidores por director
   const directorIds = [
     ...new Set(
-      upcoming
+      screenings
         .map((s) => s.movies?.directors?.id)
         .filter(Boolean) as string[],
     ),
@@ -52,7 +43,7 @@ export async function GET() {
   }
 
   // Rankear por cantidad de seguidores del director
-  const ranked = upcoming
+  const ranked = screenings
     .map((s) => ({
       ...s,
       _followers: countMap.get(s.movies?.directors?.id ?? "") ?? 0,
