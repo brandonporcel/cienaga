@@ -29,7 +29,7 @@
 
 ### P3 — Bugs menores
 
-- `count-pending` no valida Bearer y su filtro no coincide con `/api/movies/pending`.
+- `count-pending` no valida Bearer y su filtro no coincide con `/api/movies/pending`. **Verificado 2026-09-12**: `/api/directors/pending` responde 200 OK con 84 pendientes; un fallo del action fue transitorio (500 "Database error" en Vercel, no reproducible ni con anon ni service key). Idea: retry con backoff en `getPendingDirectors` de `scrape-directors.ts` para tolerar 5xx transitorios de Vercel/Supabase.
 - Filtros client-side del dashboard no filtran la grilla (solo el mensaje de "sin resultados"). ⚠️ Arreglado en `/directors` (2026-08-16: buscador + filtros por estado en `DirectorsGrid`); revisar si `/dashboard` tiene el mismo problema.
 - `addToCalendar` (`src/components/screenings/card.tsx`) usa `new Date()` en vez del horario de la función.
 - `email.service.ts` parsea `screening.screening_time_text` con `new Date()` → "Invalid Date" en el texto plano; `notification.service.ts` ordena por `screening.screening_time` (propiedad inexistente).

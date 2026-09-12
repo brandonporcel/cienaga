@@ -106,17 +106,39 @@ class DirectorScrapingOrchestrator {
   }
 
   private async getPendingDirectors(): Promise<PendingDirector[]> {
-    try {
-      const response = await axios.get(
-        `${this.apiBaseUrl}/api/directors/pending`,
-        { headers: { Authorization: `Bearer ${this.secretKey}` } },
-      );
+    const MAX_ATTEMPTS = 3;
+    const BASE_BACKOFF_MS = 2000;
 
-      return response.data.directors || [];
-    } catch (error) {
-      console.error("Error fetching pending directors:", error);
-      throw new Error("Failed to fetch pending directors from API");
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const response = await axios.get(
+          `${this.apiBaseUrl}/api/directors/pending`,
+          { headers: { Authorization: `Bearer ${this.secretKey}` } },
+        );
+
+        return response.data.directors || [];
+      } catch (error) {
+        // Reintentar solo errores transitorios: 5xx (Vercel/Supabase) o
+        // fallos de red sin respuesta. Un 4xx es config y no se arregla solo.
+        const isTransient = axios.isAxiosError(error)
+          ? !error.response || error.response.status >= 500
+          : true;
+
+        if (!isTransient || attempt === MAX_ATTEMPTS) {
+          console.error("Error fetching pending directors:", error);
+          throw new Error("Failed to fetch pending directors from API");
+        }
+
+        const backoffMs = BASE_BACKOFF_MS * 2 ** (attempt - 1);
+        console.warn(
+          `⚠️  Transient error fetching directors (attempt ${attempt}/${MAX_ATTEMPTS}). ` +
+            `Retrying in ${backoffMs / 1000}s...`,
+        );
+        await this.delay(backoffMs);
+      }
     }
+
+    throw new Error("Failed to fetch pending directors from API");
   }
 
   private async scrapeDirectorProfile(
