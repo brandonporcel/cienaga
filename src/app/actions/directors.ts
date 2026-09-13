@@ -133,6 +133,78 @@ async function getDirectors(): Promise<{
   };
 }
 
+/**
+ * Búsqueda global de directores en la base (no solo los del usuario).
+ * Devuelve con qué relación tiene el usuario cada director: seguido / visto / sin relación.
+ */
+export interface DirectorSearchResult {
+  id: string;
+  name: string;
+  url: string;
+  image_url: string;
+  tmdb_id: number | null;
+  created_at: string;
+  relation: "followed" | "watched" | "unrelated";
+}
+
+async function searchDirectors(query: string): Promise<DirectorSearchResult[]> {
+  const { supabase, user } = await getUserOrThrow();
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const { data: directors, error } = await supabase
+    .from("directors")
+    .select("id, name, url, image_url, tmdb_id, created_at")
+    .ilike("name", `%${trimmed}%`)
+    .order("name")
+    .limit(15);
+
+  if (error) {
+    console.error("Error searching directors:", error);
+    return [];
+  }
+  if (!directors || directors.length === 0) return [];
+
+  const ids = directors.map((d) => d.id);
+
+  // Directores que el usuario ya sigue
+  const { data: followedRows } = await supabase
+    .from("user_directors")
+    .select("director_id")
+    .eq("user_id", user.id)
+    .in("director_id", ids);
+  const followed = new Set<string>(
+    (followedRows ?? []).map((r) => r.director_id),
+  );
+
+  // Directores de películas que el usuario ya vio
+  const { data: watchedRows } = await supabase
+    .from("user_movies")
+    .select("movies!inner(director_id)")
+    .eq("user_id", user.id)
+    .in("movies.director_id", ids);
+  const watched = new Set(
+    (watchedRows ?? []).map(
+      (row) =>
+        (row.movies as unknown as { director_id: string }).director_id,
+    ),
+  );
+
+  return directors.map((d) => ({
+    id: d.id,
+    name: d.name,
+    url: d.url,
+    image_url: d.image_url,
+    tmdb_id: d.tmdb_id,
+    created_at: d.created_at,
+    relation: followed.has(d.id)
+      ? "followed"
+      : watched.has(d.id)
+        ? "watched"
+        : "unrelated",
+  }));
+}
+
 export interface RecentImport {
   id: string;
   title: string;
@@ -248,4 +320,4 @@ async function updateDirectorPreference(
   }
 }
 
-export { getDirectors, getDirectorDetail, updateDirectorPreference };
+export { getDirectors, getDirectorDetail, updateDirectorPreference, searchDirectors };

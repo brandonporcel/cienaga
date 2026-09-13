@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowUpRight, Filter, LayoutGrid, List, Search } from "lucide-react";
+import { ArrowUpRight, Filter, LayoutGrid, List, Loader2, Search } from "lucide-react";
+import { toast } from "sonner";
 
 import { Director, DirectorSource } from "@/types/director";
 import { cn } from "@/lib/utils";
-import { RecentImport } from "@/app/actions/directors";
+import {
+  DirectorSearchResult,
+  RecentImport,
+  searchDirectors,
+  updateDirectorPreference,
+} from "@/app/actions/directors";
 import DirectorCard from "@/components/directors/card";
 import { DirectorDetailDialog } from "@/components/directors/detail-dialog";
 import { Button } from "@/components/ui/button";
@@ -44,11 +51,14 @@ export function DirectorsGrid({
   pendingMovies?: number;
   recentImports?: RecentImport[];
 }) {
+  const router = useRouter();
   const [directors, setDirectors] = useState(initial);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>("seguidos");
   const [view, setView] = useState<ViewMode>("grid");
   const [detailDirector, setDetailDirector] = useState<Director | null>(null);
+  const [searchResults, setSearchResults] = useState<DirectorSearchResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
 
   // Sincronizar con las props nuevas (router.refresh() tras importar):
   // reemplaza el estado local solo si el set de directores cambió.
@@ -60,6 +70,51 @@ export function DirectorsGrid({
       return sameIds ? prev : initial;
     });
   }, [initial]);
+
+  // Búsqueda global en la DB (debounce 300ms): busca directores que no
+  // están en la lista del usuario (ej. para seguir directores nuevos).
+  useEffect(() => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      setSearching(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearching(true);
+    const timer = setTimeout(() => {
+      searchDirectors(query)
+        .then((results) => {
+          if (!cancelled) setSearchResults(results);
+        })
+        .catch(() => {
+          if (!cancelled) setSearchResults(null);
+        })
+        .finally(() => {
+          if (!cancelled) setSearching(false);
+        });
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
+  const handleFollowSearchResult = async (directorId: string) => {
+    try {
+      await updateDirectorPreference(directorId, "follow");
+      setSearchResults((prev) =>
+        prev?.map((r) =>
+          r.id === directorId ? { ...r, relation: "followed" } : r,
+        ) ?? null,
+      );
+      toast.success("Director seguido");
+      router.refresh();
+    } catch {
+      toast.error("No se pudo seguir al director");
+    }
+  };
 
   const handlePreferenceChanged = (
     directorId: string,
@@ -90,6 +145,13 @@ export function DirectorsGrid({
         return byQuery;
     }
   }, [directors, query, filter]);
+
+  // Resultados globales que NO están visibles en la grilla actual (los
+  // ocultos por el filtro, ej. "Seguidos" con directores solo vistos,
+  // sí se muestran acá para poder seguirlos).
+  const globalResults = (searchResults ?? []).filter(
+    (r) => !filtered.some((d) => d.id === r.id),
+  );
 
   const pendingScraping = directors.filter((d) => !d.tmdb_id && d.url);
   const pendingNames = pendingScraping.map((d) => d.name).join(", ");
@@ -214,6 +276,67 @@ export function DirectorsGrid({
         </div>
       )}
 
+      {searching && query.trim() && (
+        <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Buscando en todos los directores...
+        </div>
+      )}
+
+      {!searching && globalResults.length > 0 && (
+        <div className="mb-4">
+          <p className="text-sm font-medium text-muted-foreground mb-2">
+            Otros directores en la base
+          </p>
+          <div className="border rounded-lg divide-y">
+            {globalResults.map((result) => (
+              <div
+                key={result.id}
+                className="flex items-center gap-3 px-3 py-2"
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDetailDirector(result as unknown as Director)
+                  }
+                  className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                >
+                  <Image
+                    src={
+                      result.image_url ||
+                      "https://www.themoviedb.org/assets/2/v4/glyphicons/basic/glyphicons-basic-4-user-grey-d8fe957375e70239d6abdd549fd7568c89281b2179b5f4470e2e12895792dfa5.svg"
+                    }
+                    alt={result.name}
+                    width={32}
+                    height={32}
+                    className="rounded-full object-cover w-8 h-8 hover:ring-2 hover:ring-primary transition-all"
+                  />
+                  <span className="truncate font-medium">{result.name}</span>
+                  {result.relation === "watched" && (
+                    <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-amber-500/90 text-white shrink-0">
+                      Visto
+                    </span>
+                  )}
+                </button>
+                {result.relation === "followed" ? (
+                  <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-500/90 text-white shrink-0">
+                    Seguido
+                  </span>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleFollowSearchResult(result.id)}
+                  >
+                    Seguir
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         directors.length === 0 ? (
           pendingMovies > 0 ? (
@@ -234,6 +357,12 @@ export function DirectorsGrid({
             Todavía no seguís directores. Los detectados desde tus películas
             aparecen al filtrar por <strong>Vistos</strong> o{" "}
             <strong>Todos</strong>.
+          </p>
+        ) : globalResults.length > 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No tenés directores propios para esa búsqueda, pero hay otros
+            directores en la base arriba. Tocá <strong>Seguir</strong> para
+            agregarlos a tu lista.
           </p>
         ) : (
           <p className="text-sm text-muted-foreground">
