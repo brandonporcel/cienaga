@@ -76,6 +76,7 @@ class ListScrapingOrchestrator {
 
       const batchSize = 20;
       let totalCreated = 0;
+      let totalUpdated = 0;
       let totalSkipped = 0;
       let totalErrors = 0;
 
@@ -88,6 +89,7 @@ class ListScrapingOrchestrator {
         try {
           const result = await this.sendBatch(batch);
           totalCreated += result.created;
+          totalUpdated += result.updated;
           totalSkipped += result.skipped;
           totalErrors += result.errors.length;
         } catch (error) {
@@ -102,6 +104,7 @@ class ListScrapingOrchestrator {
 
       console.log("\n📊 Scraping completed:");
       console.log(`   ✅ Created: ${totalCreated}`);
+      console.log(`   🔄 Updated: ${totalUpdated}`);
       console.log(`   ⏭️  Skipped: ${totalSkipped}`);
       console.log(`   ❌ Errors: ${totalErrors}`);
     } catch (error) {
@@ -324,7 +327,7 @@ class ListScrapingOrchestrator {
 
   private async sendBatch(
     entries: ListEntry[],
-  ): Promise<{ created: number; skipped: number; errors: string[] }> {
+  ): Promise<{ created: number; updated: number; skipped: number; errors: string[] }> {
     try {
       const response: AxiosResponse = await axios.post(
         `${this.apiBaseUrl}/api/list/batch`,
@@ -337,7 +340,7 @@ class ListScrapingOrchestrator {
 
       const data = response.data;
       console.log(
-        `   ✅ Processed: ${data.processed}, Created: ${data.created}, Skipped: ${data.skipped}`,
+        `   ✅ Processed: ${data.processed}, Created: ${data.created}, Updated: ${data.updated}, Skipped: ${data.skipped}`,
       );
 
       if (data.errors?.length > 0) {
@@ -347,6 +350,7 @@ class ListScrapingOrchestrator {
 
       return {
         created: data.created || 0,
+        updated: data.updated || 0,
         skipped: data.skipped || 0,
         errors: data.errors || [],
       };

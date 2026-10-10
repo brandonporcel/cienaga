@@ -1,8 +1,14 @@
 # Roadmap
 
-> Bugs conocidos y pendientes. Última actualización: 2026-09-09.
+> Bugs conocidos y pendientes. Última actualización: 2026-10-10.
 
 ## Bugs conocidos (priorizados)
+
+### P1 — ~~Funciones duplicadas por cada corrida de scrape-list~~ ✅ resuelto 2026-10-10
+
+- ~~La dedupe de `POST /api/list/batch` usaba `(movie_id, cinema_id, screening_time_text)` como clave exacta. Como @lamateroric edita la lista constantemente (agrega/quita funciones semana a semana), el texto cambiaba y cada corrida INSERTaba una función nueva (113 grupos duplicados, 248 screenings de más).~~
+- **Solución**: la función ahora se identifica por `(movie_id, cinema_id)`. `processEntry` actualiza la función existente si solapa con las fechas nuevas o si la más reciente venció; si no solapa y tiene fechas futuras, inserta aparte (función nueva real del mismo cine). Al actualizar absorbe el resto del grupo migrando fechas futuras únicas y borra los duplicados. **Limpieza histórica ejecutada 2026-10-10**: 1219 → 971 screenings, 0 grupos con repeticiones.
+- **Estado**: cerrado (validar la próxima corrida del cron que el conteo `updated` > 0 y que no vuelvan a crecer).
 
 ### P2 — Links de unsubscribe inexistentes
 

@@ -29,6 +29,7 @@ type ValidatedEntry = z.infer<typeof ListEntrySchema>;
 interface ProcessingResult {
   title: string;
   success: boolean;
+  updated?: boolean;
   error?: string;
 }
 
@@ -75,19 +76,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const created = results.filter((r) => r.success && !r.error).length;
-    const skipped = results.filter((r) => r.success && r.error).length;
+    const created = results.filter((r) => r.success && !r.error && !r.updated).length;
+    const updated = results.filter((r) => r.success && r.updated).length;
+    const skipped = results.filter((r) => r.success && r.error && !r.updated).length;
     const errors = results
       .filter((r) => !r.success)
       .map((r) => `${r.title}: ${r.error}`);
 
     console.log(
-      `Batch completed: ${created} created, ${skipped} skipped, ${errors.length} errors`,
+      `Batch completed: ${created} created, ${updated} updated, ${skipped} skipped, ${errors.length} errors`,
     );
 
     return NextResponse.json({
       processed: results.length,
       created,
+      updated,
       skipped,
       errors,
     });
@@ -129,37 +132,125 @@ async function processEntry(
       }
     }
 
-    const { data: existingScreening } = await supabase
-      .from("screenings")
-      .select("id")
-      .eq("movie_id", movieId)
-      .eq("cinema_id", cinemaId)
-      .eq("screening_time_text", entry.screeningTimeText)
-      .maybeSingle();
+    const newTimes = entry.screeningDatetimes.map((dt) => new Date(dt).getTime());
+    const now = Date.now();
 
-    if (existingScreening) {
-      return { title: entry.filmTitle, success: true, error: "Screening already exists (skipped)" };
+    // La función se identifica por (movie, cinema): la nota de la lista se
+    // edita en cada corrida (agrega/quita funciones semana a semana), así
+    // que el texto crudo NO es estable. Buscamos película + cine y:
+    //   - actualizamos si la función existente solapa con las fechas nuevas,
+    //   - reutilizamos la más reciente sin fechas futuras (función vencida),
+    //   - absorbemos el resto del grupo migrando fechas futuras únicas.
+    const { data: existingScreenings } = await supabase
+      .from("screenings")
+      .select("id, created_at")
+      .eq("movie_id", movieId)
+      .eq("cinema_id", cinemaId);
+
+    const existingIds = (existingScreenings ?? []).map((s) => s.id);
+    let timesByScreening: Record<string, string[]> = {};
+    if (existingIds.length > 0) {
+      const { data: existingTimes } = await supabase
+        .from("screening_times")
+        .select("screening_id, screening_datetime")
+        .in("screening_id", existingIds);
+      timesByScreening = (existingTimes ?? []).reduce(
+        (acc, t) => {
+          (acc[t.screening_id] ??= []).push(t.screening_datetime);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
     }
 
-    const { data: newScreening, error: screeningError } = await supabase
+    const hasOverlap = (existing: string[]) =>
+      existing.some((dt) => newTimes.includes(new Date(dt).getTime()));
+    const hasFuture = (existing: string[]) =>
+      existing.some((dt) => new Date(dt).getTime() >= now);
+
+    // Más reciente primero: preferimos actualizar la última versión.
+    const sorted = [...(existingScreenings ?? [])].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+
+    // Candidato a actualizar: primero el que solapa; si ninguno, el más
+    // reciente sin fechas futuras (se reutiliza en vez de insertar).
+    const overlapTarget = sorted.find((s) =>
+      hasOverlap(timesByScreening[s.id] ?? []),
+    );
+    const deadTarget = sorted.find(
+      (s) => !hasFuture(timesByScreening[s.id] ?? []),
+    );
+    const target = overlapTarget ?? deadTarget;
+
+    if (!target) {
+      // La función existente tiene fechas futuras y NO solapa: es una
+      // función nueva del mismo cine (ej. función especial además de la
+      // regular). Se inserta aparte.
+      const { data: newScreening, error: screeningError } = await supabase
+        .from("screenings")
+        .insert({
+          movie_id: movieId,
+          cinema_id: cinemaId,
+          screening_time_text: entry.screeningTimeText,
+          description: entry.description,
+          original_url: entry.originalUrl,
+        })
+        .select("id")
+        .single();
+
+      if (screeningError) {
+        return {
+          title: entry.filmTitle,
+          success: false,
+          error: `Screening insert failed: ${screeningError.message}`,
+        };
+      }
+
+      const timeEntries = entry.screeningDatetimes.map((dt) => ({
+        screening_id: newScreening.id,
+        screening_datetime: dt,
+      }));
+
+      const { error: timeError } = await supabase
+        .from("screening_times")
+        .insert(timeEntries);
+
+      if (timeError) {
+        console.error("Error inserting screening times:", timeError);
+      }
+
+      return { title: entry.filmTitle, success: true };
+    }
+
+    // Actualizar la función existente: texto + descripción + reemplazo
+    // completo de fechas.
+    const { error: updateError } = await supabase
       .from("screenings")
-      .insert({
-        movie_id: movieId,
-        cinema_id: cinemaId,
+      .update({
         screening_time_text: entry.screeningTimeText,
         description: entry.description,
         original_url: entry.originalUrl,
       })
-      .select("id")
-      .single();
+      .eq("id", target.id);
 
-    if (screeningError) {
-      return { title: entry.filmTitle, success: false, error: `Screening insert failed: ${screeningError.message}` };
+    if (updateError) {
+      return {
+        title: entry.filmTitle,
+        success: false,
+        error: `Screening update failed: ${updateError.message}`,
+      };
     }
 
-    // Insertar TODOS los horarios (puede haber múltiples fechas por función)
+    await supabase
+      .from("screening_times")
+      .delete()
+      .eq("screening_id", target.id);
+
+    const targetTimeSet = new Set(newTimes);
     const timeEntries = entry.screeningDatetimes.map((dt) => ({
-      screening_id: newScreening.id,
+      screening_id: target.id,
       screening_datetime: dt,
     }));
 
@@ -171,7 +262,33 @@ async function processEntry(
       console.error("Error inserting screening times:", timeError);
     }
 
-    return { title: entry.filmTitle, success: true };
+    // Absorber el resto del grupo: migrar fechas futuras únicas al target y
+    // borrar los screenings viejos (quedaron representados por el nuevo).
+    for (const other of sorted) {
+      if (other.id === target.id) continue;
+
+      const otherTimes = timesByScreening[other.id] ?? [];
+      const futureUnique = otherTimes
+        .filter((dt) => new Date(dt).getTime() > now)
+        .filter((dt) => !targetTimeSet.has(new Date(dt).getTime()));
+
+      if (futureUnique.length > 0) {
+        await supabase.from("screening_times").insert(
+          futureUnique.map((dt) => ({
+            screening_id: target.id,
+            screening_datetime: dt,
+          })),
+        );
+      }
+
+      await supabase
+        .from("screening_times")
+        .delete()
+        .eq("screening_id", other.id);
+      await supabase.from("screenings").delete().eq("id", other.id);
+    }
+
+    return { title: entry.filmTitle, success: true, updated: true };
   } catch (error) {
     return {
       title: entry.filmTitle,

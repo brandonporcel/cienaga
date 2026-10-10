@@ -1,6 +1,6 @@
 # Arquitectura
 
-> Fuente de verdad de flujo de datos y decisiones de arquitectura. Última actualización: 2026-08-15.
+> Fuente de verdad de flujo de datos y decisiones de arquitectura. Última actualización: 2026-10-10.
 
 ## Visión general
 
@@ -89,11 +89,13 @@ scrape-list.ts
       → find/create cinema (enabled=false para nuevos)
       → find/create movie por slug
       → find/create director + link
-      → upsert screening (deduplicado por movie+cinema+text)
-      → insert screening_time (primer día de ventana/rango)
+      → upsert screening identificado por movie+cinema (2026-10-10: antes por movie+cinema+text)
+      → insert/update screening_times
 ```
 
 ⚠️ Los cines nuevos se crean con `enabled=false` porque la lista ES la fuente (no necesitan scraper). Las ventanas "Del X al Y" generan un screening con `screening_times` = primer día a la primera hora indicada; el `screening_time_text` contiene el texto crudo de la nota.
+
+⚠️ **Dedupe (2026-10-10)**: un screening se identifica por `(movie_id, cinema_id)`, NO por el texto. @lamateroric edita la lista constantemente y el texto cambiaba en cada corrida → se insertaba una función nueva por semana. `processEntry` ahora: si una función existente **solapa** instantes exactos con las nuevas fechas → la actualiza (reemplaza times + texto); si no solapa pero la más reciente no tiene fechas futuras (venció) → la reutiliza como target muerto; si no solapa y tiene fechas futuras (función nueva real del mismo cine) → inserta aparte. Al actualizar, absorbe el resto del grupo del mismo (movie, cinema): migra fechas futuras únicas (`> now`, no presentes en el target) y borra los screenings duplicados y sus times. El POST reporta `created`/`updated`/`skipped`/`errors`. Limpieza histórica ejecutada 2026-10-10 (1219 → 971 screenings).
 
 ## Flujo 5 — Dashboard personalizado
 
