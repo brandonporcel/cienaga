@@ -5,6 +5,7 @@ import L from "leaflet";
 import Link from "next/link";
 
 import "leaflet/dist/leaflet.css";
+import "./cinema-map.css";
 
 import Cinema from "@/types/cinema";
 
@@ -54,13 +55,20 @@ export default function CinemaMap({ cinemas, height = "480px" }: CinemaMapProps)
     <MapContainer
       center={center}
       zoom={12}
+      maxZoom={16}
       scrollWheelZoom
-      className="rounded-xl border z-0"
+      className="cinema-map z-0"
       style={{ height }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={16}
+      />
+      <TileLayer
+        attribution='Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={16}
       />
       {withCoords.map((cinema) => (
         <Marker
