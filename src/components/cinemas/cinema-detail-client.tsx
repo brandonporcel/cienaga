@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import Cinema from "@/types/cinema";
 import Screening from "@/types/screening";
@@ -45,22 +45,9 @@ export default function CinemaDetailClient({
         {cinema.address && (
           <p className="text-muted-foreground text-lg mt-2">{cinema.address}</p>
         )}
-        {cinema.url && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-3 gap-1.5"
-            asChild
-          >
-            <a href={cinema.url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-3.5 w-3.5" />
-              Sitio del cine
-            </a>
-          </Button>
-        )}
       </div>
 
-      <CinemaMapLazy cinemas={[cinema]} height="320px" />
+      <CinemaMapLazy cinemas={[cinema]} height="420px" />
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Funciones en cartelera</h2>

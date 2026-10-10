@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import ProfileUser from "./profile-user";
+import { ROUTES } from "@/config/routes";
 
 const navItems = [
   { name: "Acerca", href: "#about-section" },
   { name: "Cartelera", href: "#cinema-listings-section" },
+  { name: "Cines", href: ROUTES.cinemas.path },
 ];
 
 function Header() {

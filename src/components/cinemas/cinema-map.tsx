@@ -28,7 +28,7 @@ interface CinemaMapProps {
  * Debe importarse con `next/dynamic(..., { ssr: false })` porque Leaflet
  * toca `window` — nunca importar directo desde un server component.
  */
-export default function CinemaMap({ cinemas, height = "400px" }: CinemaMapProps) {
+export default function CinemaMap({ cinemas, height = "480px" }: CinemaMapProps) {
   const withCoords = cinemas.filter(
     (c) => typeof c.lat === "number" && typeof c.lng === "number",
   );
@@ -54,7 +54,7 @@ export default function CinemaMap({ cinemas, height = "400px" }: CinemaMapProps)
     <MapContainer
       center={center}
       zoom={12}
-      scrollWheelZoom={false}
+      scrollWheelZoom
       className="rounded-xl border z-0"
       style={{ height }}
     >
@@ -76,6 +76,14 @@ export default function CinemaMap({ cinemas, height = "400px" }: CinemaMapProps)
                   {cinema.address}
                 </p>
               )}
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${cinema.lat},${cinema.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline text-xs block mt-1"
+              >
+                Google Maps ↗
+              </a>
               <Link
                 href={`/cinemas/${cinema.slug}`}
                 className="text-primary underline text-xs block mt-1"

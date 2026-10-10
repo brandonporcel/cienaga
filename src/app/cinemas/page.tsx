@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { createClientForServer } from "@/lib/supabase/server";
-import Cinema from "@/types/cinema";
-import CinemaMapLazy from "@/components/cinemas/cinema-map-lazy";
+import CinemasBrowser, {
+  CinemaWithCount,
+} from "@/components/cinemas/cinemas-browser";
 import { Button } from "@/components/ui/button";
-
-interface CinemaWithCount extends Cinema {
-  futureCount: number;
-}
 
 export const metadata = {
   title: "Cines | Ciénaga",
@@ -48,11 +45,18 @@ export default async function CinemasPage() {
     .map((c) => ({ ...c, futureCount: counts.get(c.id) ?? 0 }))
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
+  // Si el usuario está logueado, "Volver al inicio" va al dashboard;
+  // si no, al home (el middleware ya protege /dashboard).
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const backHref = user ? "/dashboard" : "/";
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-[1320px] mx-auto px-4 py-8 md:py-12">
         <div className="mb-8">
-          <Link href="/">
+          <Link href={backHref}>
             <Button variant="ghost" size="sm" className="mb-4 gap-2">
               <ArrowLeft className="h-4 w-4" />
               Volver al inicio
@@ -64,36 +68,7 @@ export default async function CinemasPage() {
           </p>
         </div>
 
-        <CinemaMapLazy cinemas={list} height="380px" />
-
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {list.map((cinema) => (
-            <Link
-              key={cinema.id}
-              href={`/cinemas/${cinema.slug}`}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card p-4 hover:shadow-lg transition-shadow duration-200"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{cinema.name}</p>
-                  {cinema.address && (
-                    <p className="text-sm text-muted-foreground truncate">
-                      {cinema.address}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <span className="text-sm text-muted-foreground flex-shrink-0">
-                {cinema.futureCount === 1
-                  ? "1 función"
-                  : `${cinema.futureCount} funciones`}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <CinemasBrowser cinemas={list} />
       </div>
     </div>
   );
