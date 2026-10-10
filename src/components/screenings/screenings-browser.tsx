@@ -54,6 +54,7 @@ export default function ScreeningsBrowser({
   const [selectedScreening, setSelectedScreening] =
     useState<Screening | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cinemaQuery, setCinemaQuery] = useState("");
   const [selectedCinemas, setSelectedCinemas] = useState<Set<string>>(
     new Set(),
   );
@@ -161,7 +162,11 @@ export default function ScreeningsBrowser({
           </div>
 
           {/* Cinema Multi-Select */}
-          <DropdownMenu>
+          <DropdownMenu
+            onOpenChange={(open) => {
+              if (!open) setCinemaQuery("");
+            }}
+          >
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-1" />
@@ -176,18 +181,43 @@ export default function ScreeningsBrowser({
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuContent align="start" className="w-72">
               <DropdownMenuLabel>Cines</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {cinemas.map((cinema) => (
-                <DropdownMenuCheckboxItem
-                  key={cinema.name}
-                  checked={selectedCinemas.has(cinema.name)}
-                  onCheckedChange={() => toggleCinema(cinema.name)}
-                >
-                  {cinema.name}
-                </DropdownMenuCheckboxItem>
-              ))}
+              <div className="relative px-2 pb-2">
+                <Search className="absolute left-4 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar cine..."
+                  value={cinemaQuery}
+                  onChange={(e) => setCinemaQuery(e.target.value)}
+                  className="pl-8 h-8"
+                  onSelect={(e) => e.preventDefault()}
+                />
+              </div>
+              <DropdownMenuSeparator />
+              {cinemas
+                .filter((cinema) =>
+                  cinema.name
+                    .toLowerCase()
+                    .includes(cinemaQuery.toLowerCase()),
+                )
+                .map((cinema) => (
+                  <DropdownMenuCheckboxItem
+                    key={cinema.name}
+                    checked={selectedCinemas.has(cinema.name)}
+                    onCheckedChange={() => toggleCinema(cinema.name)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {cinema.name}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              {cinemas.filter((cinema) =>
+                cinema.name.toLowerCase().includes(cinemaQuery.toLowerCase()),
+              ).length === 0 && (
+                <div className="px-4 py-2 text-sm text-muted-foreground">
+                  Sin resultados para &quot;{cinemaQuery}&quot;
+                </div>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
