@@ -46,7 +46,10 @@ create table public.cinemas (
   enabled     boolean not null default true,
   slug        text not null unique,
   last_scraped timestamptz,
-  scraping_frequency interval DEFAULT '12 hours'
+  scraping_frequency interval DEFAULT '12 hours',
+  address     text,              -- dirección para el mapa (geocoded o manual)
+  lat         double precision,  -- coordenadas para Leaflet
+  lng         double precision
 );
 
 

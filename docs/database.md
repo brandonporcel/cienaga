@@ -30,6 +30,10 @@
 | enabled | boolean NOT NULL default true | ⚠️ 8 cines enabled en seed pero solo Malba/Lumiton tienen scraper |
 | last_scraped | timestamptz | |
 | scraping_frequency | interval default '12 hours' | |
+| address | text | Dirección para el mapa (geocoded vía Nominatim o manual) |
+| lat / lng | double precision | Coordenadas para Leaflet (página `/cinemas`). Null → no se muestra en el mapa |
+
+- ✅ Migración aplicada en prod (2026-10-10): `alter table public.cinemas add column address text; add column lat double precision; add column lng double precision;`. Backfill manual vía Nominatim (geocode por dirección + validación de plausibilidad contra coords esperadas). Cines sin dirección fija (cineclubes itinerantes, ciclos únicos) quedan con `lat/lng` null → no aparecen en el mapa.
 
 ### `directors`
 

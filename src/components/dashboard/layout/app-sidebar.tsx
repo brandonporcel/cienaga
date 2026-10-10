@@ -8,6 +8,7 @@ import {
   IconChairDirector,
   IconDashboard,
   IconMail,
+  IconMap2,
   IconSeedling,
   IconSettings,
 } from "@tabler/icons-react";
@@ -39,6 +40,11 @@ const data: Record<string, NavItem[]> = {
       title: "Directores",
       href: ROUTES.directors.path,
       icon: IconChairDirector,
+    },
+    {
+      title: "Cines",
+      href: ROUTES.cinemas.path,
+      icon: IconMap2,
     },
     {
       title: "Configuración",

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   Clock,
@@ -186,15 +187,19 @@ export default function ScreeningCard({
           </p>
         )}
 
-        {/* Cine */}
-        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+        {/* Cine → navega al detalle del cine */}
+        <Link
+          href={`/cinemas/${c.slug}`}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5 hover:text-primary transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
           {c.image_url ? (
             <img src={c.image_url} alt={c.name} className="h-3.5 w-auto" />
           ) : (
             <MapPin className="h-3 w-3" />
           )}
           <span className="truncate">{c.name}</span>
-        </div>
+        </Link>
 
         {/* Ver más */}
         {onOpenDetail && (

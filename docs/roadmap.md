@@ -67,6 +67,14 @@
 
 ## Cambios recientes
 
+### 2026-10-10 — Pantalla "Cines" con mapa + backfill de coordenadas
+
+- **`/cinemas`** (público): listado de cines con funciones en cartelera (conteo futuro) + mapa Leaflet (client lazy, `react-leaflet` v5 + React 19). **`/cinemas/[slug]`**: detalle con dirección, link al sitio, mapa con pin y grilla de funciones via `/api/screenings/all?cinema_id=X`.
+- **Navegación**: el nombre del cine en la card de funciones (`screenings/card.tsx`) ahora enlaza a `/cinemas/[slug]`; ítem "Cines" en la sidebar del dashboard.
+- **`cinemas`**: columnas nuevas `address`, `lat`, `lng` (migración `db/migrations/001-cinemas-geo.sql`, aplicada en prod).
+- **Backfill**: geocoded por dirección vía Nominatim (~36/69 cines con coords; 38 de los cines con funciones futuras en el mapa). Validación de plausibilidad (coords vs esperadas ±0.3°) para evitar falsos positivos de topónimos repetidos (ej: Teatro San Martín había resuelto a San Martín/santa Fe; "Roque Sáenz Peña 1150" a Junín).
+- **Cines sin sede fija** (quedan sin coords, no aparecen en el mapa): cineclubes itinerantes y ciclos únicos sin dirección pública (ej: **La Bomba cine** — proyecta en bares, confirmado por su propio Instagram; Sala Norita, Cine Filo, Macabras, Sala Lúcida, Errante Cine, Cine Club Adrogué, Cine con puré, etc.). Encargarse SOLO si se les encuentra dirección estable.
+
 ### 2026-09-09 — Auto-follow al importar CSV + feedback post-import en /directors
 
 - **`saveMoviesAction` ahora evalúa el auto-follow al subir**: para las pelis del CSV que ya tienen `director_id` en `movies`, agrupa por director, evalúa `shouldFollowDirector` con TODAS las user_movies del usuario (no solo el lote) y crea `user_directors` con `source: auto` al instante, respetando overrides manuales (no pisa `source: manual`). Lógica nueva `syncAutoFollows` en `src/app/actions/movies.ts`, DRY con `director-preference.ts`.

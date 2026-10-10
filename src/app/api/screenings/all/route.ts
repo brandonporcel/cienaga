@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { createClientForServer } from "@/lib/supabase/server";
 import Screening from "@/types/screening";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClientForServer();
+  const { searchParams } = new URL(request.url);
+  const cinemaId = searchParams.get("cinema_id");
 
   // Solo screenings con al menos un horario futuro: el filtro sobre
   // `screening_times` con !inner hace inner join (descartando screenings
@@ -12,13 +14,21 @@ export async function GET() {
   // filtrados a los futuros. Sin esto, .limit(200) sin order traía las
   // primeras por orden de inserción (viejas) y escondía las nuevas.
   const now = new Date();
-  const { data: screenings, error } = await supabase
+  let query = supabase
     .from("screenings")
     .select(
       "*, screening_times!inner(*), movies(*, directors(id, name)), cinemas(*)",
     )
-    .gte("screening_times.screening_datetime", now.toISOString())
-    .limit(1000) as { data: Screening[] | null; error: unknown };
+    .gte("screening_times.screening_datetime", now.toISOString());
+
+  if (cinemaId) {
+    query = query.eq("cinema_id", Number(cinemaId));
+  }
+
+  const { data: screenings, error } = (await query.limit(1000)) as {
+    data: Screening[] | null;
+    error: unknown;
+  };
 
   if (error || !screenings) {
     return NextResponse.json({ data: [] });

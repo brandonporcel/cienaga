@@ -4,4 +4,7 @@ export default interface Cinema {
   url: string;
   image_url: string;
   slug: string;
+  address?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
