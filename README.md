@@ -10,7 +10,6 @@
   <a href="#-características-principales">Características</a> •
   <a href="#-cómo-funciona">Cómo funciona</a> •
   <a href="#-instalación">Instalación</a> •
-  <a href="#-api-endpoints">API</a> •
   <a href="#-arquitectura">Arquitectura</a>
 </p>
 
@@ -51,19 +50,7 @@
 
 ---
 
-## 📂 Arquitectura de datos
-
-### Base de datos (Supabase)
-
-| Tabla            | Descripción                         | Campos clave                                                    |
-| ---------------- | ----------------------------------- | --------------------------------------------------------------- |
-| `users`          | Información de usuarios             | `id`, `email`, `has_upload_csv`                                 |
-| `movies`         | Películas con metadatos completos   | `title`, `year`, `rating`, `director_id`, `poster_url`          |
-| `directors`      | Directores con URLs de Letterboxd   | `name`, `url`, `image_url`                                      |
-| `user_movies`    | Películas de usuarios con ratings   | `user_id`, `movie_id`, `rating`                                 |
-| `user_directors` | Directores seguidos (auto-generado) | `user_id`, `director_id`                                        |
-| `cinemas`        | Cines monitoreados                  | `name`, `url`                                                   |
-| `screenings`     | Eventos con detalles completos      | `movie_id`, `cinema_id`, `screening_time`, `event_type`, `room` |
+## 📂 Arquitectura
 
 ### Scripts automatizados
 
@@ -151,53 +138,11 @@ pnpm type-check                   # Verificar TypeScript
 
 ---
 
-## 🌐 API Endpoints
+## 🎬 Cines y cartelera
 
-### Scraping automatizado (protegidos con `Authorization: Bearer <CRON_SECRET_KEY>`)
+La app incluye una [pantalla pública de cines](/cinemas) con mapa, donde cada cine tiene su página con dirección, link al sitio y sus próximas funciones. La cartelera se arma con la [lista de funciones en Buenos Aires](https://letterboxd.com/lamateroric/list/funciones-en-buenos-aires/) de **[@lamateroric](https://letterboxd.com/lamateroric/)**: un scraping semanal (GitHub Actions) descubre los cines y sus funciones automáticamente, y cada cine detectado queda disponible en la app. Los cines con scraper dedicado (Malba, Lumiton, etc.) aportan funciones con horarios y salas detalladas.
 
-```
-GET  /api/movies/pending           # Películas sin director ni poster
-GET  /api/movies/count-pending     # Verificar si hay trabajo pendiente
-POST /api/movies/batch             # Asignar directores y metadatos
-GET  /api/directors/pending        # Directores sin tmdb_id
-POST /api/directors/batch-update   # Actualizar perfiles de directores
-POST /api/screenings/batch         # Guardar eventos de cines en lote
-POST /api/list/batch                # Guardar funciones desde lista Letterboxd
-POST /api/users/bulk               # Emails de usuarios por ids
-POST /api/notifications/log        # Registrar envíos de notificaciones
-```
-
-### Públicos
-
-```
-GET  /api/cinemas                  # Cines monitoreados (?enabled=true)
-GET  /api/screenings/featured      # Funciones para la home
-```
-
-### Server actions (sesión del usuario)
-
-- `saveMoviesAction` — importación de CSVs de Letterboxd
-- `getPersonalizedScreenings` — dashboard personalizado
-
-**Validaciones**: Los endpoints usan Zod para validación robusta de datos
-
----
-
-## 🎬 Cines monitoreados
-
-| Cine                    | URL                                                            | Estado         |
-| ----------------------- | -------------------------------------------------------------- | -------------- |
-| **Malba**               | https://malba.org.ar/cine/                                     | ✅             |
-| **Cine York (Lumiton)** | https://lumiton.ar/                                            | ✅             |
-| **Sala Lugones**        | https://complejoteatral.gob.ar/cine                            | 🔄 Sin scraper |
-| **CCK**                 | https://palaciolibertad.gob.ar/cine/                           | 🔄 Sin scraper |
-| **Gaumont**             | https://www.cinegaumont.ar/                                    | 🔄 Sin scraper |
-| **Cine Lorca**          | https://www.lanacion.com.ar/cartelera-de-cine/sala/lorca-sa110 | 🔄 Sin scraper |
-| **Cine Cosmos**         | https://www.cinecosmos.uba.ar/                                 | 🔄 Sin scraper |
-
-Los cines sin scraper están deshabilitados en `db/seed.sql` (`enabled = false`) para que el workflow de carteleras no falle.
-
-Además, la **lista de funciones** descubre cines nuevos automáticamente (Cine Lorca, MALBA, CCK, Cine Arte Cacodelphia, Centro Cultural Recoleta, etc.). Se crean con `enabled = false` en la DB — la lista es la fuente de datos para estos cines.
+Algunos de los espacios alcanzados: MALBA, Cine Lorca, CCK, Cine Arte Cacodelphia, Centro Cultural Recoleta, Cine Gaumont y decenas de cineclubes porteños.
 
 ---
 
