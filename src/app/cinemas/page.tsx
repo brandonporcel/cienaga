@@ -17,32 +17,37 @@ export default async function CinemasPage() {
 
   const now = new Date().toISOString();
 
-  // Cines + conteo de funciones futuras (solo los que tienen algo en cartelera)
+  // Cines + películas únicas con funciones futuras. El `!inner` en
+  // screening_times hace inner join: sin él, el filtro gte traía TODAS
+  // las screenings (incluidas las viejas sin funciones futuras) y el
+  // contador de películas quedaba inflado.
   const { data: screenings, error: screeningsError } = await supabase
     .from("screenings")
-    .select("cinema_id, screening_times(screening_datetime)")
-    .filter("screening_times.screening_datetime", "gte", now);
+    .select("cinema_id, movie_id, screening_times!inner(screening_datetime)")
+    .gte("screening_times.screening_datetime", now);
 
   if (screeningsError) {
     console.error("Error fetching screenings:", screeningsError);
   }
 
-  const counts = new Map<number, number>();
+  const movieCounts = new Map<number, Set<string>>();
   for (const s of screenings ?? []) {
-    counts.set(s.cinema_id, (counts.get(s.cinema_id) ?? 0) + 1);
+    const set = movieCounts.get(s.cinema_id) ?? new Set<string>();
+    set.add(s.movie_id);
+    movieCounts.set(s.cinema_id, set);
   }
 
   const { data: cinemas, error } = await supabase
     .from("cinemas")
     .select("*")
-    .in("id", [...counts.keys()]);
+    .in("id", [...movieCounts.keys()]);
 
   if (error) {
     console.error("Error fetching cinemas:", error);
   }
 
   const list: CinemaWithCount[] = (cinemas ?? [])
-    .map((c) => ({ ...c, futureCount: counts.get(c.id) ?? 0 }))
+    .map((c) => ({ ...c, movieCount: movieCounts.get(c.id)?.size ?? 0 }))
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
   // Si el usuario está logueado, "Volver al inicio" va al dashboard;
@@ -59,12 +64,14 @@ export default async function CinemasPage() {
           <Link href={backHref}>
             <Button variant="ghost" size="sm" className="mb-4 gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Volver al inicio
+              Volver
             </Button>
           </Link>
           <h1 className="text-3xl md:text-5xl font-semibold">Cines</h1>
           <p className="text-muted-foreground text-lg mt-2">
-            Cines y espacios de Buenos Aires con funciones en cartelera
+            {list.length === 1
+              ? "1 cine con funciones en cartelera"
+              : `${list.length} cines con funciones en cartelera`}
           </p>
         </div>
 

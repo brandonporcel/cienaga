@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import Cinema from "@/types/cinema";
 
 export interface CinemaWithCount extends Cinema {
-  futureCount: number;
+  movieCount: number;
 }
 
 interface CinemasBrowserProps {
@@ -73,9 +73,9 @@ export default function CinemasBrowser({ cinemas }: CinemasBrowserProps) {
                 </div>
               </div>
               <span className="text-sm text-muted-foreground flex-shrink-0">
-                {cinema.futureCount === 1
-                  ? "1 función"
-                  : `${cinema.futureCount} funciones`}
+                {cinema.movieCount === 1
+                  ? "1 película"
+                  : `${cinema.movieCount} películas`}
               </span>
             </Link>
           ))}

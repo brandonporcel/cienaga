@@ -1,8 +1,14 @@
 # Roadmap
 
-> Bugs conocidos y pendientes. Última actualización: 2026-10-10.
+> Bugs conocidos y pendientes. Última actualización: 2026-10-11.
 
 ## Bugs conocidos (priorizados)
+
+### P1 — ~~Contador de películas inflado en /cinemas~~ ✅ resuelto 2026-10-11
+
+- ~~El contador de películas por cine en `/cinemas` usaba `.filter("screening_times.screening_datetime", "gte", now)` SIN `!inner` en el select: traía TODAS las screenings (971, incluidas ~629 viejas sin funciones futuras) y el conteo de películas únicas quedaba inflado (Alianza Francesa mostraba 3 pero su detalle decía "no hay funciones").~~
+- **Solución**: `select("cinema_id, movie_id, screening_times!inner(screening_datetime)")` + `.gte("screening_times.screening_datetime", now)` — el `!inner` hace inner join y solo cuenta cines/películas con funciones futuras (mismo criterio que `/api/screenings/all`). Verificado contra DB: 342 screenings, Alianza Francesa = 5 películas.
+- **Estado**: cerrado.
 
 ### P1 — ~~Funciones duplicadas por cada corrida de scrape-list~~ ✅ resuelto 2026-10-10
 
