@@ -10,7 +10,8 @@ type Route =
   | "help"
   | "settings"
   | "notifications"
-  | "cinemas";
+  | "cinemas"
+  | "screenings";
 
 export const ROUTES: Record<Route, RouteObject> = {
   home: { path: "/" },
@@ -21,4 +22,5 @@ export const ROUTES: Record<Route, RouteObject> = {
   settings: { path: "/settings", label: "Configuración" },
   notifications: { path: "/notifications", label: "Notificaciones" },
   cinemas: { path: "/cinemas", label: "Cines" },
+  screenings: { path: "/screenings", label: "Todas" },
 } as const;

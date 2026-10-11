@@ -4,9 +4,11 @@ import * as React from "react";
 import {
   IconBell,
   IconBrandGithub,
+  IconBrandInstagram,
   IconBrandLinkedin,
   IconChairDirector,
   IconDashboard,
+  IconList,
   IconMail,
   IconMap2,
   IconSeedling,
@@ -37,6 +39,11 @@ const data: Record<string, NavItem[]> = {
       icon: IconDashboard,
     },
     {
+      title: "Todas",
+      href: ROUTES.screenings.path,
+      icon: IconList,
+    },
+    {
       title: "Directores",
       href: ROUTES.directors.path,
       icon: IconChairDirector,
@@ -63,6 +70,12 @@ const data: Record<string, NavItem[]> = {
       href: "mailto:brandon7.7porcel@gmail.com",
       icon: IconMail,
       items: [
+        {
+          icon: IconBrandInstagram,
+          title: "Instagram",
+          href: "https://instagram.com/brandonporcel",
+          isExternal: true,
+        },
         {
           icon: IconBrandLinkedin,
           title: "LinkedIn",

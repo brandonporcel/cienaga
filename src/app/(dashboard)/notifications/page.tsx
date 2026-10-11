@@ -1,6 +1,5 @@
-import { Bell, Film } from "lucide-react";
+import { Bell } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -71,28 +70,6 @@ export default function Notifications() {
             <div>
               <Button disabled>Guardar cambios</Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Film className="w-5 h-5" />
-              Cines
-            </CardTitle>
-            <CardDescription>
-              Cines que monitorea Ciénaga para las funciones de tus directores.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">Malba</Badge>
-              <Badge variant="secondary">Lumiton</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              Los cines se suman automáticamente a medida que Ciénaga los
-              detecta.
-            </p>
           </CardContent>
         </Card>
       </div>

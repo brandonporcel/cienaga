@@ -8,7 +8,11 @@ import Screening from "@/types/screening";
 import ScreeningsBrowser from "@/components/screenings/screenings-browser";
 import { Button } from "@/components/ui/button";
 
-export default function ScreeningsPageContent() {
+export default function ScreeningsPageContent({
+  backHref,
+}: {
+  backHref: string;
+}) {
   const searchParams = useSearchParams();
   const highlightSlug = searchParams.get("movie");
 
@@ -16,10 +20,10 @@ export default function ScreeningsPageContent() {
     <div className="min-h-screen bg-background">
       <div className="max-w-[1320px] mx-auto px-4 py-8 md:py-12">
         <div className="mb-8">
-          <Link href="/">
+          <Link href={backHref}>
             <Button variant="ghost" size="sm" className="mb-4 gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Volver al inicio
+              Volver
             </Button>
           </Link>
           <h1 className="text-3xl md:text-5xl font-semibold">

@@ -28,7 +28,7 @@ export default async function Settings() {
         <div className="rounded-lg border text-card-foreground shadow-sm relative overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6">
             <div className="flex items-center gap-2">
-              <Mail className="w-6 h-6 text-white" />
+              <Mail className="w-6 h-6" />
               <h3 className="text-base font-semibold tracking-tight">
                 Correo electrónico
               </h3>

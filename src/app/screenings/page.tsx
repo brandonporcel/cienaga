@@ -1,10 +1,17 @@
-"use client";
-
 import { Suspense } from "react";
 
+import { createClientForServer } from "@/lib/supabase/server";
 import ScreeningsPageContent from "./content";
 
-export default function ScreeningsPage() {
+export default async function ScreeningsPage() {
+  const supabase = await createClientForServer();
+
+  // "Volver" va al dashboard si hay sesión; si no, al home
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const backHref = user ? "/dashboard" : "/";
+
   return (
     <Suspense
       fallback={
@@ -32,7 +39,7 @@ export default function ScreeningsPage() {
         </div>
       }
     >
-      <ScreeningsPageContent />
+      <ScreeningsPageContent backHref={backHref} />
     </Suspense>
   );
 }
