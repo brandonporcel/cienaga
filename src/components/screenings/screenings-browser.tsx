@@ -5,10 +5,12 @@ import { Filter, LayoutGrid, List, Search } from "lucide-react";
 
 import Screening from "@/types/screening";
 import Cinema from "@/types/cinema";
+import { Director } from "@/types/director";
 import { movieSlug } from "@/lib/utils";
 import ScreeningCard, {
   ScreeningDetailModal,
 } from "@/components/screenings/card";
+import { DirectorDetailDialog } from "@/components/directors/detail-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +39,8 @@ interface ScreeningsBrowserProps {
   loadScreenings: () => Promise<Screening[]>;
   // Slug de película para deep-link (?movie=...): hace scroll y abre el modal
   highlightSlug?: string | null;
+  // Si el usuario tiene sesión o no (para el dialog de director)
+  isLoggedIn?: boolean;
 }
 
 /**
@@ -47,12 +51,16 @@ interface ScreeningsBrowserProps {
 export default function ScreeningsBrowser({
   loadScreenings,
   highlightSlug,
+  isLoggedIn = true,
 }: ScreeningsBrowserProps) {
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [cinemas, setCinemas] = useState<Cinema[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedScreening, setSelectedScreening] =
     useState<Screening | null>(null);
+  const [selectedDirector, setSelectedDirector] = useState<Director | null>(
+    null,
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [cinemaQuery, setCinemaQuery] = useState("");
   const [selectedCinemas, setSelectedCinemas] = useState<Set<string>>(
@@ -362,7 +370,20 @@ export default function ScreeningsBrowser({
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {screening.movies.directors?.name}
+                    {screening.movies.directors ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDirector(screening.movies.directors!);
+                        }}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {screening.movies.directors.name}
+                      </button>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
                     {screening.cinemas.name}
@@ -402,6 +423,7 @@ export default function ScreeningsBrowser({
               <ScreeningCard
                 screening={screening}
                 onOpenDetail={setSelectedScreening}
+                onOpenDirector={setSelectedDirector}
               />
             </div>
           ))}
@@ -414,6 +436,19 @@ export default function ScreeningsBrowser({
           screening={selectedScreening}
           open={!!selectedScreening}
           onClose={() => setSelectedScreening(null)}
+          onOpenDirector={setSelectedDirector}
+        />
+      )}
+
+      {/* Modal de director (sigue al director desde cualquier función) */}
+      {selectedDirector && (
+        <DirectorDetailDialog
+          director={selectedDirector}
+          open={!!selectedDirector}
+          onOpenChange={(open) => {
+            if (!open) setSelectedDirector(null);
+          }}
+          isLoggedIn={isLoggedIn}
         />
       )}
     </>

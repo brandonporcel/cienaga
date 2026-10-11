@@ -73,6 +73,13 @@
 
 ## Cambios recientes
 
+### 2026-10-11 — Seguir directores desde /screenings + batch de UX en cines/dashboard
+
+- **Seguir directores desde las funciones**: el nombre del director (grilla, tabla y modal de detalle) abre `DirectorDetailDialog` reutilizando el modal de `/directors`. `getDirectorDetail` ahora funciona sin sesión (director público + `source: null` + filmografía vacía); sin login el botón es "Iniciá sesión para seguir" → `/login`. El follow se guarda como `source: 'manual'` (nunca lo pisa el recálculo).
+- **Detalle de cine**: columnas `website_url`/`instagram_url` (migración `005-cinemas-social-links.sql`, aplicada en prod) + botones "Sitio web"/"Instagram". Ojo: `cinemas.url` es placeholder de la app para cines auto-descubiertos, por eso los enlaces se completan a mano (MALBA: malba.org.ar + @museomalba; Lumiton: lumiton.ar).
+- **Contador de películas en /cinemas**: fix de query: el filtro sobre `screening_times` sin `!inner` traía TODAS las screenings (971, incluidas viejas sin funciones futuras); ahora con `screening_times!inner(...)` + `.gte` cuenta películas únicas reales (342 screenings, verificado contra DB). Subtítulo con "N cines con funciones en cartelera".
+- **Sidebar**: ítem "Todas" → `/screenings`, Instagram en Contacto. "Volver" en `/screenings` y `/cinemas` va a `/dashboard` con sesión, si no a `/`. `/notifications` sin sección "Cines". Icono visible de Correo en `/settings` (estaba `text-white`).
+
 ### 2026-10-10 — Pantalla "Cines" con mapa + backfill de coordenadas
 
 - **`/cinemas`** (público): listado de cines con funciones en cartelera (conteo futuro) + mapa Leaflet (client lazy, `react-leaflet` v5 + React 19). **`/cinemas/[slug]`**: detalle con dirección, link al sitio, mapa con pin y grilla de funciones via `/api/screenings/all?cinema_id=X`.

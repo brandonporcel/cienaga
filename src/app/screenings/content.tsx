@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 
 export default function ScreeningsPageContent({
   backHref,
+  isLoggedIn,
 }: {
   backHref: string;
+  isLoggedIn: boolean;
 }) {
   const searchParams = useSearchParams();
   const highlightSlug = searchParams.get("movie");
@@ -36,6 +38,7 @@ export default function ScreeningsPageContent({
 
         <ScreeningsBrowser
           highlightSlug={highlightSlug}
+          isLoggedIn={isLoggedIn}
           loadScreenings={async (): Promise<Screening[]> => {
             const res = await fetch("/api/screenings/all");
             if (!res.ok) return [];

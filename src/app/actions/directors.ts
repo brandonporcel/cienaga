@@ -9,6 +9,7 @@ import {
 import { MESSAGES } from "@/lib/constants/messages";
 import handleServerError from "@/lib/errors/server";
 import { getUserOrThrow } from "@/lib/helpers/get-server-user";
+import { createClientForServer } from "@/lib/supabase/server";
 
 async function getDirectors(): Promise<{
   directors: Director[];
@@ -220,17 +221,12 @@ function importsWindowStart(): string {
 }
 
 async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {
-  const { supabase, user } = await getUserOrThrow();
+  const supabase = await createClientForServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // Fuente de la relación (auto / manual)
-  const { data: relation } = await supabase
-    .from("user_directors")
-    .select("source")
-    .eq("user_id", user.id)
-    .eq("director_id", directorId)
-    .maybeSingle();
-
-  // Datos del director
+  // Datos del director (público)
   const { data: director, error: directorError } = await supabase
     .from("directors")
     .select("*")
@@ -244,40 +240,56 @@ async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {
     });
   }
 
-  // Filmografía vista por el usuario con su rating
-  const { data: watchedFilms, error: filmsError } = await supabase
-    .from("user_movies")
-    .select("rating, movies!inner(title, year, poster_url)")
-    .eq("user_id", user.id)
-    .eq("movies.director_id", directorId)
-    .order("rating", { ascending: false });
+  // /screenings es público: sin sesión se ve el director pero sin relación
+  // ni filmografía del usuario (source null + listas vacías).
+  let source: DirectorSource | null = null;
+  let filmography: DirectorDetail["filmography"] = [];
 
-  if (filmsError) {
-    return handleServerError({
-      error: filmsError,
-      message: MESSAGES.errors.gettingDirectors,
-    });
+  if (user) {
+    // Fuente de la relación (auto / manual)
+    const { data: relation } = await supabase
+      .from("user_directors")
+      .select("source")
+      .eq("user_id", user.id)
+      .eq("director_id", directorId)
+      .maybeSingle();
+    source = (relation?.source as DirectorSource) ?? null;
+
+    // Filmografía vista por el usuario con su rating
+    const { data: watchedFilms, error: filmsError } = await supabase
+      .from("user_movies")
+      .select("rating, movies!inner(title, year, poster_url)")
+      .eq("user_id", user.id)
+      .eq("movies.director_id", directorId)
+      .order("rating", { ascending: false });
+
+    if (filmsError) {
+      return handleServerError({
+        error: filmsError,
+        message: MESSAGES.errors.gettingDirectors,
+      });
+    }
+
+    filmography =
+      (watchedFilms as unknown as
+        | {
+            rating: number | null;
+            movies: { title: string; year: number | null; poster_url: string | null };
+          }[]
+        | null)
+        ?.map((film) => ({
+          title: film.movies.title,
+          year: film.movies.year,
+          poster_url: film.movies.poster_url,
+          rating: film.rating,
+        })) ?? [];
   }
-
-  const filmography =
-    (watchedFilms as unknown as
-      | {
-          rating: number | null;
-          movies: { title: string; year: number | null; poster_url: string | null };
-        }[]
-      | null)
-      ?.map((film) => ({
-        title: film.movies.title,
-        year: film.movies.year,
-        poster_url: film.movies.poster_url,
-        rating: film.rating,
-      })) ?? [];
 
   const metrics = getDirectorMetrics(filmography);
 
   return {
     director: director as Director,
-    source: (relation?.source as DirectorSource) ?? null,
+    source,
     metrics,
     filmography,
   };

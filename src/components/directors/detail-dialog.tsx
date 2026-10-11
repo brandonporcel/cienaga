@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Loader2, Star, Volume2, UserMinus } from "lucide-react";
+import Link from "next/link";
+import { Loader2, LogIn, Star, Volume2, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -111,11 +112,13 @@ export function DirectorDetailDialog({
   open,
   onOpenChange,
   onPreferenceChanged,
+  isLoggedIn = true,
 }: {
   director: Director;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPreferenceChanged?: (directorId: string, source: DirectorSource | null) => void;
+  isLoggedIn?: boolean;
 }) {
   const [detail, setDetail] = useState<DirectorDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -232,7 +235,19 @@ export function DirectorDetailDialog({
             )}
 
             <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-              {source === null ? (
+              {!isLoggedIn ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  asChild
+                  className="cursor-pointer"
+                >
+                  <Link href="/login">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Iniciá sesión para seguir
+                  </Link>
+                </Button>
+              ) : source === null ? (
                 <Button
                   variant="default"
                   size="sm"

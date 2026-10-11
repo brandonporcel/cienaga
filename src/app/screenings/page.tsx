@@ -39,7 +39,7 @@ export default async function ScreeningsPage() {
         </div>
       }
     >
-      <ScreeningsPageContent backHref={backHref} />
+      <ScreeningsPageContent backHref={backHref} isLoggedIn={!!user} />
     </Suspense>
   );
 }

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import Screening, { ScreeningTime } from "@/types/screening";
+import { Director } from "@/types/director";
 import { movieSlug } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,11 +109,13 @@ function linkify(text: string): ReactNode[] {
 interface ScreeningCardProps {
   screening: Screening;
   onOpenDetail?: (s: Screening) => void;
+  onOpenDirector?: (d: Director) => void;
 }
 
 export default function ScreeningCard({
   screening,
   onOpenDetail,
+  onOpenDirector,
 }: ScreeningCardProps) {
   const m = screening.movies;
   const c = screening.cinemas;
@@ -174,7 +177,20 @@ export default function ScreeningCard({
           {m.title}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {m.directors?.name}
+          {m.directors && onOpenDirector ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenDirector(m.directors!);
+              }}
+              className="hover:text-primary transition-colors"
+            >
+              {m.directors.name}
+            </button>
+          ) : (
+            m.directors?.name
+          )}
           {m.year ? ` · ${m.year}` : ""}
         </p>
 
@@ -223,12 +239,14 @@ interface ScreeningDetailProps {
   screening: Screening;
   open: boolean;
   onClose: () => void;
+  onOpenDirector?: (d: Director) => void;
 }
 
 export function ScreeningDetailModal({
   screening,
   open,
   onClose,
+  onOpenDirector,
 }: ScreeningDetailProps) {
   const m = screening.movies;
   const c = screening.cinemas;
@@ -289,7 +307,17 @@ export function ScreeningDetailModal({
           {/* Title block */}
           <h2 className="text-2xl font-bold leading-tight">{m.title}</h2>
           <p className="text-muted-foreground mt-0.5">
-            {m.directors?.name}
+            {m.directors && onOpenDirector ? (
+              <button
+                type="button"
+                onClick={() => onOpenDirector(m.directors!)}
+                className="hover:text-primary transition-colors"
+              >
+                {m.directors.name}
+              </button>
+            ) : (
+              m.directors?.name
+            )}
             {m.year ? ` · ${m.year}` : ""}
           </p>
 
