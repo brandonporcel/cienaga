@@ -18,15 +18,17 @@ const CinemaMap = dynamic(() => import("@/components/cinemas/cinema-map"), {
 interface CinemaMapLazyProps {
   cinemas: Cinema[];
   height?: string;
+  showCineLink?: boolean;
 }
 
 export default function CinemaMapLazy({
   cinemas,
-  height = "400px",
+  height = "480px",
+  showCineLink = true,
 }: CinemaMapLazyProps) {
   return (
     <div style={{ height }}>
-      <CinemaMap cinemas={cinemas} height={height} />
+      <CinemaMap cinemas={cinemas} height={height} showCineLink={showCineLink} />
     </div>
   );
 }

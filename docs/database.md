@@ -32,8 +32,11 @@
 | scraping_frequency | interval default '12 hours' | |
 | address | text | Dirección para el mapa (geocoded vía Nominatim o manual) |
 | lat / lng | double precision | Coordenadas para Leaflet (página `/cinemas`). Null → no se muestra en el mapa |
+| website_url | text | Sitio web real del cine. Completado a mano: `cinemas.url` es un placeholder de la app (`cienaga.app/cinemas/...`), NO el sitio real — por eso no hay backfill automático |
+| instagram_url | text | Instagram del cine (nullable; se completa a mano o con scraping futuro) |
 
 - ✅ Migración aplicada en prod (2026-10-10): `alter table public.cinemas add column address text; add column lat double precision; add column lng double precision;`. Backfill manual vía Nominatim (geocode por dirección + validación de plausibilidad contra coords esperadas). Cines sin dirección fija (cineclubes itinerantes, ciclos únicos) quedan con `lat/lng` null → no aparecen en el mapa.
+- ✅ Migración aplicada en prod (2026-10-11): `alter table public.cinemas add column website_url text; add column instagram_url text;`. Completados a mano por ahora: MALBA → `malba.org.ar` + `@museomalba`; Lumiton Usina → `lumiton.ar`.
 
 ### `directors`
 

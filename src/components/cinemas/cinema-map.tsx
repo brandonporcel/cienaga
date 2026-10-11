@@ -22,6 +22,9 @@ const pinIcon = L.divIcon({
 interface CinemaMapProps {
   cinemas: Cinema[];
   height?: string;
+  // El popup incluye un link "Ver cine →" por defecto; en el detalle del
+  // cine sobra porque te manda a la misma pantalla.
+  showCineLink?: boolean;
 }
 
 /**
@@ -29,7 +32,11 @@ interface CinemaMapProps {
  * Debe importarse con `next/dynamic(..., { ssr: false })` porque Leaflet
  * toca `window` — nunca importar directo desde un server component.
  */
-export default function CinemaMap({ cinemas, height = "480px" }: CinemaMapProps) {
+export default function CinemaMap({
+  cinemas,
+  height = "480px",
+  showCineLink = true,
+}: CinemaMapProps) {
   const withCoords = cinemas.filter(
     (c) => typeof c.lat === "number" && typeof c.lng === "number",
   );
@@ -92,12 +99,14 @@ export default function CinemaMap({ cinemas, height = "480px" }: CinemaMapProps)
               >
                 Google Maps ↗
               </a>
-              <Link
-                href={`/cinemas/${cinema.slug}`}
-                className="text-primary underline text-xs block mt-1"
-              >
-                Ver cine →
-              </Link>
+              {showCineLink && (
+                <Link
+                  href={`/cinemas/${cinema.slug}`}
+                  className="text-primary underline text-xs block mt-1"
+                >
+                  Ver cine →
+                </Link>
+              )}
             </div>
           </Popup>
         </Marker>

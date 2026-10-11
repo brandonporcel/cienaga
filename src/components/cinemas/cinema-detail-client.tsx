@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Globe, Instagram } from "lucide-react";
 
 import Cinema from "@/types/cinema";
 import Screening from "@/types/screening";
@@ -45,9 +45,37 @@ export default function CinemaDetailClient({
         {cinema.address && (
           <p className="text-muted-foreground text-lg mt-2">{cinema.address}</p>
         )}
+        {(cinema.website_url || cinema.instagram_url) && (
+          <div className="flex gap-2 mt-3">
+            {cinema.website_url && (
+              <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                <a
+                  href={cinema.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  Sitio web
+                </a>
+              </Button>
+            )}
+            {cinema.instagram_url && (
+              <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                <a
+                  href={cinema.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Instagram className="h-3.5 w-3.5" />
+                  Instagram
+                </a>
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      <CinemaMapLazy cinemas={[cinema]} height="420px" />
+      <CinemaMapLazy cinemas={[cinema]} height="420px" showCineLink={false} />
 
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Funciones en cartelera</h2>

@@ -7,4 +7,6 @@ export default interface Cinema {
   address?: string | null;
   lat?: number | null;
   lng?: number | null;
+  website_url?: string | null;
+  instagram_url?: string | null;
 }

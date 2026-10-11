@@ -49,7 +49,9 @@ create table public.cinemas (
   scraping_frequency interval DEFAULT '12 hours',
   address     text,              -- dirección para el mapa (geocoded o manual)
   lat         double precision,  -- coordenadas para Leaflet
-  lng         double precision
+  lng         double precision,
+  website_url text,              -- sitio web real del cine (no el placeholder de la app)
+  instagram_url text             -- Instagram del cine
 );
 
 
