@@ -314,20 +314,45 @@ function daysInMonth(year: number, month: number): number {
 }
 
 /**
- * Extrae fechas de un patrón con mes nombrado:
- * "20 y 21 de agosto a las 21:00 hs"
+ * Extrae fechas de un patrón con mes nombrado. Soporta varios grupos en la
+ * misma línea separados por ";" o "·", y listas de días con comas e "y":
+ *   "21, 22 y 29 de Noviembre; 5, 6, 12 y 13 de Diciembre a las 17:00 hs"
+ *   "15 y 29 de Noviembre a las 18:00 hs"
+ * La hora puede estar solo al final de la línea y aplica a todos los grupos.
  */
 function extractNamedMonthDates(line: string, year: number): string[] {
-  const m = line.match(NAMED_MONTH_PATTERN);
-  if (!m) return [];
-  const monthName = m[4];
-  const monthIndex = MONTH_MAP[monthName.toLowerCase()] ?? 0;
-  const time = `${m[5].padStart(2, "0")}:${m[6]}`;
-  // Capturar todos los días mencionados (m[1] = primero, m[2] = segundo opcional, m[3] = después de "y")
-  const days: number[] = [parseInt(m[1])];
-  if (m[2]) days.push(parseInt(m[2]));
-  if (m[3]) days.push(parseInt(m[3]));
-  return days.map((d) => formatDatetime(year, monthIndex, d, time));
+  const lineTimes = extractTimesFromLine(line);
+  if (lineTimes.length === 0) return [];
+
+  const dates: string[] = [];
+
+  for (const segment of line.split(/[;·]/)) {
+    // Captura la lista completa de días (no solo el último): "5, 6, 12 y 13".
+    const match = segment.match(
+      /(\d{1,2}(?:\s*(?:,|y)\s*\d{1,2})*)\s+de\s+([a-záéíóú]+)/i,
+    );
+    if (!match) continue;
+
+    const monthIndex = MONTH_MAP[match[2].toLowerCase()];
+    if (monthIndex === undefined) continue;
+
+    // Si el segmento trae su propia hora, usarla; si no, la de la línea.
+    const segmentTimes = extractTimesFromLine(segment);
+    const times = segmentTimes.length > 0 ? segmentTimes : [lineTimes[0]];
+
+    const days = match[1]
+      .split(/[,y]/)
+      .map((value) => parseInt(value.trim()))
+      .filter((day) => Number.isFinite(day) && day >= 1 && day <= 31);
+
+    for (const day of days) {
+      for (const time of times) {
+        dates.push(formatDatetime(year, monthIndex, day, time));
+      }
+    }
+  }
+
+  return dates;
 }
 
 /**
@@ -355,9 +380,11 @@ function parseScheduleBlock(scheduleLines: string[]): {
       );
       continue;
     }
-    // Si tiene mes nombrado ("20 y 21 de agosto a las 21:00 hs")
-    if (NAMED_MONTH_PATTERN.test(line)) {
-      allDatetimes.push(...extractNamedMonthDates(line, currentYear));
+    // Si tiene mes nombrado ("20 y 21 de agosto a las 21:00 hs" o varios
+    // grupos separados por ";"), extraer todos los días de todos los grupos.
+    const namedDates = extractNamedMonthDates(line, currentYear);
+    if (namedDates.length > 0) {
+      allDatetimes.push(...namedDates);
       continue;
     }
     // Fecha específica — puede haber varias en la línea separadas por "·"
