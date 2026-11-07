@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   IconBell,
   IconBrandGithub,
@@ -9,6 +10,7 @@ import {
   IconChairDirector,
   IconDashboard,
   IconList,
+  IconLogin,
   IconMail,
   IconMap2,
   IconSeedling,
@@ -93,7 +95,16 @@ const data: Record<string, NavItem[]> = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  isLoggedIn = true,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { isLoggedIn?: boolean }) {
+  // Sin sesión solo existe la cartelera pública: el resto de los ítems
+  // requieren login (el middleware redirige esas rutas al home).
+  const navMain = isLoggedIn
+    ? data.navMain
+    : data.navMain.filter((item) => item.href === ROUTES.screenings.path);
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -112,11 +123,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        {isLoggedIn && (
+          <NavSecondary items={data.navSecondary} className="mt-auto" />
+        )}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        {isLoggedIn ? (
+          <NavUser />
+        ) : (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href={ROUTES.login.path}>
+                  <IconLogin />
+                  <span>Iniciar sesión</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        )}
       </SidebarFooter>
     </Sidebar>
   );
