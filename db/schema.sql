@@ -148,3 +148,21 @@ CREATE TABLE public.notifications (
 -- Index para búsquedas eficientes por usuario
 CREATE INDEX idx_notifications_user_id_sent_at 
 ON public.notifications(user_id, sent_at DESC);
+
+-- Corridas de scraping (última búsqueda)
+create table public.scrape_runs (
+  id                uuid primary key default uuid_generate_v4(),
+  source            text not null,
+  status            text not null default 'running'
+                      check (status in ('running', 'success', 'error')),
+  started_at        timestamptz not null default now(),
+  finished_at       timestamptz,
+  entries_processed int,
+  error_message     text
+);
+
+create index idx_scrape_runs_status_started_at
+  on public.scrape_runs (status, started_at desc);
+
+create index idx_scrape_runs_source_started_at
+  on public.scrape_runs (source, started_at desc);

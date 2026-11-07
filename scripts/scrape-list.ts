@@ -5,6 +5,7 @@ import * as cheerio from "cheerio";
 import { execSync } from "child_process";
 
 import { validateEnvironmentVariables } from "./utils/validation.util";
+import { finishScrapeRun, startScrapeRun } from "./utils/scrape-run.util";
 import { parseListNote } from "./services/list/list-note-parser";
 
 interface ListEntry {
@@ -50,6 +51,9 @@ class ListScrapingOrchestrator {
   async execute(): Promise<void> {
     console.log("🎬 Starting Letterboxd list scraping...");
 
+    const runId = await startScrapeRun("letterboxd-list");
+    let entriesProcessed = 0;
+
     try {
       const totalPages = await this.getTotalPages();
       console.log(`📋 Found ${totalPages} pages to process`);
@@ -68,9 +72,11 @@ class ListScrapingOrchestrator {
       }
 
       console.log(`\n📊 Total entries collected: ${allEntries.length}`);
+      entriesProcessed = allEntries.length;
 
       if (allEntries.length === 0) {
         console.log("✅ No valid entries found");
+        await finishScrapeRun(runId, { status: "success", entriesProcessed });
         return;
       }
 
@@ -107,7 +113,14 @@ class ListScrapingOrchestrator {
       console.log(`   🔄 Updated: ${totalUpdated}`);
       console.log(`   ⏭️  Skipped: ${totalSkipped}`);
       console.log(`   ❌ Errors: ${totalErrors}`);
+
+      await finishScrapeRun(runId, { status: "success", entriesProcessed });
     } catch (error) {
+      await finishScrapeRun(runId, {
+        status: "error",
+        entriesProcessed,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      });
       console.error("💥 Fatal error:", error);
       process.exit(1);
     }
