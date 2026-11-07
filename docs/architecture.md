@@ -81,6 +81,7 @@ scrape-screenings.ts
 
 ```
 scrape-list.ts
+  → registra la corrida en scrape_runs (startScrapeRun → status "running")
   → pagina la lista /list/funciones-en-buenos-aires/detail/ (4 páginas, ~333 films)
   → extrae datos del film (slug, título, año) y nota HTML
   → parseListNote() → cinema + dirección + fechas/horarios (formatos argentinos)
@@ -91,7 +92,10 @@ scrape-list.ts
       → find/create director + link
       → upsert screening identificado por movie+cinema (2026-10-10: antes por movie+cinema+text)
       → insert/update screening_times
+  → finishScrapeRun (status "success" + entries_processed, o "error" + error_message)
 ```
+
+⚠️ La corrida se registra en `scrape_runs` (tabla `006-scrape-runs.sql`); si el insert/update falla, el scraping continúa igual. El badge "Última búsqueda" de `/dashboard` y `/screenings` lee la última corrida exitosa con `getLastScrapeRun()`.
 
 ⚠️ Los cines nuevos se crean con `enabled=false` porque la lista ES la fuente (no necesitan scraper). Las ventanas "Del X al Y" generan un screening con `screening_times` = primer día a la primera hora indicada; el `screening_time_text` contiene el texto crudo de la nota.
 
@@ -103,7 +107,7 @@ scrape-list.ts
 - Usa el **service client** (salta RLS). Consulta `screening_times` entre `now` y `now + 30 días`:
   - por `screenings.movie_id IN (user_movies del usuario)`, y
   - por `screenings.movies.director_id IN (user_directors del usuario)`.
-- Agrupa por `screening.id` con sus `screening_times` ordenados por fecha.
+- Agrupa por `screening.id` con sus `screening_times` ordenados por fecha (dedupe por `time.id`: la query devuelve la misma fila dos veces si la peli está vista **y** el director es seguido).
 - Los filtros de cine/búsqueda se aplican client-side en `/dashboard` (bug conocido: no filtran la grilla — ver roadmap).
 - Los campos `includeWatched`, `includeUnwatched`, `minUserRating`, `onlyFavoriteDirectors` de `ScreeningFilters` están **sin uso** (código muerto).
 

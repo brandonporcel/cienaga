@@ -1,8 +1,23 @@
 # Roadmap
 
-> Bugs conocidos y pendientes. Última actualización: 2026-10-11.
+> Bugs conocidos y pendientes. Última actualización: 2026-11-07.
 
 ## Bugs conocidos (priorizados)
+
+### P1 — ~~Parser de notas asignaba fechas al cine equivocado~~ ✅ resuelto 2026-11-07
+
+- ~~`buildBlocks` (`scripts/services/list/list-note-parser.ts`) asumía el orden "cine → fechas", pero TODAS las notas de la lista son "fecha → cine" (`<p>6/11 a las 15:00 hs</p><p>Cine X (dirección)<br>Entrada</p>`). Al encontrar una segunda línea de horario después de un bloque con cine, la asignaba al cine anterior: el cine siguiente quedaba sin funciones y el primero acumulaba fechas ajenas (caso Paris, Texas: "Casa de la Provincia de Buenos Aires" tenía 6/11 **y** 15/11, y el 15/11 también aparecía en Cine Teatro York → horario duplicado en el modal).~~
+- **Solución**: una línea de horario que aparece después de un bloque con cine inicia un bloque nuevo (`UNKNOWN`) que se asigna al próximo cine; los bloques `Unknown` sin cine se descartan. Además `isValidCinemaMatch` rechaza descripciones tipo "Entrada gratuita (35 mm)" que se tomaban como cine.
+- **Validado** contra las 4 páginas reales de la lista (306 films): 0 bloques vacíos, 0 nombres espurios, 0 películas perdieron fechas, total de datetimes 545 → 567 (+22 que antes se descartaban).
+- **Pendiente**: las 21 películas restantes afectadas se auto-corrigieron solo en el dato de Paris, Texas (fix manual en DB); la próxima corrida del cron semanal re-scrapea y completa el resto.
+- **Limitación conocida**: los rangos "Del X al Y" con varias horas en el mismo bloque (ej. 18:50 y 15:30 con exclusiones distintas) usan solo la primera hora — preexistente, anotado.
+- **Estado**: cerrado.
+
+### P1 — ~~Horarios duplicados en el modal (película vista + director seguido)~~ ✅ resuelto 2026-11-07
+
+- ~~`ScreeningsService.fetchScreeningTimesForUser` (`src/lib/services/screenings.service.ts`) trae el mismo `screening_time` dos veces cuando la película está vista **y** su director es seguido: ambas ramas del query devuelven la fila. `groupScreeningTimes` la pusheaba duplicada → el modal mostraba la función repetida (caso Paris, Texas).~~
+- **Solución**: dedupe por `time.id` con un `Set` (`seenTimeIds`) dentro de `groupScreeningTimes`. Solo afectaba a `/dashboard` (query personalizada), no a `/screenings`.
+- **Estado**: cerrado.
 
 ### P1 — ~~Contador de películas inflado en /cinemas~~ ✅ resuelto 2026-10-11
 
@@ -72,6 +87,19 @@
 - En vez de scrapear, obtener datos del JSON de Letterboxd (`https://letterboxd.com/film/<slug>/json/`). ⚠️ **Probado y descartado el 2026-08-16**: Cloudflare responde 403 al fingerprint TLS de Node (axios y fetch); solo curl/browsers pasan. Si se retoma, requeriría browser real (Playwright) o proxy — ver "Cambios recientes".
 
 ## Cambios recientes
+
+### 2026-11-07 — /screenings en el dashboard, header mobile, link a la lista y corridas de scraping
+
+- **`/screenings` movido al route group `(dashboard)`**: hereda el shell (sidebar + `SiteHeader` + contenedor) en vez de tener su propio `min-h-screen`/`max-w` y botón "Volver". `(dashboard)/layout.tsx` ahora resuelve la sesión (`supabase.auth.getUser()`) y le pasa `isLoggedIn` a `AppSidebar`: con sesión se ve el nav completo + `NavUser`; sin sesión solo "Todas" (`/screenings`) y un botón "Iniciar sesión". `NavSecondary` se oculta sin sesión.
+- **Header mobile de `/`**: el nav inline (Acerca/Cartelera/Cines) ahora es `hidden sm:flex`; en mobile se abre desde un `DropdownMenu` (hamburguesa) y el botón de sesión queda siempre visible (antes se desbordaba).
+- **Link a la lista de Letterboxd**: `https://letterboxd.com/lamateroric/list/funciones-en-buenos-aires/` agregado en el FAQ ("¿Qué tan actualizada está la información...?") y en el footer. `FAQItem.answer` pasó de `string` a `React.ReactNode` para permitir el enlace.
+- **Corridas de scraping**: tabla `scrape_runs` (`db/migrations/006-scrape-runs.sql`, **pendiente de aplicar en prod**) + helper `scripts/utils/scrape-run.util.ts` (`startScrapeRun`/`finishScrapeRun`). `scrape-list.ts` registra inicio/fin y `entries_processed`; si el registro falla, el scraping sigue igual. Server action `getLastScrapeRun()` + badge client `LastScrapeBadge` ("Última búsqueda: dd/mm HH:MM") en `/dashboard` y `/screenings` (se oculta si la tabla no existe o no hay corridas). Solo el scraper de la lista registra corridas por ahora; los demás pueden adoptar el helper.
+
+### 2026-11-07 — Fix del parser de notas de la lista (fecha → cine)
+
+- **`list-note-parser.ts`**: las notas de la lista arrancan con la fecha y después el cine; el parser ahora cierra el bloque anterior cuando aparece un horario nuevo y asigna los bloques `Unknown` al cine siguiente. Se descartan bloques sin cine y se rechazan descripciones ("Entrada gratuita (35 mm)") como nombre de cine.
+- **Dato corregido en DB**: Paris, Texas → "Casa de la Provincia de Buenos Aires" queda solo con 6/11; el 15/11 pertenece a "Cine Teatro York" (ya existía). Se eliminó el horario duplicado del 15/11.
+- **Impacto**: 22 films tenían el segundo cine sin funciones; el total parseado pasó de 545 a 567 datetimes. El resto se completa en la próxima corrida del cron semanal.
 
 ### 2026-10-11 — Seguir directores desde /screenings + batch de UX en cines/dashboard
 

@@ -116,6 +116,22 @@
 - Índice `idx_notifications_user_id_sent_at (user_id, sent_at DESC)`.
 - ⚠️ Se escribe pero nunca se lee para deduplicar envíos (ver roadmap).
 
+### `scrape_runs`
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| id | uuid PK | `uuid_generate_v4()` |
+| source | text NOT NULL | Identifica el scraper (hoy solo `letterboxd-list`) |
+| status | text NOT NULL default `running` | CHECK `running` / `success` / `error` |
+| started_at | timestamptz NOT NULL default now() | |
+| finished_at | timestamptz | NULL mientras corre |
+| entries_processed | int | Cantidad de entries procesadas |
+| error_message | text | Solo en `status = error` |
+
+- Índices `idx_scrape_runs_status_started_at (status, started_at desc)` e `idx_scrape_runs_source_started_at (source, started_at desc)`.
+- La escribe `scripts/utils/scrape-run.util.ts` (service role) desde los scrapers; la lee `getLastScrapeRun()` (anon) para el badge "Última búsqueda".
+- Migración `006-scrape-runs.sql` — **pendiente de aplicar en prod**.
+
 ## RLS (estado actual)
 
 - Habilitado únicamente en `public.users`, sin policies.
