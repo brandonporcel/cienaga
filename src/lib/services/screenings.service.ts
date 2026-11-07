@@ -167,8 +167,14 @@ export class ScreeningsService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private groupScreeningTimes(screeningTimes: Record<string, any>[]) {
     const map = new Map();
+    // Una misma función puede volver por dos queries (película vista y
+    // director seguido). Deduplicamos por id de screening_time para no
+    // mostrar el mismo horario dos veces en el modal.
+    const seenTimeIds = new Set<string>();
     screeningTimes.forEach((time) => {
       const screening = time.screenings;
+      if (!screening || seenTimeIds.has(time.id)) return;
+      seenTimeIds.add(time.id);
       if (!map.has(screening.id)) {
         map.set(screening.id, { ...screening, screening_times: [] });
       }
