@@ -32,8 +32,22 @@ const faqData = [
   },
   {
     question: "¿Qué tan actualizada está la información de la cartelera?",
-    answer:
-      "La cartelera se actualiza constantemente a partir de la información oficial de los cines de Buenos Aires, para que siempre tengas datos precisos sobre funciones, estrenos y reestrenos.",
+    answer: (
+      <>
+        La cartelera se arma a partir de la lista pública{" "}
+        <a
+          href="https://letterboxd.com/lamateroric/list/funciones-en-buenos-aires/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          Funciones en Buenos Aires
+        </a>{" "}
+        de Letterboxd, más la información oficial de los cines. Se actualiza
+        automáticamente para que siempre tengas datos precisos sobre funciones,
+        estrenos y reestrenos.
+      </>
+    ),
   },
   {
     question: "¿Van a enviarme spam o correos no deseados?",
@@ -44,7 +58,7 @@ const faqData = [
 
 interface FAQItemProps {
   question: string;
-  answer: string;
+  answer: React.ReactNode;
   isOpen: boolean;
   onToggle: () => void;
 }

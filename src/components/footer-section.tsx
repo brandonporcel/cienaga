@@ -18,6 +18,14 @@ export function FooterSection() {
         {/* Right Section: Contact + GitHub */}
         <div className="flex items-center gap-4">
           <a
+            href="https://letterboxd.com/lamateroric/list/funciones-en-buenos-aires/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground text-sm font-medium leading-5 hover:underline"
+          >
+            Lista de funciones
+          </a>
+          <a
             href="mailto:brandon7.7porcel@gmail.com"
             className="text-foreground text-sm font-medium leading-5 hover:underline"
           >
