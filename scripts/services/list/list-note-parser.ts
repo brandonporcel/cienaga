@@ -49,6 +49,14 @@ function isValidCinemaMatch(name: string, address: string): boolean {
   // el paréntesis es el día excluido, no una dirección.
   if (RANGE_PATTERN.test(name)) return false;
   if (/^\d{1,2}\/\d{1,2}\s+a\s+las\b/i.test(name)) return false;
+  // Líneas de descripción que parecen "Nombre (aclaración)":
+  //   ej: "Entrada gratuita (con música en vivo)", "Entrada gratuita (35 mm)"
+  if (
+    /^(entradas?|localidades|boleter[ií]a|gratis|gratuitas?|precio|valor|funci[oó]n)\b/i.test(
+      name,
+    )
+  )
+    return false;
   return true;
 }
 const RANGE_PATTERN =
@@ -104,6 +112,14 @@ function normalizeLines(html: string): string[] {
 
 const UNKNOWN_CINEMA = "Unknown";
 
+function createUnknownBlock(): CinemaBlock {
+  return {
+    cinemaName: UNKNOWN_CINEMA,
+    scheduleLines: [],
+    descriptionLines: [],
+  };
+}
+
 function buildBlocks(lines: string[]): CinemaBlock[] {
   const blocks: CinemaBlock[] = [];
   let current: CinemaBlock | null = null;
@@ -130,14 +146,18 @@ function buildBlocks(lines: string[]): CinemaBlock[] {
     }
 
     if (!current) {
-      current = {
-        cinemaName: UNKNOWN_CINEMA,
-        scheduleLines: [],
-        descriptionLines: [],
-      };
+      current = createUnknownBlock();
     }
 
     if (isScheduleLine(line)) {
+      // Las notas de la lista usan el formato "fecha → cine": cada sección
+      // empieza con una o más líneas de horario y DESPUÉS viene el cine.
+      // Si ya hay un cine asignado, esta línea inicia la sección del
+      // SIGUIENTE cine, no pertenece al bloque actual.
+      if (current.cinemaName !== UNKNOWN_CINEMA) {
+        blocks.push(current);
+        current = createUnknownBlock();
+      }
       current.scheduleLines.push(line);
     } else {
       current.descriptionLines.push(line);
@@ -383,25 +403,29 @@ export function parseListNote(html: string): ParsedCinemaNote[] {
     return [];
   }
 
-  return blocks.map((block) => {
-    const urls = extractUrls(block.descriptionLines);
-    const description = [
-      ...block.descriptionLines.filter((l) => !URL_PATTERN.test(l)),
-      ...urls,
-    ]
-      // Joinear con \n para respetar el formato multi-línea original de la
-      // lista (la card lo muestra con whitespace-pre-line).
-      .join("\n")
-      .trim() || undefined;
+  return blocks
+    // Un bloque "Unknown" quedó con horarios pero sin cine (nota mal
+    // formada): no se puede asignar a ningún lado, se descarta.
+    .filter((block) => block.cinemaName !== UNKNOWN_CINEMA)
+    .map((block) => {
+      const urls = extractUrls(block.descriptionLines);
+      const description = [
+        ...block.descriptionLines.filter((l) => !URL_PATTERN.test(l)),
+        ...urls,
+      ]
+        // Joinear con \n para respetar el formato multi-línea original de la
+        // lista (la card lo muestra con whitespace-pre-line).
+        .join("\n")
+        .trim() || undefined;
 
-    const schedule = parseScheduleBlock(block.scheduleLines);
+      const schedule = parseScheduleBlock(block.scheduleLines);
 
-    return {
-      cinemaName: block.cinemaName,
-      cinemaAddress: block.cinemaAddress,
-      description,
-      schedule,
-      fullTimeText: schedule?.fullTimeText || block.scheduleLines.join(" · "),
-    };
-  });
+      return {
+        cinemaName: block.cinemaName,
+        cinemaAddress: block.cinemaAddress,
+        description,
+        schedule,
+        fullTimeText: schedule?.fullTimeText || block.scheduleLines.join(" · "),
+      };
+    });
 }
