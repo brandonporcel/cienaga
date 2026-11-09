@@ -99,11 +99,13 @@ export function AppSidebar({
   isLoggedIn = true,
   ...props
 }: React.ComponentProps<typeof Sidebar> & { isLoggedIn?: boolean }) {
-  // Sin sesión solo existe la cartelera pública: el resto de los ítems
-  // requieren login (el middleware redirige esas rutas al home).
+  // Sin sesión solo existen las rutas públicas (cartelera y cines): el
+  // resto de los ítems requieren login (el middleware redirige esas
+  // rutas al home).
+  const publicPaths = new Set([ROUTES.screenings.path, ROUTES.cinemas.path]);
   const navMain = isLoggedIn
     ? data.navMain
-    : data.navMain.filter((item) => item.href === ROUTES.screenings.path);
+    : data.navMain.filter((item) => publicPaths.has(item.href));
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>

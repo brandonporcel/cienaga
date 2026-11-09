@@ -88,12 +88,18 @@
 
 ## Cambios recientes
 
+### 2026-11-08 — /cinemas en el dashboard y correcciones de datos de Paris, Texas y The Virgin
+
+- **`/cinemas` movido al route group `(dashboard)`**: el listado y el detalle (`/cinemas/[slug]`) heredan sidebar + `SiteHeader` + contenedor, sin `min-h-screen`/`max-w` propio. Sin sesión el sidebar muestra "Todas" (`/screenings`) y "Cines" (`/cinemas`). `NavMain` marca activo también en subrutas y `SiteHeader` resuelve el título por prefijo (ej. `/cinemas/[slug]` → "Cines"). El botón "Volver a cines" del detalle se mantiene.
+- **Parser de meses nombrados** (`extractNamedMonthDates`): la regex anterior perdía días intermedios y no manejaba varios meses separados por `;`. Ahora divide por `[;·]`, captura la lista completa de días y usa la hora de la línea como fallback. The Virgin of the Quarry Lake → Borges genera las 7 fechas (21, 22, 29/11; 5, 6, 12, 13/12).
+- **Datos corregidos en DB**: Paris, Texas → Casa de la Provincia de Buenos Aires (447) queda solo con 6/11 (se borró el 15/11, que pertenece a Cine Teatro York). The Virgin of the Quarry Lake → Biblioteca del Congreso (396) queda solo con 5/11 (se borraron las fechas de diciembre que pertenecen a Borges) y Borges (398) recupera 21, 22, 29/11 y 6/12. El parser actual genera estos valores, así que la próxima corrida del scraper los mantiene.
+
 ### 2026-11-07 — /screenings en el dashboard, header mobile, link a la lista y corridas de scraping
 
-- **`/screenings` movido al route group `(dashboard)`**: hereda el shell (sidebar + `SiteHeader` + contenedor) en vez de tener su propio `min-h-screen`/`max-w` y botón "Volver". `(dashboard)/layout.tsx` ahora resuelve la sesión (`supabase.auth.getUser()`) y le pasa `isLoggedIn` a `AppSidebar`: con sesión se ve el nav completo + `NavUser`; sin sesión solo "Todas" (`/screenings`) y un botón "Iniciar sesión". `NavSecondary` se oculta sin sesión.
+- **`/screenings` movido al route group `(dashboard)`**: hereda el shell (sidebar + `SiteHeader` + contenedor) en vez de tener su propio `min-h-screen`/`max-w` y botón "Volver". `(dashboard)/layout.tsx` ahora resuelve la sesión (`supabase.auth.getUser()`) y le pasa `isLoggedIn` a `AppSidebar`: con sesión se ve el nav completo + `NavUser`; sin sesión solo "Todas" (`/screenings`) y "Cines" (`/cinemas`) más un botón "Iniciar sesión". `NavSecondary` se oculta sin sesión.
 - **Header mobile de `/`**: el nav inline (Acerca/Cartelera/Cines) ahora es `hidden sm:flex`; en mobile se abre desde un `DropdownMenu` (hamburguesa) y el botón de sesión queda siempre visible (antes se desbordaba).
 - **Link a la lista de Letterboxd**: `https://letterboxd.com/lamateroric/list/funciones-en-buenos-aires/` agregado en el FAQ ("¿Qué tan actualizada está la información...?") y en el footer. `FAQItem.answer` pasó de `string` a `React.ReactNode` para permitir el enlace.
-- **Corridas de scraping**: tabla `scrape_runs` (`db/migrations/006-scrape-runs.sql`, **pendiente de aplicar en prod**) + helper `scripts/utils/scrape-run.util.ts` (`startScrapeRun`/`finishScrapeRun`). `scrape-list.ts` registra inicio/fin y `entries_processed`; si el registro falla, el scraping sigue igual. Server action `getLastScrapeRun()` + badge client `LastScrapeBadge` ("Última búsqueda: dd/mm HH:MM") en `/dashboard` y `/screenings` (se oculta si la tabla no existe o no hay corridas). Solo el scraper de la lista registra corridas por ahora; los demás pueden adoptar el helper.
+- **Corridas de scraping**: tabla `scrape_runs` (`db/migrations/006-scrape-runs.sql`, **aplicada en prod el 2026-11-07**) + helper `scripts/utils/scrape-run.util.ts` (`startScrapeRun`/`finishScrapeRun`). `scrape-list.ts` registra inicio/fin y `entries_processed`; si el registro falla, el scraping sigue igual. Server action `getLastScrapeRun()` + badge client `LastScrapeBadge` ("Última búsqueda: dd/mm HH:MM") en `/dashboard` y `/screenings` (se oculta si la tabla no existe o no hay corridas). Solo el scraper de la lista registra corridas por ahora; los demás pueden adoptar el helper.
 
 ### 2026-11-07 — Fix del parser de notas de la lista (fecha → cine)
 

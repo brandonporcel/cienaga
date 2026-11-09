@@ -1,11 +1,7 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
 import { createClientForServer } from "@/lib/supabase/server";
 import CinemasBrowser, {
   CinemaWithCount,
 } from "@/components/cinemas/cinemas-browser";
-import { Button } from "@/components/ui/button";
 
 export const metadata = {
   title: "Cines | Ciénaga",
@@ -50,33 +46,18 @@ export default async function CinemasPage() {
     .map((c) => ({ ...c, movieCount: movieCounts.get(c.id)?.size ?? 0 }))
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
-  // Si el usuario está logueado, "Volver al inicio" va al dashboard;
-  // si no, al home (el middleware ya protege /dashboard).
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const backHref = user ? "/dashboard" : "/";
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-[1320px] mx-auto px-4 py-8 md:py-12">
-        <div className="mb-8">
-          <Link href={backHref}>
-            <Button variant="ghost" size="sm" className="mb-4 gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Volver
-            </Button>
-          </Link>
-          <h1 className="text-3xl md:text-5xl font-semibold">Cines</h1>
-          <p className="text-muted-foreground text-lg mt-2">
-            {list.length === 1
-              ? "1 cine con funciones en cartelera"
-              : `${list.length} cines con funciones en cartelera`}
-          </p>
-        </div>
-
-        <CinemasBrowser cinemas={list} />
+    <>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">Cines</h1>
+        <p className="text-muted-foreground text-sm">
+          {list.length === 1
+            ? "1 cine con funciones en cartelera"
+            : `${list.length} cines con funciones en cartelera`}
+        </p>
       </div>
-    </div>
+
+      <CinemasBrowser cinemas={list} />
+    </>
   );
 }

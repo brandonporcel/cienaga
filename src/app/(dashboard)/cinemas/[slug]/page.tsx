@@ -24,11 +24,5 @@ export default async function CinemaDetailPage({ params }: PageProps) {
 
   if (error || !cinema) notFound();
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-[1320px] mx-auto px-4 py-8 md:py-12">
-        <CinemaDetailClient cinema={cinema as Cinema} />
-      </div>
-    </div>
-  );
+  return <CinemaDetailClient cinema={cinema as Cinema} />;
 }

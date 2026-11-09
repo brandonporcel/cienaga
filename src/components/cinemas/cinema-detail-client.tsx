@@ -34,16 +34,18 @@ export default function CinemaDetailClient({
 
   return (
     <>
-      <div className="mb-8">
+      <div className="mb-6">
         <Link href="/cinemas">
           <Button variant="ghost" size="sm" className="mb-4 gap-2">
             <ArrowLeft className="h-4 w-4" />
             Volver a cines
           </Button>
         </Link>
-        <h1 className="text-3xl md:text-5xl font-semibold">{cinema.name}</h1>
+        <h1 className="text-2xl font-semibold">{cinema.name}</h1>
         {cinema.address && (
-          <p className="text-muted-foreground text-lg mt-2">{cinema.address}</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {cinema.address}
+          </p>
         )}
         {(cinema.website_url || cinema.instagram_url) && (
           <div className="flex gap-2 mt-3">

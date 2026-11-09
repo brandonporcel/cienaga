@@ -23,7 +23,8 @@ export function NavMain({ items }: { items: NavItem[] }) {
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive = item.href === pathname;
+            const isActive =
+              item.href === pathname || pathname.startsWith(`${item.href}/`);
             return (
               <SidebarMenuItem key={item.title} className="mb-0.5">
                 <SidebarMenuButton
