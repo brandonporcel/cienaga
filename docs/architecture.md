@@ -1,6 +1,6 @@
 # Arquitectura
 
-> Fuente de verdad de flujo de datos y decisiones de arquitectura. Última actualización: 2026-10-10.
+> Fuente de verdad de flujo de datos y decisiones de arquitectura. Última actualización: 2026-11-16.
 
 ## Visión general
 
@@ -33,7 +33,7 @@ Ciénaga cruza el historial de Letterboxd de un usuario con la cartelera de cine
 
 ## Flujo 1 — Importación de Letterboxd (usuario)
 
-1. El usuario sube `watched.csv` y `ratings.csv` desde `/directors` (upload dialog).
+1. El usuario sube `watched.csv` y `ratings.csv` desde el botón **Actualizar Datos** del header del dashboard (disponible en todas las rutas con sesión; `src/components/directors/upload-dialog.tsx`).
 2. `src/lib/services/letterboxd.ts` parsea los CSVs en el **cliente** (Papa.parse) y deduplica por título+año.
 3. `saveMoviesAction` (`src/app/actions/movies.ts`) — server action:
    - Busca cada película por `title + year + url`; si no existe, la inserta.
@@ -109,6 +109,7 @@ scrape-list.ts
   - por `screenings.movies.director_id IN (user_directors del usuario)`.
 - Agrupa por `screening.id` con sus `screening_times` ordenados por fecha (dedupe por `time.id`: la query devuelve la misma fila dos veces si la peli está vista **y** el director es seguido).
 - Los filtros de cine/búsqueda se aplican client-side en `/dashboard` (bug conocido: no filtran la grilla — ver roadmap).
+- El orden por fecha también se resuelve client-side en `ScreeningsBrowser` (compartido con `/screenings`): primera función próxima ascendente/descendente, para no depender del orden de PostgREST (que no garantiza orden sin `order` explícito).
 - Los campos `includeWatched`, `includeUnwatched`, `minUserRating`, `onlyFavoriteDirectors` de `ScreeningFilters` están **sin uso** (código muerto).
 
 ## Flujo 6 — Notificaciones (GitHub Actions, cada 3 días)

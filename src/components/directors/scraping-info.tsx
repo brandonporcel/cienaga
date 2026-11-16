@@ -25,15 +25,17 @@ export function ScrapingInfo() {
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-sm space-y-2 text-sm">
           <p>
-            <strong>¿Cómo funciona?</strong> Ciénaga detecta automáticamente tus directores favoritos
-            a partir de tu historial de Letterboxd.
+            <strong>¿Qué hace?</strong> Actualizar datos importa tu historial
+            de Letterboxd y detecta automáticamente tus directores, películas
+            y ratings.
           </p>
           <p>
-            El perfil de cada director se actualiza automáticamente todos los días.
-            Si recién subiste tus CSVs, puede tardar unas horas.
+            El perfil de cada director se actualiza automáticamente todos los
+            días. Si recién subiste tus CSVs, puede tardar unas horas en
+            aparecer todo.
           </p>
           <p>
-            <strong>Estados:</strong>
+            <strong>Estados de directores:</strong>
           </p>
           <ul className="list-disc list-inside space-y-1 text-muted-foreground">
             <li><strong>Seguido</strong> — ≥4 pelis vistas (o 1 peli con ≥4★).</li>

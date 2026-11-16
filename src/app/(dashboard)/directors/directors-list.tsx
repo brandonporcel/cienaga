@@ -30,6 +30,11 @@ import { Input } from "@/components/ui/input";
 type ListFilter = "all" | "seguidos" | "vistos" | "alpha";
 type ViewMode = "grid" | "table";
 
+// La lista se renderiza de a bloques para no montar cientos de cards de
+// una sola vez. El fetch sigue trayendo el listado del usuario completo
+// (es metadata chica); si el dataset crece, mover la paginación al server.
+const PAGE_SIZE = 24;
+
 const SOURCE_BADGE_CLASSES: Record<DirectorSource, string> = {
   auto: "bg-emerald-500/90 text-white",
   manual: "bg-sky-500/90 text-white",
@@ -42,12 +47,10 @@ const SOURCE_BADGE_LABELS: Record<DirectorSource, string> = {
 
 export function DirectorsGrid({
   directors: initial,
-  toolbar,
   pendingMovies = 0,
   recentImports = [],
 }: {
   directors: Director[];
-  toolbar?: React.ReactNode;
   pendingMovies?: number;
   recentImports?: RecentImport[];
 }) {
@@ -56,6 +59,7 @@ export function DirectorsGrid({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>("seguidos");
   const [view, setView] = useState<ViewMode>("grid");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [detailDirector, setDetailDirector] = useState<Director | null>(null);
   const [searchResults, setSearchResults] = useState<DirectorSearchResult[] | null>(null);
   const [searching, setSearching] = useState(false);
@@ -146,6 +150,14 @@ export function DirectorsGrid({
     }
   }, [directors, query, filter]);
 
+  // Al cambiar búsqueda, filtro o vista, volver al primer bloque.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [query, filter, view]);
+
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visible.length;
+
   // Resultados globales que NO están visibles en la grilla actual (los
   // ocultos por el filtro, ej. "Seguidos" con directores solo vistos,
   // sí se muestran acá para poder seguirlos).
@@ -232,7 +244,6 @@ export function DirectorsGrid({
             </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">{toolbar}</div>
       </div>
 
       {pendingScraping.length > 0 && (
@@ -348,7 +359,7 @@ export function DirectorsGrid({
           ) : (
             <p className="text-sm text-muted-foreground">
               No hay directores importados aún. Usa el botón{" "}
-              <strong>Actualizar Datos</strong> para comenzar. 🎬
+              <strong>Actualizar Datos</strong> del header para comenzar. 🎬
             </p>
           )
         ) : filter === "seguidos" &&
@@ -371,7 +382,7 @@ export function DirectorsGrid({
         )
       ) : view === "grid" ? (
         <div className="grid grid-cols-2 gap-6 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((director) => (
+          {visible.map((director) => (
             <DirectorCard
               key={director.id}
               director={director}
@@ -384,6 +395,7 @@ export function DirectorsGrid({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
+                <th className="w-12 text-left px-4 py-3 font-medium">#</th>
                 <th className="text-left px-4 py-3 font-medium">Director</th>
                 <th className="text-left px-4 py-3 font-medium">Estado</th>
                 <th className="text-left px-4 py-3 font-medium hidden md:table-cell">
@@ -396,11 +408,14 @@ export function DirectorsGrid({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((director) => (
+              {visible.map((director, index) => (
                 <tr
                   key={director.id}
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                 >
+                  <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                    {index + 1}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <button
@@ -468,6 +483,22 @@ export function DirectorsGrid({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {filtered.length > 0 && (
+        <div className="mt-6 flex flex-col items-center gap-2">
+          {hasMore && (
+            <Button
+              variant="outline"
+              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+            >
+              Cargar más
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Mostrando {visible.length} de {filtered.length}
+          </p>
         </div>
       )}
 

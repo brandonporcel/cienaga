@@ -19,7 +19,7 @@ export default async function DashboardLayout({
     >
       <AppSidebar variant="inset" isLoggedIn={isLoggedIn} />
       <SidebarInset>
-        <SiteHeader />
+        <SiteHeader isLoggedIn={isLoggedIn} />
         <div className="flex flex-col p-4 md:py-6 lg:px-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>

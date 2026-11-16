@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Filter, LayoutGrid, List, Search } from "lucide-react";
+import { ArrowUpDown, Filter, LayoutGrid, List, Search } from "lucide-react";
 
 import Screening from "@/types/screening";
 import Cinema from "@/types/cinema";
@@ -33,6 +33,33 @@ function toLocalDateStr(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
+}
+
+// Primera función de un screening (la más próxima). Sirve para ordenar
+// las funciones por fecha de forma determinista en ambas vistas.
+function firstScreeningTime(screening: Screening): number {
+  const times = (screening.screening_times ?? [])
+    .map((t) => new Date(t.screening_datetime).getTime())
+    .filter((time) => Number.isFinite(time));
+  return times.length > 0 ? Math.min(...times) : Number.POSITIVE_INFINITY;
+}
+
+// Horario futuro más próximo (o el primero si no hay futuros), para
+// mostrar "Próxima función" sin depender del orden que devuelve la DB.
+function nextScreeningDatetime(screening: Screening): string | null {
+  const now = Date.now();
+  const future = (screening.screening_times ?? [])
+    .filter((t) => new Date(t.screening_datetime).getTime() >= now)
+    .sort(
+      (a, b) =>
+        new Date(a.screening_datetime).getTime() -
+        new Date(b.screening_datetime).getTime(),
+    );
+  return (
+    future[0]?.screening_datetime ??
+    screening.screening_times?.[0]?.screening_datetime ??
+    null
+  );
 }
 
 interface ScreeningsBrowserProps {
@@ -67,6 +94,7 @@ export default function ScreeningsBrowser({
     new Set(),
   );
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [view, setView] = useState<"grid" | "table">("grid");
 
   const highlightedRef = useRef<HTMLDivElement>(null);
@@ -109,23 +137,30 @@ export default function ScreeningsBrowser({
 
     const matchesDate = (() => {
       if (dateFilter === "all") return true;
-      // Filtro por fecha específica (YYYY-MM-DD)
-      const screeningDate = new Date(
-        screening.screening_times?.[0]?.screening_datetime || 0,
+      // Filtro por fecha específica (YYYY-MM-DD): alcanza con que la
+      // función tenga horario ese día (no solo el primero).
+      return (screening.screening_times ?? []).some(
+        (time) =>
+          toLocalDateStr(new Date(time.screening_datetime)) === dateFilter,
       );
-      return toLocalDateStr(screeningDate) === dateFilter;
     })();
 
     return matchesSearch && matchesCinema && matchesDate;
+  });
+
+  const displayedScreenings = [...filteredScreenings].sort((a, b) => {
+    const diff = firstScreeningTime(a) - firstScreeningTime(b);
+    return sortOrder === "asc" ? diff : -diff;
   });
 
   // Fechas únicas con funciones, ordenadas
   const availableDates = useMemo(() => {
     const dateSet = new Set<string>();
     for (const screening of screenings) {
-      const dt = screening.screening_times?.[0]?.screening_datetime;
-      if (dt) {
-        dateSet.add(toLocalDateStr(new Date(dt)));
+      for (const time of screening.screening_times ?? []) {
+        if (time.screening_datetime) {
+          dateSet.add(toLocalDateStr(new Date(time.screening_datetime)));
+        }
       }
     }
     return Array.from(dateSet).sort();
@@ -250,6 +285,23 @@ export default function ScreeningsBrowser({
               <List className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Orden por fecha */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setSortOrder((order) => (order === "asc" ? "desc" : "asc"))
+            }
+            title={
+              sortOrder === "asc"
+                ? "Fechas más próximas primero"
+                : "Fechas más lejanas primero"
+            }
+          >
+            <ArrowUpDown className="h-4 w-4 mr-1" />
+            Fecha {sortOrder === "asc" ? "↑" : "↓"}
+          </Button>
         </div>
       </div>
 
@@ -289,9 +341,9 @@ export default function ScreeningsBrowser({
       {/* Contador de resultados (refleja filtros y búsqueda activos) */}
       {!loading && (
         <p className="text-sm text-muted-foreground mb-4">
-          {filteredScreenings.length === 1
+          {displayedScreenings.length === 1
             ? "1 resultado"
-            : `${filteredScreenings.length} resultados`}
+            : `${displayedScreenings.length} resultados`}
         </p>
       )}
 
@@ -312,7 +364,7 @@ export default function ScreeningsBrowser({
             </div>
           ))}
         </div>
-      ) : filteredScreenings.length === 0 ? (
+      ) : displayedScreenings.length === 0 ? (
         <p className="text-muted-foreground text-center py-12">
           No se encontraron funciones que coincidan con tu búsqueda.
         </p>
@@ -333,7 +385,7 @@ export default function ScreeningsBrowser({
               </tr>
             </thead>
             <tbody>
-              {filteredScreenings.map((screening) => (
+              {displayedScreenings.map((screening) => (
                 <tr
                   key={screening.id}
                   className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
@@ -389,9 +441,9 @@ export default function ScreeningsBrowser({
                     {screening.cinemas.name}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                    {screening.screening_times?.[0]?.screening_datetime
+                    {nextScreeningDatetime(screening)
                       ? new Date(
-                          screening.screening_times[0].screening_datetime,
+                          nextScreeningDatetime(screening)!,
                         ).toLocaleDateString("es-AR", {
                           weekday: "short",
                           day: "numeric",
@@ -410,7 +462,7 @@ export default function ScreeningsBrowser({
           id="cartelera"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
         >
-          {filteredScreenings.map((screening) => (
+          {displayedScreenings.map((screening) => (
             <div
               key={screening.id}
               ref={isHighlighted(screening) ? highlightedRef : undefined}

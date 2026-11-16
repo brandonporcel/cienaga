@@ -1,6 +1,6 @@
 # Roadmap
 
-> Bugs conocidos y pendientes. Última actualización: 2026-11-07.
+> Bugs conocidos y pendientes. Última actualización: 2026-11-16.
 
 ## Bugs conocidos (priorizados)
 
@@ -87,6 +87,13 @@
 - En vez de scrapear, obtener datos del JSON de Letterboxd (`https://letterboxd.com/film/<slug>/json/`). ⚠️ **Probado y descartado el 2026-08-16**: Cloudflare responde 403 al fingerprint TLS de Node (axios y fetch); solo curl/browsers pasan. Si se retoma, requeriría browser real (Playwright) o proxy — ver "Cambios recientes".
 
 ## Cambios recientes
+
+### 2026-11-16 — Acciones globales en el header, paginación de directores y orden de funciones
+
+- **`Actualizar Datos` + icono de ayuda movidos al header del dashboard** (`SiteHeader`): antes solo existían en el toolbar de `/directors`. Ahora están siempre visibles junto al toggle de tema para usuarios con sesión, sin depender de la ruta. `UploadDialog` se movió a `src/components/directors/upload-dialog.tsx` (ya no es exclusivo de la ruta) y el tooltip de `ScrapingInfo` se generalizó para explicar la importación, no solo los estados de directores. Sin sesión no se muestran (la importación requiere login) y el sidebar sigue mostrando "Iniciar sesión".
+- **Botón "GitHub" eliminado del header**: el acceso a GitHub queda solo en el menú de Contacto del sidebar (`NavSecondary`).
+- **`/directors`: columna `#` en la vista tabla** (numeración de filas) y **render paginado por bloques de 24** con botón "Cargar más" + contador "Mostrando X de Y". El fetch sigue trayendo el listado completo (metadata chica); si el dataset crece, mover la paginación al servidor.
+- **Orden por fecha en `/dashboard` y `/screenings`**: `ScreeningsBrowser` ordena client-side por la primera función próxima y agrega un toggle `Fecha ↑ / ↓` (ascendente por defecto). Antes `/dashboard` dependía del orden arbitrario de PostgREST. También se corrigió el filtro por día (ahora alcanza con que *algún* horario coincida, no solo `screening_times[0]`) y la columna "Próxima función" usa el horario futuro más cercano.
 
 ### 2026-11-08 — /cinemas en el dashboard y correcciones de datos de Paris, Texas y The Virgin
 

@@ -202,9 +202,9 @@ export function UploadDialog() {
     <div className="contents">
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button variant="default" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Actualizar Datos
+          <Button variant="default" size="sm" aria-label="Actualizar datos">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Actualizar Datos</span>
           </Button>
         </DialogTrigger>
 

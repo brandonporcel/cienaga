@@ -3,12 +3,13 @@
 import { usePathname } from "next/navigation";
 
 import { ROUTES } from "@/config/routes";
+import { ScrapingInfo } from "@/components/directors/scraping-info";
+import { UploadDialog } from "@/components/directors/upload-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export function SiteHeader() {
+export function SiteHeader({ isLoggedIn = true }: { isLoggedIn?: boolean }) {
   const pathname = usePathname();
   const titleByRoute =
     Object.values(ROUTES)
@@ -29,16 +30,12 @@ export function SiteHeader() {
         />
         <h1 className="text-base font-medium">{titleByRoute}</h1>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
-            <a
-              href="https://github.com/brandonporcel"
-              rel="noopener noreferrer"
-              target="_blank"
-              className="dark:text-foreground"
-            >
-              GitHub
-            </a>
-          </Button>
+          {isLoggedIn && (
+            <>
+              <UploadDialog />
+              <ScrapingInfo />
+            </>
+          )}
           <ThemeToggle className="hidden sm:flex" />
         </div>
       </div>
