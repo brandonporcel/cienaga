@@ -4,76 +4,209 @@ import * as cheerio from "cheerio";
 import { ScrapedMovieData } from "../../types/movie.types";
 import { cleanDirectorName, parseYear } from "../../utils/validation.util";
 
+interface FirecrawlResponse {
+  html: string;
+  finalUrl?: string;
+  metadata: Record<string, unknown>;
+}
+
+interface FetchResult {
+  html: string;
+  finalUrl?: string;
+}
+
 export class LetterboxdScraperService {
   private static readonly USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
   private static readonly TIMEOUT = 7000;
-  private static readonly SCRAPE_TIMEOUT = 8000;
+  private static readonly FIRECRAWL_TIMEOUT = 45000;
 
+  /**
+   * Scrapea la film page de Letterboxd.
+   *
+   * Intenta primero el fetch directo (funciona desde IPs residenciales).
+   * GitHub Actions corre desde IPs de datacenter que Cloudflare bloquea, así
+   * que si el fetch directo no devuelve director, reintenta vía Firecrawl
+   * (que atraviesa el challenge). Se pide `rawHtml` para conservar el
+   * JSON-LD y los meta tags originales; además se usa la metadata de la API
+   * como respaldo.
+   */
   static async scrapeMovieData(url: string): Promise<ScrapedMovieData> {
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(
-        () => reject(new Error("Scraping timeout")),
-        this.SCRAPE_TIMEOUT,
-      );
-    });
+    console.log(`🎬 Scraping: ${url}`);
 
+    const direct = await this.fetchDirect(url);
+    let data = direct
+      ? this.parseHtml(direct.html, direct.finalUrl)
+      : this.emptyData();
+
+    if (data.director) {
+      this.logResult(url, data);
+      return data;
+    }
+
+    const firecrawl = await this.fetchByFirecrawl(url);
+    if (!firecrawl) {
+      this.logResult(url, data);
+      return data;
+    }
+
+    console.log(`🔥 Firecrawl fallback: ${url}`);
+    const fallback = this.parseHtml(
+      firecrawl.html,
+      firecrawl.finalUrl,
+      firecrawl.metadata,
+    );
+
+    data = this.mergeData(data, fallback);
+    this.logResult(url, data);
+
+    return data;
+  }
+
+  private static emptyData(): ScrapedMovieData {
+    return {
+      director: null,
+      directorUrl: null,
+      posterUrl: null,
+      year: null,
+    };
+  }
+
+  /**
+   * Combina los datos del fetch directo con los del fallback. El fallback
+   * tiene prioridad porque fue el que encontró el director, pero conservamos
+   * poster/background del directo si Firecrawl no los pudo extraer.
+   */
+  private static mergeData(
+    direct: ScrapedMovieData,
+    fallback: ScrapedMovieData,
+  ): ScrapedMovieData {
+    return {
+      ...fallback,
+      director: fallback.director ?? direct.director,
+      directorSlug: fallback.directorSlug ?? direct.directorSlug,
+      directorUrl: fallback.directorUrl ?? direct.directorUrl,
+      posterUrl: fallback.posterUrl ?? direct.posterUrl,
+      backgroundMovieImg:
+        fallback.backgroundMovieImg ?? direct.backgroundMovieImg,
+      movieDuration: fallback.movieDuration ?? direct.movieDuration,
+      movieRating: fallback.movieRating ?? direct.movieRating,
+      year: fallback.year ?? direct.year,
+      movieNationalName: fallback.movieNationalName ?? direct.movieNationalName,
+      movieSlug: fallback.movieSlug ?? direct.movieSlug,
+      watches: fallback.watches ?? direct.watches,
+    };
+  }
+
+  private static logResult(url: string, data: ScrapedMovieData): void {
+    console.log(
+      `✅ Extracted - Director: ${data.director || "NOT FOUND"}, Year: ${data.year || "NOT FOUND"}, Poster: ${data.posterUrl ? "FOUND" : "NOT FOUND"}`,
+    );
+    if (!data.director) console.warn(`⚠️  Sin director para ${url}`);
+  }
+
+  private static async fetchDirect(url: string): Promise<FetchResult | null> {
     try {
-      console.log(`🎬 Scraping: ${url}`);
-
-      const scrapePromise = axios.get(url, {
+      const response: AxiosResponse = await axios.get(url, {
         headers: { "User-Agent": this.USER_AGENT },
         timeout: this.TIMEOUT,
+        maxRedirects: 5,
       });
 
-      const response: AxiosResponse = await Promise.race([
-        scrapePromise,
-        timeoutPromise,
-      ]);
-      const $ = cheerio.load(response.data);
+      if (typeof response.data !== "string") return null;
 
-      const data: ScrapedMovieData = {
-        movieSlug: this.extractMovieSlug($),
-        directorSlug: this.extractDirectorSlug($),
-        director: this.extractDirector($),
-        directorUrl: this.extractDirectorUrl($),
-        posterUrl: this.extractPosterUrl($),
-        backgroundMovieImg: this.extractBackgroundMovieImg($),
-        movieDuration: this.extractMovieDuration($),
-        movieRating: this.extractMovieRating($),
-        year: this.extractYear($),
-        movieNationalName: this.extractMovieNationalName($),
+      return {
+        html: response.data,
+        finalUrl: response.request?.res?.responseUrl,
       };
-
-      console.log(
-        `✅ Extracted - Director: ${data.director || "NOT FOUND"}, Year: ${data.year || "NOT FOUND"}, Poster: ${data.posterUrl ? "FOUND" : "NOT FOUND"}`,
-      );
-
-      return data;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       console.error(`❌ Error scraping ${url}: ${errorMessage}`);
-
-      return {
-        director: null,
-        directorUrl: null,
-        posterUrl: null,
-        year: null,
-      };
+      return null;
     }
   }
 
-  private static extractDirector($: cheerio.CheerioAPI): string | null {
+  private static async fetchByFirecrawl(
+    url: string,
+  ): Promise<FirecrawlResponse | null> {
+    const apiKey = process.env.FIRECRAWL_API_KEY;
+    if (!apiKey) return null;
+
+    try {
+      const response = await axios.post(
+        "https://api.firecrawl.dev/v2/scrape",
+        { url, formats: ["rawHtml"] },
+        {
+          headers: { Authorization: `Bearer ${apiKey}` },
+          timeout: this.FIRECRAWL_TIMEOUT,
+        },
+      );
+
+      const data = response.data?.data;
+      // rawHtml conserva JSON-LD y meta tags (el formato "html" los limpia).
+      const html =
+        typeof data?.rawHtml === "string" ? data.rawHtml : data?.html;
+      if (typeof html !== "string") return null;
+
+      const metadata = (data?.metadata as Record<string, unknown>) ?? {};
+      const finalUrl =
+        typeof metadata.url === "string"
+          ? metadata.url
+          : typeof metadata.ogUrl === "string"
+            ? metadata.ogUrl
+            : undefined;
+
+      return { html, finalUrl, metadata };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error(`❌ Firecrawl fallback error for ${url}: ${errorMessage}`);
+      return null;
+    }
+  }
+
+  private static parseHtml(
+    html: string,
+    finalUrl?: string,
+    metadata: Record<string, unknown> = {},
+  ): ScrapedMovieData {
+    const $ = cheerio.load(html);
+
+    return {
+      movieSlug: this.extractMovieSlug($, finalUrl, metadata),
+      directorSlug: this.extractDirectorSlug($),
+      director: this.extractDirector($, metadata),
+      directorUrl: this.extractDirectorUrl($),
+      posterUrl: this.extractPosterUrl($, metadata),
+      backgroundMovieImg: this.extractBackgroundMovieImg($, metadata),
+      movieDuration: this.extractMovieDuration($),
+      movieRating: this.extractMovieRating($, metadata),
+      year: this.extractYear($, metadata),
+      movieNationalName: this.extractMovieNationalName($),
+      watches: this.extractWatches($),
+    };
+  }
+
+  private static extractDirector(
+    $: cheerio.CheerioAPI,
+    metadata: Record<string, unknown> = {},
+  ): string | null {
     // Método 1: Meta tag Twitter (más confiable)
     let director = $('meta[name="twitter:data1"]').attr("content") || null;
 
-    // Método 2: Link del director en el HTML
+    // Método 2: metadata de Firecrawl (el HTML que devuelve no siempre
+    // conserva los meta tags de Twitter)
+    if (!director && typeof metadata["twitter:data1"] === "string") {
+      director = metadata["twitter:data1"];
+    }
+
+    // Método 3: Link del director en el HTML
     if (!director) {
       director = $('a[href*="/director/"]').first().text().trim() || null;
     }
 
-    // Método 3: JSON-LD structured data
+    // Método 4: JSON-LD structured data
     if (!director) {
       const jsonLdScript = $('script[type="application/ld+json"]')
         .first()
@@ -86,10 +219,20 @@ export class LetterboxdScraperService {
           } else if (Array.isArray(data.director) && data.director[0]?.name) {
             director = data.director[0].name;
           }
-        } catch (e) {
+        } catch {
           // Ignore JSON parse errors
         }
       }
+    }
+
+    // Método 5: texto tipo "Solanin (2010) directed by Takahiro Miki • ..."
+    if (!director) {
+      const title =
+        (typeof metadata.title === "string" && metadata.title) ||
+        (typeof metadata.ogTitle === "string" && metadata.ogTitle) ||
+        $("title").text();
+      const match = title.match(/directed by\s+([^•|]+)/i);
+      if (match) director = match[1].trim();
     }
 
     return cleanDirectorName(director);
@@ -98,9 +241,10 @@ export class LetterboxdScraperService {
   private static extractDirectorUrl($: cheerio.CheerioAPI): string | null {
     const directorLink = $('a[href*="/director/"]').first();
     if (directorLink.length) {
-      const relativeUrl = directorLink.attr("href");
-      if (relativeUrl) {
-        return `https://letterboxd.com${relativeUrl}`;
+      const href = directorLink.attr("href");
+      if (href) {
+        // Firecrawl devuelve hrefs absolutos; el fetch directo, relativos.
+        return href.startsWith("http") ? href : `https://letterboxd.com${href}`;
       }
     }
     return null;
@@ -116,7 +260,25 @@ export class LetterboxdScraperService {
     return null;
   }
 
-  private static extractMovieSlug($: cheerio.CheerioAPI): string | null {
+  private static extractMovieSlug(
+    $: cheerio.CheerioAPI,
+    finalUrl?: string,
+    metadata: Record<string, unknown> = {},
+  ): string | null {
+    // La URL final es la fuente más confiable (boxd.it redirige a /film/slug/)
+    const candidates = [
+      finalUrl,
+      typeof metadata.url === "string" ? metadata.url : undefined,
+      typeof metadata.ogUrl === "string" ? metadata.ogUrl : undefined,
+    ];
+
+    for (const candidate of candidates) {
+      const match = candidate?.match(/\/film\/([^/?#]+)/);
+      if (match) return match[1];
+    }
+
+    // Fallback: link del HTML. Es menos confiable porque puede apuntar a
+    // otra película (recomendadas), pero cubre casos sin URL final.
     const movieLink = $('a[href*="/film/"]').first();
     if (movieLink.length) {
       const relativeUrl = movieLink.attr("href");
@@ -126,7 +288,10 @@ export class LetterboxdScraperService {
     return null;
   }
 
-  private static extractPosterUrl($: cheerio.CheerioAPI): string | null {
+  private static extractPosterUrl(
+    $: cheerio.CheerioAPI,
+    metadata: Record<string, unknown> = {},
+  ): string | null {
     // Método 1: JSON-LD (mejor calidad, poster oficial)
     const jsonLdScript = $('script[type="application/ld+json"]').first().text();
     // elimina cualquier bloque /* ... */
@@ -147,16 +312,76 @@ export class LetterboxdScraperService {
           }
           return data.image;
         }
-      } catch (e) {
+      } catch {
         // Continuar con método 2
       }
     }
 
-    return null;
+    // Método 2: buscar el poster en el HTML. Firecrawl no devuelve JSON-LD,
+    // así que este camino es imprescindible para el fallback.
+    const html = $.html();
+    const posters =
+      html.match(
+        /https:\/\/[a-z0-9.]*ltrbxd\.com\/resized\/film-poster\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)/gi,
+      ) ?? [];
+
+    if (posters.length === 0) return null;
+
+    // Si la metadata identifica la película (uid: "film:19677"), preferir
+    // el poster cuyo path contiene ese id para no agarrar el de una
+    // recomendación.
+    const filmId = this.extractLetterboxdFilmId(metadata);
+    const candidates = filmId
+      ? posters.filter((url) => url.includes(`/${filmId}-`))
+      : posters;
+    const pool = candidates.length > 0 ? candidates : posters;
+
+    const withDimensions = pool
+      .map((url) => {
+        const match = url.match(/-(\d+)-(\d+)-(\d+)-(\d+)-crop/);
+        if (!match) return null;
+        const w = parseInt(match[3], 10);
+        const h = parseInt(match[4], 10);
+        // Descartar imágenes landscape: no son posters.
+        if (w >= h) return null;
+        return { url, area: w * h };
+      })
+      .filter((x): x is { url: string; area: number } => x !== null)
+      .sort((a, b) => b.area - a.area);
+
+    return withDimensions[0]?.url ?? pool[0] ?? null;
   }
 
-  private static extractMovieRating($: cheerio.CheerioAPI): number | null {
-    // Método 1: JSON-LD (mejor calidad, poster oficial)
+  private static extractLetterboxdFilmId(
+    metadata: Record<string, unknown>,
+  ): string | null {
+    const identifier = metadata["production:identifier"];
+    if (typeof identifier !== "string") return null;
+
+    try {
+      const parsed = JSON.parse(identifier);
+      const uid: unknown = parsed?.uid;
+      if (typeof uid !== "string") return null;
+      const match = uid.match(/film:(\d+)/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private static extractMovieRating(
+    $: cheerio.CheerioAPI,
+    metadata: Record<string, unknown> = {},
+  ): number | null {
+    // Método 0: metadata de Firecrawl ("twitter:data2": "3.94 out of 5")
+    if (typeof metadata["twitter:data2"] === "string") {
+      const match = (metadata["twitter:data2"] as string).match(
+        /(\d+(?:\.\d+)?)/,
+      );
+      if (match) return parseFloat(match[1]);
+    }
+
+    // Método 1: JSON-LD
     const jsonLdScript = $('script[type="application/ld+json"]').first().text();
     // elimina cualquier bloque /* ... */
     const cleanJson = jsonLdScript.replace(/\/\*.*?\*\//gs, "").trim();
@@ -167,7 +392,7 @@ export class LetterboxdScraperService {
         if (data.aggregateRating) {
           return data.aggregateRating.ratingValue;
         }
-      } catch (e) {
+      } catch {
         // Continuar con método 2
       }
     }
@@ -225,6 +450,7 @@ export class LetterboxdScraperService {
 
   private static extractBackgroundMovieImg(
     $: cheerio.CheerioAPI,
+    metadata: Record<string, unknown> = {},
   ): string | null {
     // El fondo de Letterboxd es la imagen landscape (backdrop) alojada en
     // /resized/sm/upload/... con sufijo -<W>-<H>-crop-000000. Ya NO se puede
@@ -238,7 +464,11 @@ export class LetterboxdScraperService {
         /https:\/\/[a-z0-9.]*ltrbxd\.com\/resized\/sm\/upload\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)/gi,
       ) ?? [];
 
-    if (images.length === 0) return null;
+    if (images.length === 0) {
+      // Firecrawl expone og:image en metadata aunque no esté en el HTML.
+      const ogImage = metadata["og:image"];
+      return typeof ogImage === "string" ? ogImage : null;
+    }
 
     // Elegir el backdrop landscape de mayor resolución. Formato de la URL:
     // ...-<W>-<W>-<H>-<H>-crop-000000.jpg (W = ancho, H = alto del recorte).
@@ -263,7 +493,22 @@ export class LetterboxdScraperService {
     return landscape;
   }
 
-  private static extractYear($: cheerio.CheerioAPI): number | null {
+  private static extractYear(
+    $: cheerio.CheerioAPI,
+    metadata: Record<string, unknown> = {},
+  ): number | null {
+    // Método 0: metadata de Firecrawl ("production:name-and-year")
+    const metaYear =
+      (typeof metadata["production:name-and-year"] === "string" &&
+        metadata["production:name-and-year"]) ||
+      (typeof metadata.title === "string" && metadata.title) ||
+      "";
+
+    if (metaYear) {
+      const match = metaYear.match(/\((\d{4})\)/);
+      if (match) return parseYear(match[1]);
+    }
+
     // Método 1: Del título de la página
     const titleMatch = $("title")
       .text()
@@ -287,12 +532,28 @@ export class LetterboxdScraperService {
         if (data.dateCreated) {
           return parseYear(data.dateCreated);
         }
-      } catch (e) {
+      } catch {
         // Ignore
       }
     }
 
     return null;
+  }
+
+  /**
+   * "Watched by 10,600 members" ya viene en la film page. Extraerlo acá evita
+   * una segunda llamada a Firecrawl al CSI endpoint por cada película.
+   */
+  private static extractWatches($: cheerio.CheerioAPI): number | null {
+    const ariaLabel = $(".production-statistic.-watches")
+      .first()
+      .attr("aria-label");
+    const text = ariaLabel ?? $("body").text();
+    const match = text.match(/Watched by\s*([\d.,]+)/i);
+    if (!match) return null;
+
+    const value = parseInt(match[1].replace(/[.,]/g, ""), 10);
+    return Number.isNaN(value) ? null : value;
   }
 
   private static extractMovieNationalName(

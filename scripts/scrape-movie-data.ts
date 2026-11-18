@@ -50,7 +50,6 @@ class MovieDataScrapingOrchestrator {
         }
 
         // Detect stuck loop: same movies, no progress
-        const currentIds = new Set(movies.map((m) => m.id));
         const allSeen = movies.every((m) => seenMovieIds.has(m.id));
         if (allSeen) {
           consecutiveNoProgress++;

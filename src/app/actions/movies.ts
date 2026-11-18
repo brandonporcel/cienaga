@@ -3,8 +3,8 @@
 import { LetterboxdMovie } from "@/types/letterboxd";
 import { MESSAGES } from "@/lib/constants/messages";
 import handleServerError from "@/lib/errors/server";
-import { createClientForServer } from "@/lib/supabase/server";
 import { shouldFollowDirector } from "@/lib/services/director-preference";
+import { createClientForServer } from "@/lib/supabase/server";
 
 /**
  * Sincroniza user_directors (source 'auto') para un set de directores,
@@ -96,19 +96,31 @@ async function saveMoviesAction(movies: LetterboxdMovie[]) {
     const knownDirectorIds = new Set<string>();
 
     for (const movie of movies) {
-      // Verificar si la película ya existe
-      const { data: existingMovie, error: checkError } = await supabase
+      // Verificar si la película ya existe. Se compara por título + año y no
+      // por URL porque Letterboxd exporta la misma peli como URL canónica
+      // (/film/slug/) o corta (boxd.it/xxxx) según el archivo, y comparar por
+      // URL creaba duplicados en cada re-importación.
+      const { data: existingMovies, error: checkError } = await supabase
         .from("movies")
-        .select("id, director_id")
+        .select("id, director_id, poster_url, url")
         .eq("title", movie.title)
-        .eq("year", movie.year)
-        .eq("url", movie.url)
-        .single();
+        .eq("year", movie.year);
 
-      if (checkError && checkError.code !== "PGRST116") {
+      if (checkError) {
         console.error("Error checking existing movie:", checkError);
         continue;
       }
+
+      // Si ya hay duplicados, quedarse con el más completo (director +
+      // poster) y preferir la URL canónica.
+      const existingMovie =
+        (existingMovies ?? []).sort((a, b) => {
+          const score = (row: typeof a) =>
+            (row.director_id ? 2 : 0) +
+            (row.poster_url ? 2 : 0) +
+            (row.url?.includes("/film/") ? 1 : 0);
+          return score(b) - score(a);
+        })[0] ?? null;
 
       let movieId: string;
 
@@ -173,11 +185,9 @@ async function saveMoviesAction(movies: LetterboxdMovie[]) {
       // 3. Auto-follow de directores ya conocidos de las pelis subidas
       let autoFollowed = 0;
       if (knownDirectorIds.size > 0) {
-        autoFollowed = await syncAutoFollows(
-          supabase,
-          userId,
-          [...knownDirectorIds],
-        );
+        autoFollowed = await syncAutoFollows(supabase, userId, [
+          ...knownDirectorIds,
+        ]);
       }
 
       console.log(

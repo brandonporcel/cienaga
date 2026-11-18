@@ -1,6 +1,6 @@
 # Roadmap
 
-> Bugs conocidos y pendientes. Última actualización: 2026-11-16.
+> Bugs conocidos y pendientes. Última actualización: 2026-11-18.
 
 ## Bugs conocidos (priorizados)
 
@@ -54,6 +54,13 @@
 - **Simplificado (2026-08-22)**: estados reducidos a `auto` | `manual` (eliminado `muted`). UI muestra solo "Seguido" y "Visto".
 - **Pendiente en prod**: correr la migración SQL (columna `source`), re-subir los CSVs (para persistir ratings con el fix), y correr el recalculate.
 
+### P2 — Duplicados históricos de películas por re-importación
+
+- `saveMoviesAction` comparaba por `title + year + url`; como Letterboxd exporta la misma peli con URL canónica (`/film/slug/`) o corta (`boxd.it/xxxx`), cada re-importación creaba una fila nueva en `movies` y movía `user_movies` a esa fila. Hay grupos duplicados (mismo título+año) con datos repartidos entre las dos filas.
+- **Fix (2026-11-18)**: la importación ahora busca por `title + year` y elige la fila más completa (director/poster). Evita duplicados nuevos.
+- **Cleanup (2026-11-18)**: merge global ejecutado sobre 156 grupos (misma película con URL canónica + `boxd.it`). Se eligió como survivor la fila con `screenings`/slug, se repuntaron 278 `user_movies`, se copió metadata faltante (duración, rating, director, poster) y se borraron 156 filas sobrantes. `POST /api/directors/recalculate` dio 18 altas y 7 bajas. No quedan duplicados (`title+year`) en `movies`.
+- Estado: cerrado.
+
 ### P3 — Bugs menores
 
 - `count-pending` no valida Bearer y su filtro no coincide con `/api/movies/pending`. **Verificado 2026-09-12**: `/api/directors/pending` responde 200 OK con 84 pendientes; un fallo del action fue transitorio (500 "Database error" en Vercel, no reproducible ni con anon ni service key). Idea: retry con backoff en `getPendingDirectors` de `scrape-directors.ts` para tolerar 5xx transitorios de Vercel/Supabase.
@@ -88,12 +95,23 @@
 
 ## Cambios recientes
 
+### 2026-11-18 — Fix del pipeline de directores bloqueado por Cloudflare + dedupe de importaciones
+
+- **Diagnóstico**: las corridas de `scrape:movie-directors` venían terminando en ~25s sin progreso desde el 2026-10-31 (antes tardaban 2-8 min). El fetch directo de la film page de Letterboxd recibe 403 de Cloudflare desde IPs de datacenter (GitHub Actions); `scrapeMovieData` no tenía fallback, así que las 50 pelis del lote quedaban pendientes y el detector de stuck-loop cortaba la corrida. El CSI ya usaba Firecrawl, pero la film page no.
+- **Fix scraper**: `LetterboxdScraperService.scrapeMovieData` intenta axios directo y, si no obtiene director, reintenta vía Firecrawl (`formats: ["rawHtml"]`, que conserva JSON-LD y meta tags). Parsea director, año, rating, poster, background y `watches` desde el HTML + metadata. `batch-processor` usa el `movieSlug` resuelto siguiendo el redirect de `boxd.it` y evita la llamada al CSI cuando la film page ya trae "Watched by X members".
+- **Cola de pendientes**: `/api/movies/pending` ahora ordena por `created_at DESC`; una importación reciente se procesa en la próxima corrida en vez de quedar detrás de meses de backlog.
+- **Importación**: `saveMoviesAction` busca por `title + year` (no por URL) y, si hay duplicados, elige la fila con director/poster. Evita crear una peli nueva cuando Letterboxd cambia entre URL canónica y corta.
+- **Banner de /directors**: `getDirectors` excluye cortometrajes (`is_short`) del conteo de pendientes y los trata como resueltos en "últimas importaciones"; antes un corto sin director quedaba como pendiente eterno.
+- **Datos corregidos**: se procesaron a mano los 12 pendientes del último import del usuario (11 con director+poster+watches; "Palestinian Women" quedó marcada como corto). Los 6 pendientes restantes del usuario son todos cortos, así que el banner queda en 0 al deployar el filtro.
+- **Duplicados globales eliminados**: 156 grupos `title+year` unificados (278 `user_movies` repuntadas, 156 filas borradas, recalculate 18/7). La biblioteca del usuario quedó en 438 películas, 0 duplicados, 0 pendientes no-cortos.
+- **Workflow eliminado**: `.github/workflows/scrape-backgrounds.yml`; el backfill de fondos queda solo como script manual (`pnpm scrape:backgrounds`).
+
 ### 2026-11-16 — Acciones globales en el header, paginación de directores y orden de funciones
 
 - **`Actualizar Datos` + icono de ayuda movidos al header del dashboard** (`SiteHeader`): antes solo existían en el toolbar de `/directors`. Ahora están siempre visibles junto al toggle de tema para usuarios con sesión, sin depender de la ruta. `UploadDialog` se movió a `src/components/directors/upload-dialog.tsx` (ya no es exclusivo de la ruta) y el tooltip de `ScrapingInfo` se generalizó para explicar la importación, no solo los estados de directores. Sin sesión no se muestran (la importación requiere login) y el sidebar sigue mostrando "Iniciar sesión".
 - **Botón "GitHub" eliminado del header**: el acceso a GitHub queda solo en el menú de Contacto del sidebar (`NavSecondary`).
 - **`/directors`: columna `#` en la vista tabla** (numeración de filas) y **render paginado por bloques de 24** con botón "Cargar más" + contador "Mostrando X de Y". El fetch sigue trayendo el listado completo (metadata chica); si el dataset crece, mover la paginación al servidor.
-- **Orden por fecha en `/dashboard` y `/screenings`**: `ScreeningsBrowser` ordena client-side por la primera función próxima y agrega un toggle `Fecha ↑ / ↓` (ascendente por defecto). Antes `/dashboard` dependía del orden arbitrario de PostgREST. También se corrigió el filtro por día (ahora alcanza con que *algún* horario coincida, no solo `screening_times[0]`) y la columna "Próxima función" usa el horario futuro más cercano.
+- **Orden por fecha en `/dashboard` y `/screenings`**: `ScreeningsBrowser` ordena client-side por la primera función próxima y agrega un toggle `Fecha ↑ / ↓` (ascendente por defecto). Antes `/dashboard` dependía del orden arbitrario de PostgREST. También se corrigió el filtro por día (ahora alcanza con que _algún_ horario coincida, no solo `screening_times[0]`) y la columna "Próxima función" usa el horario futuro más cercano.
 
 ### 2026-11-08 — /cinemas en el dashboard y correcciones de datos de Paris, Texas y The Virgin
 

@@ -53,15 +53,22 @@ export class BatchProcessorService {
 
           if (!scrapedData.director) return null;
 
-          // Obtener los "watches" (miembros que vieron la peli) desde el
-          // CSI endpoint para filtrar pelis de nicho en el backend.
-          const slug = extractFilmSlug(movie.url);
-          const stats = slug ? await getFilmStats(slug) : null;
+          // Obtener los "watches" (miembros que vieron la peli). La film page
+          // ya trae "Watched by X members"; si no está, se consulta el CSI.
+          // El scraper resuelve el slug real siguiendo el redirect de
+          // boxd.it; sin eso, las URLs cortas no tienen stats.
+          const slug = scrapedData.movieSlug ?? extractFilmSlug(movie.url);
+          const stats =
+            typeof scrapedData.watches === "number"
+              ? null
+              : slug
+                ? await getFilmStats(slug)
+                : null;
 
           return {
             movieId: movie.id,
             ...scrapedData,
-            watches: stats?.watches ?? null,
+            watches: scrapedData.watches ?? stats?.watches ?? null,
           };
         },
       );

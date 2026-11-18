@@ -37,7 +37,11 @@ export async function GET(request: NextRequest) {
       .not("url", "is", null)
       .or(`watches.is.null,watches.gte.${MIN_WATCHES}`)
       .limit(limit)
-      .order("created_at", { ascending: true }); // Procesar las más viejas primero
+      // Procesar las más nuevas primero: así una importación reciente se
+      // resuelve en la próxima corrida en lugar de quedar detrás de meses
+      // de backlog. Las viejas se siguen procesando a medida que la cola
+      // nueva se vacía.
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching movies:", error);

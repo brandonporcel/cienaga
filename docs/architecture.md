@@ -1,6 +1,6 @@
 # Arquitectura
 
-> Fuente de verdad de flujo de datos y decisiones de arquitectura. Última actualización: 2026-11-16.
+> Fuente de verdad de flujo de datos y decisiones de arquitectura. Última actualización: 2026-11-18.
 
 ## Visión general
 
@@ -16,11 +16,11 @@ Ciénaga cruza el historial de Letterboxd de un usuario con la cartelera de cine
 
 ## Clientes de Supabase
 
-| Cliente | Archivo | Key | Uso |
-| --- | --- | --- | --- |
-| Server (SSR) | `src/lib/supabase/server.ts` | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Server actions, API routes |
-| Service | `src/lib/supabase/service.ts` | `SUPABASE_SERVICE_ROLE_KEY` | `ScreeningsService`, endpoints de batch — **salta RLS** |
-| Browser | `src/lib/supabase/client.ts` | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cliente (auth) |
+| Cliente      | Archivo                       | Key                             | Uso                                                     |
+| ------------ | ----------------------------- | ------------------------------- | ------------------------------------------------------- |
+| Server (SSR) | `src/lib/supabase/server.ts`  | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Server actions, API routes                              |
+| Service      | `src/lib/supabase/service.ts` | `SUPABASE_SERVICE_ROLE_KEY`     | `ScreeningsService`, endpoints de batch — **salta RLS** |
+| Browser      | `src/lib/supabase/client.ts`  | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cliente (auth)                                          |
 
 ⚠️ La service key vive en el runtime de la app (server actions del dashboard la usan), no solo en scripts. No debe filtrarse al bundle del cliente.
 
@@ -36,22 +36,25 @@ Ciénaga cruza el historial de Letterboxd de un usuario con la cartelera de cine
 1. El usuario sube `watched.csv` y `ratings.csv` desde el botón **Actualizar Datos** del header del dashboard (disponible en todas las rutas con sesión; `src/components/directors/upload-dialog.tsx`).
 2. `src/lib/services/letterboxd.ts` parsea los CSVs en el **cliente** (Papa.parse) y deduplica por título+año.
 3. `saveMoviesAction` (`src/app/actions/movies.ts`) — server action:
-   - Busca cada película por `title + year + url`; si no existe, la inserta.
+   - Busca cada película por `title + year` (no por URL: Letterboxd exporta la misma peli como `/film/slug/` o `boxd.it/xxxx`). Si hay duplicados históricos, elige la fila con director/poster.
+   - Si no existe, la inserta con `national_title`.
    - Hace upsert de las relaciones en `user_movies` (`onConflict: user_id,movie_id`).
 
-⚠️ **Bug conocido**: el insert no incluye `national_title` (NOT NULL) → todas las inserciones fallan silenciosamente. Ver `docs/roadmap.md`.
+✅ **Duplicados históricos migrados (2026-11-18)**: se unificaron 156 grupos `title+year` (misma pelí con URL canónica y corta), repuntando 278 `user_movies` a la fila con `screenings`/slug y borrando la sobrante. No quedan duplicados en `movies`. Ver `docs/roadmap.md`.
 
 ## Flujo 2 — Scraping de datos de películas (GitHub Actions, cada 12 horas)
 
 ```
 scrape-movie-data.ts
-  → GET /api/movies/pending          (Bearer; movies sin director_id ni poster_url)
-  → scraper Letterboxd por película  (cheerio, boxd.it, JSON-LD)
+  → GET /api/movies/pending          (Bearer; movies sin director_id ni poster_url, orden created_at DESC)
+  → scraper Letterboxd por película  (axios directo → Firecrawl rawHtml si Cloudflare bloquea)
   → POST /api/movies/batch           (Bearer; asigna director_id, poster, duración, etc.)
       └─ además genera user_directors: cualquier user con user_movies de un director lo sigue
 ```
 
 ⚠️ **Hallazgo (2026-08-16)**: el endpoint JSON de Letterboxd (`/film/<slug>/json/`) responde **403 a clientes Node** (axios y fetch — fingerprint TLS bloqueado por Cloudflare); solo responde a curl/browsers. No usar ese endpoint desde los scripts. Ver `docs/roadmap.md`.
+
+⚠️ **Cloudflare y GitHub Actions (2026-11-18)**: desde el 2026-10-31 Cloudflare también bloquea la film page HTML (`/film/<slug>/`) desde IPs de datacenter. El fetch directo falla y el pipeline quedaba sin progreso. `LetterboxdScraperService.scrapeMovieData` ahora reintenta con Firecrawl (`formats: ["rawHtml"]`, conserva JSON-LD/meta) cuando no encuentra director. La film page ya trae "Watched by X members", así que se evita la llamada extra al CSI cuando está disponible.
 
 ## Flujo 3 — Scraping de perfiles de directores (GitHub Actions, diario)
 
@@ -135,24 +138,24 @@ send-notifications.ts
 
 ### Consumidos por scripts (Bearer)
 
-| Método | Ruta | Descripción |
-| --- | --- | --- |
-| GET | `/api/movies/pending?limit=` | Películas sin director ni poster |
-| GET | `/api/movies/count-pending` | Conteo (público, filtro distinto al de pending) |
-| POST | `/api/movies/batch` | Asigna directores/metadatos + genera user_directors |
-| GET | `/api/directors/pending?limit=` | Directores sin tmdb_id |
-| POST | `/api/directors/batch-update` | Actualiza perfiles de directores |
-| POST | `/api/screenings/batch` | Crea screenings + screening_times |
-| POST | `/api/list/batch` | Crea screenings desde la lista Letterboxd (crea cines nuevos) |
-| POST | `/api/users/bulk` | Emails de usuarios por ids |
-| POST | `/api/notifications/log` | Registra envíos (GET y POST validan Bearer) |
+| Método | Ruta                            | Descripción                                                   |
+| ------ | ------------------------------- | ------------------------------------------------------------- |
+| GET    | `/api/movies/pending?limit=`    | Películas sin director ni poster                              |
+| GET    | `/api/movies/count-pending`     | Conteo (público, filtro distinto al de pending)               |
+| POST   | `/api/movies/batch`             | Asigna directores/metadatos + genera user_directors           |
+| GET    | `/api/directors/pending?limit=` | Directores sin tmdb_id                                        |
+| POST   | `/api/directors/batch-update`   | Actualiza perfiles de directores                              |
+| POST   | `/api/screenings/batch`         | Crea screenings + screening_times                             |
+| POST   | `/api/list/batch`               | Crea screenings desde la lista Letterboxd (crea cines nuevos) |
+| POST   | `/api/users/bulk`               | Emails de usuarios por ids                                    |
+| POST   | `/api/notifications/log`        | Registra envíos (GET y POST validan Bearer)                   |
 
 ### Públicos
 
-| Método | Ruta | Descripción |
-| --- | --- | --- |
-| GET | `/api/cinemas?enabled=true` | Cines monitoreados |
-| GET | `/api/screenings/featured` | Home público (⚠️ sin orden ni filtro de fecha — roadmap) |
+| Método | Ruta                        | Descripción                                              |
+| ------ | --------------------------- | -------------------------------------------------------- |
+| GET    | `/api/cinemas?enabled=true` | Cines monitoreados                                       |
+| GET    | `/api/screenings/featured`  | Home público (⚠️ sin orden ni filtro de fecha — roadmap) |
 
 ### Server actions (sesión del usuario)
 

@@ -2,13 +2,13 @@
 "use server";
 
 import { Director, DirectorDetail } from "@/types/director";
+import { MESSAGES } from "@/lib/constants/messages";
+import handleServerError from "@/lib/errors/server";
+import { getUserOrThrow } from "@/lib/helpers/get-server-user";
 import {
   DirectorSource,
   getDirectorMetrics,
 } from "@/lib/services/director-preference";
-import { MESSAGES } from "@/lib/constants/messages";
-import handleServerError from "@/lib/errors/server";
-import { getUserOrThrow } from "@/lib/helpers/get-server-user";
 import { createClientForServer } from "@/lib/supabase/server";
 
 async function getDirectors(): Promise<{
@@ -20,20 +20,21 @@ async function getDirectors(): Promise<{
 
   // Películas del usuario sin director detectado aún (el cron las procesa
   // en las próximas corridas). Sirve para mostrar el banner de "estamos detectando".
+  // Los cortometrajes no se trackean (no tienen director asignado por diseño),
+  // así que no deben contar como pendientes eternos.
   const { count: pendingMovies } = await supabase
     .from("user_movies")
-    .select("id, movies!inner(id)", { count: "exact", head: true })
+    .select("movie_id, movies!inner(id)", { count: "exact", head: true })
     .eq("user_id", user.id)
-    .eq("movies.director_id", null);
+    .is("movies.director_id", null)
+    .eq("movies.is_short", false);
 
   // Últimas películas importadas (72h = ventana de una corrida del cron).
   // Sirve para confirmar al usuario que su subida se registró, listando
   // las pelis con su estado de detección (✅/⏳).
   const { data: recentMovies } = await supabase
     .from("user_movies")
-    .select(
-      "created_at, movies!inner(id, title, year, director_id)",
-    )
+    .select("created_at, movies!inner(id, title, year, director_id, is_short)")
     .eq("user_id", user.id)
     .gte("created_at", importsWindowStart())
     .order("created_at", { ascending: false })
@@ -45,12 +46,14 @@ async function getDirectors(): Promise<{
       title: string;
       year: number | null;
       director_id: string | null;
+      is_short: boolean;
     };
     return {
       id: movie.id,
       title: movie.title,
       year: movie.year,
-      hasDirector: !!movie.director_id,
+      // Un corto no necesita director: lo damos por resuelto.
+      hasDirector: !!movie.director_id || movie.is_short,
     };
   });
 
@@ -90,7 +93,10 @@ async function getDirectors(): Promise<{
   for (const row of userDirectors ?? []) {
     const dir = row.directors as unknown as Director;
     if (dir) {
-      directorsMap.set(dir.id, { ...dir, source: row.source as DirectorSource });
+      directorsMap.set(dir.id, {
+        ...dir,
+        source: row.source as DirectorSource,
+      });
     }
   }
 
@@ -186,8 +192,7 @@ async function searchDirectors(query: string): Promise<DirectorSearchResult[]> {
     .in("movies.director_id", ids);
   const watched = new Set(
     (watchedRows ?? []).map(
-      (row) =>
-        (row.movies as unknown as { director_id: string }).director_id,
+      (row) => (row.movies as unknown as { director_id: string }).director_id,
     ),
   );
 
@@ -271,18 +276,23 @@ async function getDirectorDetail(directorId: string): Promise<DirectorDetail> {
     }
 
     filmography =
-      (watchedFilms as unknown as
-        | {
-            rating: number | null;
-            movies: { title: string; year: number | null; poster_url: string | null };
-          }[]
-        | null)
-        ?.map((film) => ({
-          title: film.movies.title,
-          year: film.movies.year,
-          poster_url: film.movies.poster_url,
-          rating: film.rating,
-        })) ?? [];
+      (
+        watchedFilms as unknown as
+          | {
+              rating: number | null;
+              movies: {
+                title: string;
+                year: number | null;
+                poster_url: string | null;
+              };
+            }[]
+          | null
+      )?.map((film) => ({
+        title: film.movies.title,
+        year: film.movies.year,
+        poster_url: film.movies.poster_url,
+        rating: film.rating,
+      })) ?? [];
   }
 
   const metrics = getDirectorMetrics(filmography);
@@ -332,4 +342,9 @@ async function updateDirectorPreference(
   }
 }
 
-export { getDirectors, getDirectorDetail, updateDirectorPreference, searchDirectors };
+export {
+  getDirectors,
+  getDirectorDetail,
+  updateDirectorPreference,
+  searchDirectors,
+};
